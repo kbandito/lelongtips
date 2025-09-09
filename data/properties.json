@@ -1,0 +1,68 @@
+{
+  "menara_up_office_unit_kuala_lumpur_1323_sqft": {
+    "title": "Menara UP Office Unit",
+    "price": "RM204,000",
+    "location": "Kuala Lumpur",
+    "size": "1,323 sq.ft",
+    "auction_date": "10 Sep 2025 (Wed)",
+    "url": "https://www.lelongtips.com.my/search?keyword=&property_type%5B%5D=7&property_type%5B%5D=6&property_type%5B%5D=8&property_type%5B%5D=4&property_type%5B%5D=5&state=kl_sel&bank=&listing_status=&input-date=&auction-date=&case=&listing_type=&min_price=&max_price=&min_size=&max_size=",
+    "last_updated": "2025-09-09T06:15:29.192532",
+    "first_seen": "2025-09-09T06:15:29.192540",
+    "price_history": [
+      {
+        "price": "RM204,000",
+        "date": "2025-09-09T06:15:29.192532"
+      }
+    ],
+    "auction_date_history": [
+      {
+        "auction_date": "10 Sep 2025 (Wed)",
+        "date": "2025-09-09T06:15:29.192532"
+      }
+    ]
+  },
+  "radia_office_strata_shah_alam_selangor_1755_sqft": {
+    "title": "Radia Office Strata",
+    "price": "RM351,000",
+    "location": "Shah Alam, Selangor",
+    "size": "1,755 sq.ft",
+    "auction_date": "10 Sep 2025 (Wed)",
+    "url": "https://www.lelongtips.com.my/search?keyword=&property_type%5B%5D=7&property_type%5B%5D=6&property_type%5B%5D=8&property_type%5B%5D=4&property_type%5B%5D=5&state=kl_sel&bank=&listing_status=&input-date=&auction-date=&case=&listing_type=&min_price=&max_price=&min_size=&max_size=",
+    "last_updated": "2025-09-09T06:15:29.192548",
+    "first_seen": "2025-09-09T06:15:29.192549",
+    "price_history": [
+      {
+        "price": "RM351,000",
+        "date": "2025-09-09T06:15:29.192548"
+      }
+    ],
+    "auction_date_history": [
+      {
+        "auction_date": "10 Sep 2025 (Wed)",
+        "date": "2025-09-09T06:15:29.192548"
+      }
+    ]
+  },
+  "emporis_shop_lot_kota_damansara_selangor_1679_sqft": {
+    "title": "Emporis Shop Lot",
+    "price": "RM735,900",
+    "location": "Kota Damansara, Selangor",
+    "size": "1,679 sq.ft",
+    "auction_date": "25 Sep 2025 (Thu)",
+    "url": "https://www.lelongtips.com.my/search?keyword=&property_type%5B%5D=7&property_type%5B%5D=6&property_type%5B%5D=8&property_type%5B%5D=4&property_type%5B%5D=5&state=kl_sel&bank=&listing_status=&input-date=&auction-date=&case=&listing_type=&min_price=&max_price=&min_size=&max_size=",
+    "last_updated": "2025-09-09T06:15:29.192556",
+    "first_seen": "2025-09-09T06:15:29.192557",
+    "price_history": [
+      {
+        "price": "RM735,900",
+        "date": "2025-09-09T06:15:29.192556"
+      }
+    ],
+    "auction_date_history": [
+      {
+        "auction_date": "25 Sep 2025 (Thu)",
+        "date": "2025-09-09T06:15:29.192556"
+      }
+    ]
+  }
+}
