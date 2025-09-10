@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Enhanced Property Monitoring Script with Complete Daily Summary
-Shows total listings, new listings, and changed properties in daily summary
-Works with or without repository write permissions
+Real Property Monitoring Script with Actual Lelong Scraping
+Scrapes real data from Lelong website showing actual 1,600+ listings
 """
 
 import requests
@@ -14,8 +13,9 @@ from datetime import datetime, timedelta
 import re
 import tempfile
 from pathlib import Path
+import urllib.parse
 
-class EnhancedPropertyMonitor:
+class RealPropertyMonitor:
     def __init__(self):
         # Try to use repository data directory, fall back to temp if no write permissions
         self.base_path = Path(__file__).parent.parent if Path(__file__).parent.name == 'src' else Path(__file__).parent
@@ -40,14 +40,19 @@ class EnhancedPropertyMonitor:
         self.lelong_url = "https://www.lelongtips.com.my/search?keyword=&property_type%5B%5D=7&property_type%5B%5D=6&property_type%5B%5D=8&property_type%5B%5D=4&property_type%5B%5D=5&state=kl_sel&bank=&listing_status=&input-date=&auction-date=&case=&listing_type=&min_price=&max_price=&min_size=&max_size="
         
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
         }
         
         # Notification settings
         self.telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN', '')
         self.telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID', '')
         
-        print(f"🚀 Enhanced Property Monitor with Complete Daily Summary")
+        print(f"🚀 Real Property Monitor with Actual Lelong Scraping")
         print(f"🤖 Telegram configured: {'✅' if self.telegram_bot_token and self.telegram_chat_id else '❌'}")
         print(f"💾 Persistent storage: {'✅' if self.use_persistent_storage else '❌'}")
     
@@ -72,130 +77,180 @@ class EnhancedPropertyMonitor:
             print(f"⚠️ Could not save properties database: {e}")
             return False
     
-    def load_daily_stats(self):
-        """Load daily statistics"""
-        if self.daily_stats.exists():
-            try:
-                with open(self.daily_stats, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"⚠️ Error loading daily stats: {e}")
-        return {}
-    
-    def save_daily_stats(self, stats):
-        """Save daily statistics"""
-        try:
-            with open(self.daily_stats, 'w', encoding='utf-8') as f:
-                json.dump(stats, f, indent=2, ensure_ascii=False)
-            return True
-        except Exception as e:
-            print(f"⚠️ Could not save daily stats: {e}")
-            return False
-    
-    def create_property_id(self, title, location, size):
+    def create_property_id(self, title, location, size, auction_date):
         """Create a unique property ID"""
         clean_title = re.sub(r'[^\w\s]', '', title)
         clean_location = re.sub(r'[^\w\s]', '', location)
         clean_size = re.sub(r'[^\w\s]', '', size)
-        return f"{clean_title}_{clean_location}_{clean_size}".replace(' ', '_').lower()
+        clean_date = re.sub(r'[^\w\s]', '', auction_date)
+        
+        return f"{clean_title}_{clean_location}_{clean_size}_{clean_date}".replace(' ', '_').lower()[:100]
+    
+    def extract_property_data(self, property_element):
+        """Extract property data from a single property element"""
+        try:
+            property_data = {}
+            
+            # Extract auction price
+            price_element = property_element.find('h4', string=lambda text: text and 'Auction Price' in text)
+            if price_element:
+                price_text = price_element.get_text(strip=True)
+                price_match = re.search(r'RM[\d,]+', price_text)
+                if price_match:
+                    property_data['price'] = price_match.group()
+            
+            # Extract auction date
+            date_element = property_element.find('h4', string=lambda text: text and 'Auction Date' in text)
+            if date_element:
+                # Look for the next element that contains the date
+                next_element = date_element.find_next()
+                if next_element:
+                    date_text = next_element.get_text(strip=True)
+                    # Match pattern like "10 Sep 2025 (Wed)"
+                    date_match = re.search(r'\d{1,2}\s+\w{3}\s+\d{4}\s+\(\w{3}\)', date_text)
+                    if date_match:
+                        property_data['auction_date'] = date_match.group()
+            
+            # Extract property title and location
+            title_elements = property_element.find_all(['h3', 'h4', 'h5', 'strong'])
+            for element in title_elements:
+                text = element.get_text(strip=True)
+                if text and not any(keyword in text.lower() for keyword in ['auction price', 'auction date', 'rm', 'sq.ft']):
+                    if 'title' not in property_data:
+                        property_data['title'] = text
+                    elif 'location' not in property_data and len(text) > 20:
+                        property_data['location'] = text
+                        break
+            
+            # Extract size
+            size_elements = property_element.find_all(string=re.compile(r'\d+[\s,]*sq\.ft'))
+            for size_text in size_elements:
+                size_match = re.search(r'[\d,]+\s*sq\.ft', size_text)
+                if size_match:
+                    property_data['size'] = size_match.group()
+                    break
+            
+            # Extract discount percentage
+            discount_elements = property_data.find_all(string=re.compile(r'-\d+%'))
+            for discount_text in discount_elements:
+                discount_match = re.search(r'-\d+%', discount_text)
+                if discount_match:
+                    property_data['discount'] = discount_match.group()
+                    break
+            
+            # Extract property type from context
+            property_type_keywords = {
+                'office': 'Office',
+                'shop': 'Shop',
+                'retail': 'Retail',
+                'factory': 'Factory',
+                'warehouse': 'Warehouse',
+                'land': 'Land',
+                'hotel': 'Hotel',
+                'resort': 'Resort'
+            }
+            
+            full_text = property_element.get_text().lower()
+            for keyword, prop_type in property_type_keywords.items():
+                if keyword in full_text:
+                    property_data['property_type'] = prop_type
+                    break
+            
+            # Set defaults for missing data
+            if 'title' not in property_data:
+                property_data['title'] = 'Property Listing'
+            if 'location' not in property_data:
+                property_data['location'] = 'KL/Selangor'
+            if 'size' not in property_data:
+                property_data['size'] = 'Size not specified'
+            if 'property_type' not in property_data:
+                property_data['property_type'] = 'Commercial'
+            
+            return property_data
+            
+        except Exception as e:
+            print(f"⚠️ Error extracting property data: {e}")
+            return None
     
     def scrape_lelong_properties(self):
-        """Scrape current Lelong auction properties"""
-        print(f"🔍 Scraping properties from Lelong...")
+        """Scrape real Lelong auction properties"""
+        print(f"🔍 Scraping properties from: {self.lelong_url}")
         
         try:
+            # Make request to Lelong
             response = requests.get(self.lelong_url, headers=self.headers, timeout=30)
             response.raise_for_status()
             
-            # Enhanced mock data with realistic variety
-            mock_properties = [
-                {
-                    'title': 'Menara UP Office Unit',
-                    'price': 'RM204,000',
-                    'location': 'Kuala Lumpur',
-                    'size': '1,323 sq.ft',
-                    'auction_date': '15 Sep 2025 (Mon)',
-                    'property_type': 'Office'
-                },
-                {
-                    'title': 'Radia Office Strata',
-                    'price': 'RM351,000',
-                    'location': 'Shah Alam, Selangor',
-                    'size': '1,755 sq.ft',
-                    'auction_date': '18 Sep 2025 (Thu)',
-                    'property_type': 'Office'
-                },
-                {
-                    'title': 'Emporis Shop Lot',
-                    'price': 'RM735,900',
-                    'location': 'Kota Damansara, Selangor',
-                    'size': '1,679 sq.ft',
-                    'auction_date': '25 Sep 2025 (Thu)',
-                    'property_type': 'Shop'
-                },
-                {
-                    'title': 'KLCC Office Tower',
-                    'price': 'RM1,200,000',
-                    'location': 'Kuala Lumpur City Centre',
-                    'size': '2,500 sq.ft',
-                    'auction_date': '20 Sep 2025 (Sat)',
-                    'property_type': 'Office'
-                },
-                {
-                    'title': 'Subang Factory Unit',
-                    'price': 'RM850,000',
-                    'location': 'Subang Jaya, Selangor',
-                    'size': '5,000 sq.ft',
-                    'auction_date': '22 Sep 2025 (Mon)',
-                    'property_type': 'Factory'
-                },
-                {
-                    'title': 'Petaling Jaya Warehouse',
-                    'price': 'RM680,000',
-                    'location': 'Petaling Jaya, Selangor',
-                    'size': '4,200 sq.ft',
-                    'auction_date': '28 Sep 2025 (Sun)',
-                    'property_type': 'Warehouse'
-                },
-                {
-                    'title': 'Bangsar Retail Space',
-                    'price': 'RM920,000',
-                    'location': 'Bangsar, Kuala Lumpur',
-                    'size': '1,800 sq.ft',
-                    'auction_date': '30 Sep 2025 (Tue)',
-                    'property_type': 'Retail'
-                },
-                {
-                    'title': 'Mont Kiara Office Suite',
-                    'price': 'RM450,000',
-                    'location': 'Mont Kiara, Kuala Lumpur',
-                    'size': '1,200 sq.ft',
-                    'auction_date': '16 Sep 2025 (Tue)',
-                    'property_type': 'Office'
-                }
-            ]
+            print(f"✅ Successfully fetched page (Status: {response.status_code})")
             
+            # Parse HTML
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Extract total results count
+            result_text = soup.find(string=re.compile(r'Result\(s\):\s*[\d,]+'))
+            total_results = 0
+            if result_text:
+                result_match = re.search(r'Result\(s\):\s*([\d,]+)', result_text)
+                if result_match:
+                    total_results = int(result_match.group(1).replace(',', ''))
+                    print(f"📊 Total results found: {total_results:,}")
+            
+            # Find property containers - look for elements containing auction prices
+            property_containers = []
+            
+            # Method 1: Look for elements containing "Auction Price"
+            auction_price_elements = soup.find_all(string=re.compile(r'Auction Price'))
+            for element in auction_price_elements:
+                # Find the parent container
+                container = element.find_parent()
+                while container and container.name not in ['div', 'article', 'section']:
+                    container = container.find_parent()
+                if container and container not in property_containers:
+                    property_containers.append(container)
+            
+            # Method 2: Look for price patterns directly
+            price_elements = soup.find_all(string=re.compile(r'RM[\d,]+'))
+            for element in price_elements:
+                container = element.find_parent()
+                while container and container.name not in ['div', 'article', 'section']:
+                    container = container.find_parent()
+                if container and container not in property_containers:
+                    # Check if this container also has auction date
+                    if container.find(string=re.compile(r'\d{1,2}\s+\w{3}\s+\d{4}')):
+                        property_containers.append(container)
+            
+            print(f"🏠 Found {len(property_containers)} property containers")
+            
+            # Extract property data
             properties = {}
-            for prop_data in mock_properties:
-                property_id = self.create_property_id(
-                    prop_data['title'], 
-                    prop_data['location'], 
-                    prop_data['size']
-                )
-                
-                properties[property_id] = {
-                    **prop_data,
-                    'url': self.lelong_url,
-                    'last_updated': datetime.now().isoformat(),
-                    'first_seen': datetime.now().isoformat()
-                }
+            extracted_count = 0
             
-            print(f"✅ Successfully found {len(properties)} properties")
-            return properties
+            for container in property_containers[:50]:  # Limit to first 50 for testing
+                property_data = self.extract_property_data(container)
+                
+                if property_data and 'price' in property_data and 'auction_date' in property_data:
+                    property_id = self.create_property_id(
+                        property_data.get('title', ''),
+                        property_data.get('location', ''),
+                        property_data.get('size', ''),
+                        property_data.get('auction_date', '')
+                    )
+                    
+                    properties[property_id] = {
+                        **property_data,
+                        'url': self.lelong_url,
+                        'last_updated': datetime.now().isoformat(),
+                        'first_seen': datetime.now().isoformat(),
+                        'total_results_on_site': total_results
+                    }
+                    extracted_count += 1
+            
+            print(f"✅ Successfully extracted {extracted_count} properties from {total_results:,} total listings")
+            return properties, total_results
             
         except Exception as e:
             print(f"❌ Error scraping Lelong: {e}")
-            return {}
+            return {}, 0
     
     def detect_changes(self, current_properties, database):
         """Detect new listings and changes in existing properties"""
@@ -306,8 +361,8 @@ class EnhancedPropertyMonitor:
             print(f"❌ Error sending Telegram notification: {e}")
             return False
     
-    def format_enhanced_daily_summary(self, current_properties, new_listings, changed_properties, total_tracked):
-        """Format enhanced daily summary with complete statistics"""
+    def format_real_daily_summary(self, current_properties, new_listings, changed_properties, total_tracked, total_on_site):
+        """Format daily summary with real Lelong data"""
         now = datetime.now()
         tomorrow = now + timedelta(days=1)
         
@@ -324,7 +379,8 @@ class EnhancedPropertyMonitor:
         
         # KEY STATISTICS (What the user requested)
         message += f"📈 *Key Statistics:*\n"
-        message += f"• **Total Listings Available**: *{len(current_properties)}*\n"
+        message += f"• **Total Listings on Lelong**: *{total_on_site:,}*\n"
+        message += f"• **Properties Analyzed**: *{len(current_properties)}*\n"
         message += f"• **Total Properties Tracked**: *{total_tracked}*\n"
         message += f"• **New Listings Today**: *{len(new_listings)}*\n"
         message += f"• **Properties with Changes**: *{len(changed_properties)}*\n\n"
@@ -332,46 +388,25 @@ class EnhancedPropertyMonitor:
         # Property breakdown by type
         property_types = {}
         for prop in current_properties.values():
-            prop_type = prop.get('property_type', 'Unknown')
+            prop_type = prop.get('property_type', 'Commercial')
             if prop_type not in property_types:
                 property_types[prop_type] = 0
             property_types[prop_type] += 1
         
-        message += f"📋 *Property Breakdown:*\n"
-        for prop_type, count in sorted(property_types.items()):
-            message += f"• {prop_type}: {count}\n"
-        message += "\n"
+        if property_types:
+            message += f"📋 *Property Breakdown (Analyzed):*\n"
+            for prop_type, count in sorted(property_types.items()):
+                message += f"• {prop_type}: {count}\n"
+            message += "\n"
         
         # Show new listings if any
         if new_listings:
             message += f"🆕 *NEW LISTINGS TODAY ({len(new_listings)}):*\n"
             for i, (prop_id, details) in enumerate(list(new_listings.items())[:3], 1):
-                message += f"{i}. *{details['title']}*\n"
+                message += f"{i}. *{details['title'][:50]}...*\n" if len(details['title']) > 50 else f"{i}. *{details['title']}*\n"
                 message += f"   💰 {details['price']} | 📅 {details['auction_date']}\n"
-                message += f"   📍 {details['location']} | 📏 {details['size']}\n"
-                
-                # Calculate potential savings
-                try:
-                    price_str = details['price'].replace('RM', '').replace(',', '')
-                    price = float(re.findall(r'[\d.]+', price_str)[0])
-                    if price < 1000:
-                        price *= 1000
-                    
-                    size_str = details['size'].replace('sq.ft', '').replace(',', '')
-                    size_sqft = float(re.findall(r'[\d.]+', size_str)[0]) if re.findall(r'[\d.]+', size_str) else 1000
-                    
-                    auction_psf = price / size_sqft
-                    market_psf = 1280
-                    savings_percentage = ((market_psf - auction_psf) / market_psf) * 100
-                    
-                    if savings_percentage > 0:
-                        message += f"   📊 Potential Savings: {savings_percentage:.0f}% below market\n"
-                    else:
-                        message += f"   📊 Premium property\n"
-                except:
-                    message += f"   📊 Significant discount expected\n"
-                
-                message += "\n"
+                message += f"   📍 {details.get('location', 'Location TBD')[:40]}...\n" if len(details.get('location', '')) > 40 else f"   📍 {details.get('location', 'Location TBD')}\n"
+                message += f"   📏 {details.get('size', 'Size TBD')}\n\n"
             
             if len(new_listings) > 3:
                 message += f"   ...and {len(new_listings) - 3} more new listings!\n\n"
@@ -383,28 +418,12 @@ class EnhancedPropertyMonitor:
                 prop = data['property']
                 changes = data['changes']
                 
-                message += f"{i}. *{prop['title']}*\n"
+                title = prop['title'][:40] + "..." if len(prop['title']) > 40 else prop['title']
+                message += f"{i}. *{title}*\n"
+                
                 for change in changes:
                     if change['type'] == 'price_change':
                         message += f"   💰 Price: {change['old_value']} → {change['new_value']}\n"
-                        
-                        # Calculate price change percentage
-                        try:
-                            old_price = float(re.findall(r'[\d.]+', change['old_value'].replace('RM', '').replace(',', ''))[0])
-                            new_price = float(re.findall(r'[\d.]+', change['new_value'].replace('RM', '').replace(',', ''))[0])
-                            if old_price < 1000:
-                                old_price *= 1000
-                            if new_price < 1000:
-                                new_price *= 1000
-                            
-                            change_pct = ((new_price - old_price) / old_price) * 100
-                            if change_pct > 0:
-                                message += f"   📈 Increased by {change_pct:.1f}%\n"
-                            else:
-                                message += f"   📉 Decreased by {abs(change_pct):.1f}%\n"
-                        except:
-                            pass
-                            
                     elif change['type'] == 'auction_date_change':
                         message += f"   📅 Date: {change['old_value']} → {change['new_value']}\n"
                 
@@ -431,49 +450,57 @@ class EnhancedPropertyMonitor:
                 min_price = min(prices)
                 max_price = max(prices)
                 
-                message += f"💡 *Market Insights:*\n"
+                message += f"💡 *Market Insights (Analyzed Sample):*\n"
                 message += f"• Average Price: RM{avg_price:,.0f}\n"
                 message += f"• Price Range: RM{min_price:,.0f} - RM{max_price:,.0f}\n"
-                message += f"• Potential Savings: 50-74% below market\n\n"
+                message += f"• Total Market Size: {total_on_site:,} listings\n"
+                message += f"• Analysis Coverage: {(len(current_properties)/total_on_site)*100:.1f}%\n\n"
         
         # System status
         message += f"⚙️ *System Status:*\n"
         message += f"• Monitoring: ✅ Active (Daily)\n"
         message += f"• Next Scan: {tomorrow.strftime('%d %b %Y, 9:00 AM')}\n"
         message += f"• Coverage: KL + Selangor\n"
-        message += f"• Data Storage: {'✅ Persistent' if self.use_persistent_storage else '⚠️ Temporary'}\n\n"
+        message += f"• Data Source: Real Lelong Scraping\n"
+        message += f"• Storage: {'✅ Persistent' if self.use_persistent_storage else '⚠️ Temporary'}\n\n"
         
         # Footer
-        message += f"🔔 *Automated Daily Monitoring*\n"
-        message += f"📱 GitHub Actions • 9 AM Malaysia Time\n"
+        message += f"🔔 *Real-Time Lelong Monitoring*\n"
+        message += f"📱 GitHub Actions • Daily at 9 AM\n"
+        message += f"🌐 Tracking {total_on_site:,} live auction listings"
         
         if not has_alerts:
-            message += f"✨ No changes today - market is stable!"
+            message += f"\n✨ No changes detected - market is stable!"
         
         return message
     
     def run_monitoring(self):
-        """Main monitoring function with enhanced daily summary"""
-        print(f"🚀 Starting enhanced daily property monitoring at {datetime.now()}")
+        """Main monitoring function with real Lelong scraping"""
+        print(f"🚀 Starting real Lelong property monitoring at {datetime.now()}")
         
         try:
             # Load existing database
             database = self.load_properties_database()
             print(f"📊 Loaded database with {len(database)} existing properties")
             
-            # Scrape current listings
-            current_properties = self.scrape_lelong_properties()
+            # Scrape current listings from real Lelong
+            current_properties, total_on_site = self.scrape_lelong_properties()
             
             if not current_properties:
-                print("⚠️ No properties found")
-                # Send notification about no properties found
+                print("⚠️ No properties extracted from scraping")
+                # Send notification about scraping issue
                 error_message = f"⚠️ *Daily Property Scan* ⚠️\n\n"
-                error_message += f"No properties found in today's scan.\n"
-                error_message += f"Total tracked: {len(database)}\n\n"
+                error_message += f"Could not extract property data from Lelong.\n"
+                error_message += f"Total listings on site: {total_on_site:,}\n"
+                error_message += f"Extracted: 0\n\n"
+                error_message += f"This might indicate:\n"
+                error_message += f"• Website structure changes\n"
+                error_message += f"• Anti-scraping measures\n"
+                error_message += f"• Network issues\n\n"
                 error_message += f"Will retry tomorrow at 9 AM."
                 
                 self.send_telegram_notification(error_message)
-                return "No properties found"
+                return "No properties extracted"
             
             # Detect new listings and changes
             new_listings, changed_properties = self.detect_changes(current_properties, database)
@@ -481,54 +508,46 @@ class EnhancedPropertyMonitor:
             # Save updated database (if possible)
             self.save_properties_database(database)
             
-            # Save daily stats
-            daily_stats = {
-                'date': datetime.now().isoformat(),
-                'total_listings': len(current_properties),
-                'total_tracked': len(database),
-                'new_listings': len(new_listings),
-                'changed_properties': len(changed_properties)
-            }
-            self.save_daily_stats(daily_stats)
-            
-            # Always send enhanced daily summary
-            summary_message = self.format_enhanced_daily_summary(
-                current_properties, new_listings, changed_properties, len(database)
+            # Always send real daily summary
+            summary_message = self.format_real_daily_summary(
+                current_properties, new_listings, changed_properties, len(database), total_on_site
             )
             
             if self.send_telegram_notification(summary_message):
-                print("✅ Enhanced daily summary notification sent")
+                print("✅ Real daily summary notification sent")
                 notifications_sent = True
             else:
                 print("❌ Failed to send daily summary notification")
                 notifications_sent = False
                 # Print the message for debugging
-                print("Enhanced daily summary would be:")
+                print("Real daily summary would be:")
                 print(summary_message.replace('*', '').replace('_', ''))
             
             # Summary
-            print(f"\n{'='*70}")
-            print(f"📊 ENHANCED DAILY MONITORING SUMMARY")
-            print(f"{'='*70}")
-            print(f"📊 Total listings available: {len(current_properties)}")
+            print(f"\n{'='*80}")
+            print(f"📊 REAL LELONG MONITORING SUMMARY")
+            print(f"{'='*80}")
+            print(f"🌐 Total listings on Lelong: {total_on_site:,}")
+            print(f"📊 Properties analyzed: {len(current_properties)}")
             print(f"📈 Total properties tracked: {len(database)}")
             print(f"🆕 New listings found: {len(new_listings)}")
             print(f"🔄 Properties with changes: {len(changed_properties)}")
             print(f"📱 Daily summary sent: {'✅' if notifications_sent else '❌'}")
             print(f"📅 Next scan: Tomorrow at 9 AM Malaysia time")
             print(f"💾 Data persistence: {'✅' if self.use_persistent_storage else '⚠️ Temporary'}")
-            print(f"{'='*70}")
+            print(f"🎯 Analysis coverage: {(len(current_properties)/total_on_site)*100:.1f}% of total listings")
+            print(f"{'='*80}")
             
-            return f"Enhanced monitoring complete: {len(current_properties)} total, {len(new_listings)} new, {len(changed_properties)} changed"
+            return f"Real monitoring complete: {total_on_site:,} total on site, {len(current_properties)} analyzed, {len(new_listings)} new, {len(changed_properties)} changed"
             
         except Exception as e:
-            error_msg = f"❌ Error in monitoring: {e}"
+            error_msg = f"❌ Error in real monitoring: {e}"
             print(error_msg)
             
             # Send error notification
             if self.telegram_bot_token and self.telegram_chat_id:
-                error_notification = f"🚨 *Property Monitor Error* 🚨\n\n"
-                error_notification += f"Enhanced daily scan failed:\n"
+                error_notification = f"🚨 *Real Property Monitor Error* 🚨\n\n"
+                error_notification += f"Real Lelong scraping failed:\n"
                 error_notification += f"```\n{str(e)}\n```\n\n"
                 error_notification += f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                 error_notification += f"Will retry tomorrow at 9 AM."
@@ -538,5 +557,5 @@ class EnhancedPropertyMonitor:
             raise e
 
 if __name__ == "__main__":
-    monitor = EnhancedPropertyMonitor()
+    monitor = RealPropertyMonitor()
     report = monitor.run_monitoring()
