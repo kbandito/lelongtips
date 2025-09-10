@@ -2,8 +2,8 @@ name: Property Monitor
 
 on:
   schedule:
-    # Runs daily at 9 AM Malaysia time (1 AM UTC)
-    - cron: '0 1 * * *'
+    # Runs daily at 3 PM Malaysia time (7 AM UTC)
+    - cron: '0 7 * * *'
   
   # Allow manual triggering
   workflow_dispatch:
