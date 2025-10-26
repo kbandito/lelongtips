@@ -1,5 +1,5 @@
 {
-  "start_time": "2025-10-25T13:06:23.260930",
+  "start_time": "2025-10-26T13:07:25.509881",
   "total_pages": 140,
   "total_results": 1674,
   "pages_completed": 126,
@@ -8,10 +8,10 @@
   "invalid_skipped": 0,
   "errors": [],
   "current_page": 126,
-  "last_update": "2025-10-25T13:14:19.305047",
+  "last_update": "2025-10-26T13:14:50.197654",
   "stopped_early": true,
   "stop_reason": "Coverage too high",
-  "end_time": "2025-10-25T13:14:19.305059",
+  "end_time": "2025-10-26T13:14:50.197666",
   "total_properties_extracted": 2526,
   "success_rate": 90.0,
   "coverage_percentage": 150.89605734767025
