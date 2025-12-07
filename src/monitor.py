@@ -325,16 +325,37 @@ class FixedFullScrapingPropertyMonitor:
         try:
             property_data = {}
             
-            # Try to get real listing name and URL from the first property link
+            # HEADER / FULL ADDRESS from <h3>
+            full_header = None
+            try:
+                h3 = container.find('h3', class_='fw-bold mb-1')
+                if h3:
+                    full_header = h3.get_text(separator=' ', strip=True)
+                    # Remove "Login to view" noise and "Unit No." prefix
+                    full_header = re.sub(r'\s*Login to view\s*', '', full_header, flags=re.IGNORECASE)
+                    full_header = re.sub(r'^\s*Unit No\.\s*,?\s*', '', full_header, flags=re.IGNORECASE)
+                    full_header = full_header.strip(' ,')
+                    if full_header:
+                        property_data['header'] = full_header
+            except Exception:
+                pass
+            
+            # Try to get real listing URL / name from link
             listing_url = None
             listing_title = None
             try:
-                link = container.find('a', href=re.compile(r'/property/', re.IGNORECASE))
-                if link and link.get('href'):
-                    # Prefer title attribute if available
-                    listing_title = (link.get('title') or link.get_text(strip=True) or None)
+                # Prefer property details links; fall back to /login if that's all there is
+                link = container.find('a', href=True)
+                if link:
                     raw_href = link['href']
                     listing_url = urllib.parse.urljoin(self.base_url, raw_href)
+                    # Use title attribute or link text, but NOT "Login to view"
+                    title_attr = link.get('title')
+                    link_text = link.get_text(strip=True)
+                    if title_attr and title_attr.lower() != 'login to view':
+                        listing_title = title_attr
+                    elif link_text and link_text.lower() not in ('login to view', 'unit no.'):
+                        listing_title = link_text
             except Exception:
                 pass
             
@@ -365,28 +386,34 @@ class FixedFullScrapingPropertyMonitor:
             else:
                 property_data['size'] = 'Size not specified'
             
-            # Title (prefer HTML anchor title/text, fallback regex, then synthetic)
+            # Title (prefer listing_title, then pattern, then explicit "X Storey Shop Office", then fallback)
             title = None
             if listing_title:
                 title = listing_title
             else:
-                title_patterns = [
-                    r'([A-Z][a-zA-Z\s&]+(?:Office|Tower|Plaza|Centre|Center|Complex|Building|Mall|Square))',
-                    r'([A-Z][a-zA-Z\s&]+(?:Apartment|Condominium|Residence|Suites|Condo))',
-                    r'([A-Z][a-zA-Z\s&]+(?:Shop|Retail|Commercial|Store))',
-                    r'([A-Z][a-zA-Z\s&]+(?:Factory|Warehouse|Industrial|Plant))',
-                    r'([A-Z][a-zA-Z\s&,]+(?:Land|Plot|Lot))',
-                    r'(Taman\s+[A-Z][a-zA-Z\s&]+)',
-                    r'(Bandar\s+[A-Z][a-zA-Z\s&]+)',
-                    r'(Menara\s+[A-Z][a-zA-Z\s&]+)',
-                ]
-                for pattern in title_patterns:
-                    title_match = re.search(pattern, container_text)
-                    if title_match:
-                        candidate_title = title_match.group(1).strip()
-                        if 5 <= len(candidate_title) <= 100 and not re.match(r'^\d+$', candidate_title):
-                            title = candidate_title
-                            break
+                # Explicit pattern for "3 Storey Shop Office" etc.
+                m_storey = re.search(r'\d+\s+Storey\s+Shop\s+Office', container_text, flags=re.IGNORECASE)
+                if m_storey:
+                    title = m_storey.group(0).strip().title()
+                else:
+                    title_patterns = [
+                        r'([A-Z][a-zA-Z\s&]+(?:Office|Tower|Plaza|Centre|Center|Complex|Building|Mall|Square))',
+                        r'([A-Z][a-zA-Z\s&]+(?:Apartment|Condominium|Residence|Suites|Condo))',
+                        r'([A-Z][a-zA-Z\s&]+(?:Shop|Retail|Commercial|Store))',
+                        r'([A-Z][a-zA-Z\s&]+(?:Factory|Warehouse|Industrial|Plant))',
+                        r'([A-Z][a-zA-Z\s&,]+(?:Land|Plot|Lot))',
+                        r'(Taman\s+[A-Z][a-zA-Z\s&]+)',
+                        r'(Bandar\s+[A-Z][a-zA-Z\s&]+)',
+                        r'(Menara\s+[A-Z][a-zA-Z\s&]+)',
+                    ]
+                    for pattern in title_patterns:
+                        title_match = re.search(pattern, container_text)
+                        if title_match:
+                            candidate_title = title_match.group(1).strip()
+                            if 5 <= len(candidate_title) <= 100 and not re.match(r'^\d+$', candidate_title):
+                                title = candidate_title
+                                break
+            
             if not title:
                 title = f"Property Listing P{page_num}-{index}"
             property_data['title'] = title
@@ -732,17 +759,21 @@ class FixedFullScrapingPropertyMonitor:
                 message += f"• {self.tg_escape_html(prop_type)}: {count}\n"
             message += "\n"
         
-        # New listings (full details)
+        # New listings (up to 25)
         if new_listings:
             message += f"🆕 <b>NEW LISTINGS TODAY ({len(new_listings)}):</b>\n"
-            for i, (prop_id, details) in enumerate(list(new_listings.items())[:5], 1):
+            for i, (prop_id, details) in enumerate(list(new_listings.items())[:25], 1):
+                header = details.get('header') or details.get('location') or details.get('title', 'Untitled')
+                header_html = self.tg_escape_html(header)
                 title_html = self.tg_escape_html(details.get('title', 'Untitled'))
+                ptype_html = self.tg_escape_html(details.get('property_type', '-'))
                 price_html = self.tg_escape_html(details.get('price', '-'))
                 loc_html = self.tg_escape_html(details.get('location', 'Location TBD'))
                 size_html = self.tg_escape_html(details.get('size', 'Size TBD'))
                 date_html = self.tg_escape_html(details.get('auction_date', 'Date TBD'))
                 
-                message += f"{i}. <b>{title_html}</b>\n"
+                message += f"{i}. <b>{header_html}</b>\n"
+                message += f"   🏷 {title_html} ({ptype_html})\n"
                 message += f"   💰 {price_html}\n"
                 message += f"   📍 {loc_html}\n"
                 message += f"   📏 {size_html}\n"
@@ -755,18 +786,23 @@ class FixedFullScrapingPropertyMonitor:
                 
                 message += "\n"
             
-            if len(new_listings) > 5:
-                message += f"   ...and {len(new_listings) - 5} more new listings!\n\n"
+            if len(new_listings) > 25:
+                message += f"   ...and {len(new_listings) - 25} more new listings!\n\n"
         
-        # Changed properties (with strikethrough old → new)
+        # Changed properties (up to 25, with strikethrough)
         if changed_properties:
             message += f"🔄 <b>PROPERTY CHANGES TODAY ({len(changed_properties)}):</b>\n"
-            for i, (prop_id, data) in enumerate(list(changed_properties.items())[:3], 1):
+            for i, (prop_id, data) in enumerate(list(changed_properties.items())[:25], 1):
                 prop = data['property']
                 changes = data['changes']
                 
+                header = prop.get('header') or prop.get('location') or prop.get('title', 'Untitled')
+                header_html = self.tg_escape_html(header)
                 title_html = self.tg_escape_html(prop.get('title', 'Untitled'))
-                message += f"{i}. <b>{title_html}</b>\n"
+                ptype_html = self.tg_escape_html(prop.get('property_type', '-'))
+                
+                message += f"{i}. <b>{header_html}</b>\n"
+                message += f"   🏷 {title_html} ({ptype_html})\n"
                 
                 for change in changes:
                     old_html = self.tg_escape_html(change['old_value'])
@@ -784,8 +820,8 @@ class FixedFullScrapingPropertyMonitor:
                 
                 message += "\n"
             
-            if len(changed_properties) > 3:
-                message += f"   ...and {len(changed_properties) - 3} more changes!\n\n"
+            if len(changed_properties) > 25:
+                message += f"   ...and {len(changed_properties) - 25} more changes!\n\n"
         
         # Market insights
         if current_properties:
