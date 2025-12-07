@@ -121,9 +121,14 @@ class FixedFullScrapingPropertyMonitor:
             print(f"⚠️ Could not save scraping progress: {e}")
             return False
     
-    def create_property_hash(self, price, auction_date, location, size):
-        """Create a hash for duplicate detection"""
-        content = f"{price}_{auction_date}_{location}_{size}".lower()
+    def create_property_hash(self, title, price, auction_date, location, size):
+        """
+        Create a hash for duplicate detection.
+
+        Include the title so that different units with the same price/date/location/size
+        are not falsely treated as duplicates.
+        """
+        content = f"{title}_{price}_{auction_date}_{location}_{size}".lower()
         return hashlib.md5(content.encode()).hexdigest()
     
     def create_property_id(self, title, location, price, auction_date):
@@ -286,7 +291,7 @@ class FixedFullScrapingPropertyMonitor:
                         container = container.parent
                         container_attempts += 1
                         
-                except Exception as e:
+                except Exception:
                     continue
             
             print(f"📄 Page {page_num}: Found {len(potential_properties)} potential property containers")
@@ -294,11 +299,17 @@ class FixedFullScrapingPropertyMonitor:
             # Process each potential property
             for i, prop_info in enumerate(potential_properties):
                 try:
-                    property_data = self.extract_and_validate_property(prop_info['container_text'], page_num, i)
+                    property_data = self.extract_and_validate_property(
+                        prop_info['container'],
+                        prop_info['container_text'],
+                        page_num,
+                        i
+                    )
                     
                     if property_data:
                         # Check for duplicates using hash
                         prop_hash = self.create_property_hash(
+                            property_data['title'],
                             property_data['price'],
                             property_data['auction_date'],
                             property_data['location'],
@@ -319,18 +330,36 @@ class FixedFullScrapingPropertyMonitor:
                     page_invalid += 1
                     continue
             
-            print(f"✅ Page {page_num}: Extracted {len(properties)} valid properties (skipped {page_duplicates} duplicates, {page_invalid} invalid)")
+            print(
+                f"✅ Page {page_num}: Extracted {len(properties)} valid properties "
+                f"(skipped {page_duplicates} duplicates, {page_invalid} invalid)"
+            )
             return properties
             
         except Exception as e:
             print(f"❌ Error processing page {page_num}: {e}")
             return []
     
-    def extract_and_validate_property(self, container_text, page_num, index):
-        """Extract and validate property data from container text"""
+    def extract_and_validate_property(self, container, container_text, page_num, index):
+        """Extract and validate property data from container node + text"""
         try:
             property_data = {}
             
+            # Try to get the real listing name and URL from the first property link
+            listing_url = None
+            listing_title = None
+
+            try:
+                # Adjust regex if Lelong uses a different path for property details
+                link = container.find('a', href=re.compile(r'/property/', re.IGNORECASE))
+                if link and link.get('href'):
+                    listing_title = link.get_text(strip=True) or None
+                    raw_href = link['href']
+                    # Build absolute URL safely
+                    listing_url = urllib.parse.urljoin(self.base_url, raw_href)
+            except Exception:
+                pass
+
             # Extract and validate price
             price_match = re.search(r'RM([\d,]+)', container_text)
             if not price_match:
@@ -363,30 +392,38 @@ class FixedFullScrapingPropertyMonitor:
             else:
                 property_data['size'] = 'Size not specified'
             
-            # Extract title with better patterns
-            title_patterns = [
-                r'([A-Z][a-zA-Z\s&]+(?:Office|Tower|Plaza|Centre|Center|Complex|Building|Mall|Square))',
-                r'([A-Z][a-zA-Z\s&]+(?:Apartment|Condominium|Residence|Suites|Condo))',
-                r'([A-Z][a-zA-Z\s&]+(?:Shop|Retail|Commercial|Store))',
-                r'([A-Z][a-zA-Z\s&]+(?:Factory|Warehouse|Industrial|Plant))',
-                r'([A-Z][a-zA-Z\s&,]+(?:Land|Plot|Lot))',
-                r'(Taman\s+[A-Z][a-zA-Z\s&]+)',
-                r'(Bandar\s+[A-Z][a-zA-Z\s&]+)',
-                r'(Menara\s+[A-Z][a-zA-Z\s&]+)',
-            ]
-            
-            title = f"Property Listing P{page_num}-{index}"
-            for pattern in title_patterns:
-                title_match = re.search(pattern, container_text)
-                if title_match:
-                    candidate_title = title_match.group(1).strip()
-                    # Validate title length and content
-                    if 5 <= len(candidate_title) <= 100 and not re.match(r'^\d+$', candidate_title):
-                        title = candidate_title
-                        break
-            
+            # Title priority:
+            # 1) Anchor text from the property link (exact listing name on website)
+            # 2) Regex-based patterns as fallback
+            title = None
+
+            if listing_title:
+                title = listing_title
+            else:
+                title_patterns = [
+                    r'([A-Z][a-zA-Z\s&]+(?:Office|Tower|Plaza|Centre|Center|Complex|Building|Mall|Square))',
+                    r'([A-Z][a-zA-Z\s&]+(?:Apartment|Condominium|Residence|Suites|Condo))',
+                    r'([A-Z][a-zA-Z\s&]+(?:Shop|Retail|Commercial|Store))',
+                    r'([A-Z][a-zA-Z\s&]+(?:Factory|Warehouse|Industrial|Plant))',
+                    r'([A-Z][a-zA-Z\s&,]+(?:Land|Plot|Lot))',
+                    r'(Taman\s+[A-Z][a-zA-Z\s&]+)',
+                    r'(Bandar\s+[A-Z][a-zA-Z\s&]+)',
+                    r'(Menara\s+[A-Z][a-zA-Z\s&]+)',
+                ]
+
+                for pattern in title_patterns:
+                    title_match = re.search(pattern, container_text)
+                    if title_match:
+                        candidate_title = title_match.group(1).strip()
+                        if 5 <= len(candidate_title) <= 100 and not re.match(r'^\d+$', candidate_title):
+                            title = candidate_title
+                            break
+
+            if not title:
+                title = f"Property Listing P{page_num}-{index}"
+
             property_data['title'] = title
-            
+
             # Extract location with better patterns
             location_patterns = [
                 r'(Kuala Lumpur[^,\n.]*)',
@@ -446,6 +483,12 @@ class FixedFullScrapingPropertyMonitor:
                 property_data['discount'] = discount_match.group(1)
             
             # Add metadata
+            # Listing URL (detail page) if available; fallback to search page URL
+            if listing_url:
+                property_data['listing_url'] = listing_url
+            else:
+                property_data['listing_url'] = f"{self.base_url}?page={page_num}"
+
             property_data['url'] = f"{self.base_url}?page={page_num}"
             property_data['page_number'] = page_num
             property_data['last_updated'] = datetime.now().isoformat()
@@ -453,7 +496,7 @@ class FixedFullScrapingPropertyMonitor:
             
             return property_data
             
-        except Exception as e:
+        except Exception:
             return None
     
     def scrape_all_pages(self, total_pages, total_results):
@@ -503,6 +546,12 @@ class FixedFullScrapingPropertyMonitor:
                     prop_data['total_results_on_site'] = total_results
                     all_properties[property_id] = prop_data
                 
+                # DEBUG: per-page and running total
+                print(
+                    f"🐞 DEBUG: After page {page_num}, total unique properties = {len(all_properties)} "
+                    f"(site shows {total_results})"
+                )
+                
                 # Update progress
                 scraping_stats['pages_completed'] = page_num
                 scraping_stats['properties_extracted'] = len(all_properties)
@@ -513,7 +562,7 @@ class FixedFullScrapingPropertyMonitor:
                 # Save progress periodically
                 if page_num % 10 == 0:
                     self.save_scraping_progress(scraping_stats)
-                    coverage = (len(all_properties) / total_results) * 100
+                    coverage = (len(all_properties) / total_results) * 100 if total_results else 0
                     print(f"📊 Progress: {page_num}/{total_pages} pages, {len(all_properties)} properties extracted ({coverage:.1f}% coverage)")
                 
                 # Check for early termination (GitHub Actions time limit)
@@ -525,7 +574,7 @@ class FixedFullScrapingPropertyMonitor:
                     break
                 
                 # Check if we're getting reasonable coverage
-                if page_num > 20:
+                if page_num > 20 and total_results:
                     current_coverage = (len(all_properties) / total_results) * 100
                     if current_coverage > 150:  # If coverage is still too high, stop
                         print(f"⚠️ Coverage too high ({current_coverage:.1f}%), stopping to prevent over-extraction")
@@ -550,10 +599,16 @@ class FixedFullScrapingPropertyMonitor:
         # Final stats
         scraping_stats['end_time'] = datetime.now().isoformat()
         scraping_stats['total_properties_extracted'] = len(all_properties)
-        scraping_stats['success_rate'] = (scraping_stats['pages_completed'] / total_pages) * 100
-        scraping_stats['coverage_percentage'] = (len(all_properties) / total_results) * 100
+        scraping_stats['success_rate'] = (scraping_stats['pages_completed'] / total_pages) * 100 if total_pages else 0
+        scraping_stats['coverage_percentage'] = (len(all_properties) / total_results) * 100 if total_results else 0
         
         self.save_scraping_progress(scraping_stats)
+
+        # DEBUG: final extraction vs expected
+        print(
+            f"🐞 DEBUG SUMMARY: Site total={total_results}, extracted_unique={len(all_properties)}, "
+            f"coverage={scraping_stats['coverage_percentage']:.1f}%"
+        )
         
         print(f"\n{'='*80}")
         print(f"📊 FIXED FULL SCRAPING COMPLETED")
@@ -735,6 +790,12 @@ class FixedFullScrapingPropertyMonitor:
                 
                 if 'discount' in details:
                     message += f"   📊 Discount: {details['discount']}\n"
+
+                # Add listing link
+                raw_url = details.get('listing_url') or details.get('url')
+                if raw_url:
+                    safe_url = raw_url.replace(')', '%29').replace('(', '%28')
+                    message += f"   🔗 [View Listing]({safe_url})\n"
                 
                 message += "\n"
             
@@ -774,6 +835,12 @@ class FixedFullScrapingPropertyMonitor:
                             
                     elif change['type'] == 'auction_date_change':
                         message += f"   📅 Date: {change['old_value']} → {change['new_value']}\n"
+
+                # Add listing link
+                raw_url = prop.get('listing_url') or prop.get('url')
+                if raw_url:
+                    safe_url = raw_url.replace(')', '%29').replace('(', '%28')
+                    message += f"   🔗 [View Listing]({safe_url})\n"
                 
                 message += "\n"
             
@@ -892,7 +959,11 @@ class FixedFullScrapingPropertyMonitor:
             print(f"✨ System status: Fixed full scraping operational")
             print(f"{'='*80}")
             
-            return f"Fixed full scraping complete: {total_results:,} total on site, {len(current_properties)} extracted (REAL), {len(new_listings)} new, {len(changed_properties)} changed, {coverage:.1f}% coverage"
+            return (
+                f"Fixed full scraping complete: {total_results:,} total on site, "
+                f"{len(current_properties)} extracted (REAL), {len(new_listings)} new, "
+                f"{len(changed_properties)} changed, {coverage:.1f}% coverage"
+            )
             
         except Exception as e:
             error_msg = f"❌ Error in fixed full scraping monitoring: {e}"
@@ -913,3 +984,4 @@ class FixedFullScrapingPropertyMonitor:
 if __name__ == "__main__":
     monitor = FixedFullScrapingPropertyMonitor()
     report = monitor.run_monitoring()
+    print(report)
