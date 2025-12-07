@@ -657,6 +657,7 @@ class FixedFullScrapingPropertyMonitor:
                     f"duplicates_skipped={scraping_stats['duplicates_skipped']}"
                 )
 
+                # Periodic progress save
                 if page_num % 10 == 0:
                     self.save_scraping_progress(scraping_stats)
                     coverage = (
@@ -670,6 +671,7 @@ class FixedFullScrapingPropertyMonitor:
                         f"({coverage:.1f}% coverage)"
                     )
 
+                # Time limit guard (e.g. GitHub Actions 20 min)
                 elapsed_time = (
                     datetime.now()
                     - datetime.fromisoformat(scraping_stats["start_time"])
@@ -680,16 +682,6 @@ class FixedFullScrapingPropertyMonitor:
                     scraping_stats["stop_reason"] = "Time limit"
                     break
 
-                if page_num > 20 and total_results:
-                    current_coverage = (len(all_properties) / total_results) * 100
-                    if current_coverage > 150:
-                        print(
-                            f"⚠️ Coverage too high ({current_coverage:.1f}%), "
-                            f"stopping to prevent over-extraction"
-                        )
-                        scraping_stats["stopped_early"] = True
-                        scraping_stats["stop_reason"] = "Coverage too high"
-                        break
             except Exception as e:
                 error_msg = f"Page {page_num}: {str(e)}"
                 scraping_stats["errors"].append(error_msg)
