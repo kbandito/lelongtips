@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fixed Full Scraping Property Monitor - Option A
-Eliminates over-extraction and duplicates to get real 1,660 properties
+Eliminates over-extraction and duplicates to get real properties
 Improved property identification and validation
 """
 
@@ -47,6 +47,7 @@ class FixedFullScrapingPropertyMonitor:
 
         # Base search URL (without page parameter)
         self.base_url = "https://www.lelongtips.com.my/search"
+        self.root_url = "https://www.lelongtips.com.my"
         self.search_params = {
             "keyword": "",
             "property_type[]": ["7", "6", "8", "4", "5"],
@@ -86,7 +87,7 @@ class FixedFullScrapingPropertyMonitor:
         self.min_price = 50000  # Minimum valid price RM50,000
         self.max_price = 500000000  # Maximum valid price RM500M
 
-        # Duplicate detection
+        # Duplicate detection (within a run)
         self.seen_property_hashes = set()
 
         # Notification settings
@@ -106,6 +107,35 @@ class FixedFullScrapingPropertyMonitor:
     def tg_escape_html(self, text):
         """Escape text for Telegram HTML parse_mode."""
         return html.escape(str(text), quote=True)
+
+    def normalize_text(self, s):
+        if not s:
+            return ""
+        s = s.strip().lower()
+        s = re.sub(r"\s+", " ", s)
+        return s
+
+    def normalize_size(self, s):
+        if not s:
+            return ""
+        s = s.lower()
+        # extract digits
+        digits = re.findall(r"\d+", s)
+        num = "".join(digits) if digits else ""
+        # keep unit rough
+        unit = "sqft" if "sq.ft" in s or "sqft" in s else ""
+        return f"{num}{unit}"
+
+    def generate_stable_key(self, prop):
+        """
+        Generate a stable identity key for a property:
+        title + location + size (normalized).
+        This should not change when price/auction date change.
+        """
+        title = self.normalize_text(prop.get("title", ""))
+        location = self.normalize_text(prop.get("location", ""))
+        size = self.normalize_size(prop.get("size", ""))
+        return f"{title}|{location}|{size}"
 
     # ---------- DB ----------
     def load_properties_database(self):
@@ -141,26 +171,30 @@ class FixedFullScrapingPropertyMonitor:
 
     def create_property_hash(self, title, price, auction_date, location, size):
         """
-        Create a hash for duplicate detection.
+        Create a hash for duplicate detection (within a run).
 
-        IMPORTANT: include title so different units with same price/date/location/size
-        are not falsely treated as duplicates.
+        Include price + date so we treat "same identity, different price/date"
+        as distinct entries for coverage checks, but we de-dup by this hash.
         """
         content = f"{title}_{price}_{auction_date}_{location}_{size}".lower()
         return hashlib.md5(content.encode()).hexdigest()
 
-    def create_property_id(self, title, location, price, auction_date):
-        """Create a unique property ID"""
+    def create_property_id(self, title, location, size):
+        """
+        Create a (relatively) stable property ID.
+
+        IMPORTANT: does NOT include price or auction_date, so a price change
+        does not create a "new" property. We rely on title+location+size.
+        """
         clean_title = re.sub(r"[^\w\s]", "", title)
         clean_location = re.sub(r"[^\w\s]", "", location)
-        clean_price = re.sub(r"[^\w\s]", "", price)
-        clean_date = re.sub(r"[^\w\s]", "", auction_date)
+        clean_size = re.sub(r"[^\w\s]", "", size)
 
-        return (
-            f"{clean_title}_{clean_location}_{clean_price}_{clean_date}"
-            .replace(" ", "_")
-            .lower()[:100]
-        )
+        base = f"{clean_title}_{clean_location}_{clean_size}".strip()
+        base = re.sub(r"\s+", "_", base).lower()
+        if not base:
+            base = "property"
+        return base[:100]
 
     # ---------- Validation ----------
     def validate_price(self, price_str):
@@ -364,16 +398,16 @@ class FixedFullScrapingPropertyMonitor:
             header_short = None  # e.g. "Plaza Haji Taib, Kuala Lumpur"
             header_full = None  # e.g. "Plaza Haji Taib, 42, Lorong ..."
 
-            try:
-                # Walk up a few levels in case price is in a sub-block
-                search_nodes = []
-                node = container
-                steps = 0
-                while node is not None and node.name != "html" and steps < 6:
-                    search_nodes.append(node)
-                    node = node.parent
-                    steps += 1
+            # Build list of ancestor nodes that likely represent the card
+            search_nodes = []
+            node = container
+            steps = 0
+            while node is not None and node.name != "html" and steps < 6:
+                search_nodes.append(node)
+                node = node.parent
+                steps += 1
 
+            try:
                 for node in search_nodes:
                     # Short header, e.g. "Plaza Haji Taib, Kuala Lumpur"
                     if not header_short:
@@ -425,7 +459,6 @@ class FixedFullScrapingPropertyMonitor:
                 property_data["header_short"] = header_short
             if header_full:
                 property_data["header_full"] = header_full
-            # Generic header used later
             if header_full:
                 property_data["header"] = header_full
             elif header_short:
@@ -435,28 +468,59 @@ class FixedFullScrapingPropertyMonitor:
             listing_url = None
             listing_title = None
             try:
-                link = None
-                # Prefer /property/ links (like stretched-link)
-                for a in container.find_all("a", href=True):
-                    href = a["href"]
-                    if "/property/" in href:
-                        link = a
-                        break
-                if not link:
-                    link = container.find("a", href=True)
+                # Collect <a> tags from all search_nodes to cover entire card
+                anchors = []
+                for n in search_nodes:
+                    anchors.extend(n.find_all("a", href=True))
 
-                if link:
-                    raw_href = link["href"]
-                    listing_url = urllib.parse.urljoin(self.base_url, raw_href)
-                    title_attr = link.get("title")
-                    link_text = link.get_text(strip=True)
-                    if title_attr and title_attr.lower() != "login to view":
-                        listing_title = title_attr
-                    elif link_text and link_text.lower() not in (
-                        "login to view",
-                        "unit no.",
+                candidates = []
+                for a in anchors:
+                    href = a.get("href", "")
+                    if not href:
+                        continue
+                    # Skip login / javascript / anchors
+                    if "/login" in href or href.startswith("#") or href.lower().startswith(
+                        "javascript:"
                     ):
-                        listing_title = link_text
+                        continue
+
+                    full_url = urllib.parse.urljoin(self.root_url, href)
+
+                    title_attr = a.get("title") or ""
+                    link_text = a.get_text(strip=True) or ""
+                    if title_attr and title_attr.lower() == "login to view":
+                        title_attr = ""
+                    if link_text and link_text.lower() == "login to view":
+                        link_text = ""
+
+                    # Priority:
+                    # 3 - /property/ and class has stretched-link
+                    # 2 - /property/ anywhere
+                    # 1 - other link (fallback)
+                    priority = 1
+                    classes = a.get("class", [])
+                    class_str = " ".join(classes).lower() if classes else ""
+
+                    if "/property/" in href:
+                        priority = 2
+                        if "stretched-link" in class_str:
+                            priority = 3
+
+                    candidates.append(
+                        (priority, full_url, title_attr.strip(), link_text.strip())
+                    )
+
+                if candidates:
+                    # Pick highest priority
+                    candidates.sort(key=lambda x: x[0], reverse=True)
+                    best = candidates[0]
+                    listing_url = best[1]
+                    # Prefer non-empty title_attr; else link_text
+                    if best[2]:
+                        listing_title = best[2]
+                    elif best[3]:
+                        listing_title = best[3]
+
             except Exception:
                 pass
 
@@ -592,6 +656,9 @@ class FixedFullScrapingPropertyMonitor:
             property_data["last_updated"] = now_iso
             property_data["first_seen"] = now_iso
 
+            # Stable key (for DB change detection)
+            property_data["_stable_key"] = self.generate_stable_key(property_data)
+
             return property_data
         except Exception:
             return None
@@ -635,8 +702,7 @@ class FixedFullScrapingPropertyMonitor:
                     property_id = self.create_property_id(
                         prop_data["title"],
                         prop_data["location"],
-                        prop_data["price"],
-                        prop_data["auction_date"],
+                        prop_data["size"],
                     )
                     prop_data["total_results_on_site"] = total_results
                     all_properties[property_id] = prop_data
@@ -731,7 +797,15 @@ class FixedFullScrapingPropertyMonitor:
 
     # ---------- Change detection ----------
     def detect_changes(self, current_properties, database):
-        """Detect new listings and changes in existing properties"""
+        """
+        Detect new listings and changes in existing properties.
+
+        NEW listing:
+          - No existing DB record with same stable key (title+location+size)
+
+        CHANGED listing:
+          - There is a DB record with same stable key, and price/date differ.
+        """
         new_listings = {}
         changed_properties = {}
 
@@ -739,11 +813,39 @@ class FixedFullScrapingPropertyMonitor:
             f"🔍 Analyzing {len(current_properties)} current vs {len(database)} stored properties"
         )
 
-        for prop_id, current_data in current_properties.items():
-            if prop_id not in database:
-                # New property
-                new_listings[prop_id] = current_data
-                database[prop_id] = {
+        # Pre-build a mapping from stable_key -> existing_id for quick lookup
+        stable_index = {}
+        for existing_id, existing_data in database.items():
+            sk = existing_data.get("_stable_key")
+            if not sk:
+                sk = self.generate_stable_key(existing_data)
+                existing_data["_stable_key"] = sk
+            if sk and sk not in stable_index:
+                stable_index[sk] = existing_id
+
+        for current_id, current_data in current_properties.items():
+            # Ensure current stable key exists
+            sk = current_data.get("_stable_key")
+            if not sk:
+                sk = self.generate_stable_key(current_data)
+                current_data["_stable_key"] = sk
+
+            existing_id = None
+            existing_data = None
+
+            # 1) Direct match by key
+            if current_id in database:
+                existing_id = current_id
+                existing_data = database[current_id]
+            # 2) Match by stable key
+            elif sk in stable_index:
+                existing_id = stable_index[sk]
+                existing_data = database[existing_id]
+
+            if existing_id is None:
+                # Truly new listing
+                new_listings[current_id] = current_data
+                database[current_id] = {
                     **current_data,
                     "price_history": [
                         {
@@ -758,9 +860,14 @@ class FixedFullScrapingPropertyMonitor:
                         }
                     ],
                 }
+                database[current_id]["_stable_key"] = sk
+                stable_index[sk] = current_id
             else:
-                existing_data = database[prop_id]
+                # Existing property - check for changes
                 changes = []
+                # Make sure existing_data has stable key
+                if "_stable_key" not in existing_data:
+                    existing_data["_stable_key"] = sk
 
                 # Price change
                 if current_data["price"] != existing_data["price"]:
@@ -819,14 +926,14 @@ class FixedFullScrapingPropertyMonitor:
                     )
 
                 if changes:
-                    # Prefer existing "nice" title if current one is generic
+                    # Merge data so we keep nice original titles if any
                     prop_snapshot = {**existing_data, **current_data}
                     if existing_data.get("title") and str(
                         current_data.get("title", "")
                     ).startswith("Property Listing P"):
                         prop_snapshot["title"] = existing_data["title"]
 
-                    changed_properties[prop_id] = {
+                    changed_properties[existing_id] = {
                         "property": prop_snapshot,
                         "changes": changes,
                         "history": {
@@ -837,10 +944,12 @@ class FixedFullScrapingPropertyMonitor:
                         },
                     }
 
-                database[prop_id].update(current_data)
-                database[prop_id]["first_seen"] = existing_data.get(
+                # Update DB with latest snapshot
+                database[existing_id].update(current_data)
+                database[existing_id]["first_seen"] = existing_data.get(
                     "first_seen", current_data["last_updated"]
                 )
+                database[existing_id]["_stable_key"] = sk
 
         print(
             f"📊 Analysis complete: {len(new_listings)} new, {len(changed_properties)} changed"
