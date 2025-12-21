@@ -1,5 +1,5 @@
 {
-  "start_time": "2025-12-20T13:08:53.393912",
+  "start_time": "2025-12-21T13:09:53.877790",
   "total_pages": 145,
   "total_results": 1730,
   "pages_completed": 145,
@@ -8,8 +8,8 @@
   "invalid_skipped": 0,
   "errors": [],
   "current_page": 145,
-  "last_update": "2025-12-20T13:18:07.786686",
-  "end_time": "2025-12-20T13:18:07.786695",
+  "last_update": "2025-12-21T13:19:05.311223",
+  "end_time": "2025-12-21T13:19:05.311232",
   "total_properties_extracted": 2001,
   "success_rate": 100.0,
   "coverage_percentage": 115.66473988439306
