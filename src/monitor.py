@@ -169,6 +169,66 @@ class FixedFullScrapingPropertyMonitor:
             print(f"⚠️ Could not save scraping progress: {e}")
             return False
 
+    def save_changes_history(self, new_listings, changed_properties):
+        """Save changes history for tracking over time"""
+        try:
+            existing = []
+            if self.changes_history.exists():
+                with open(self.changes_history, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+                    if not isinstance(existing, list):
+                        existing = []
+
+            entry = {
+                "scan_date": datetime.now().isoformat(),
+                "new_listings_count": len(new_listings),
+                "changed_properties_count": len(changed_properties),
+                "new_listing_ids": list(new_listings.keys()),
+                "changes": [],
+            }
+
+            for prop_id, data in changed_properties.items():
+                for change in data.get("changes", []):
+                    entry["changes"].append(
+                        {
+                            "property_id": prop_id,
+                            "title": data["property"].get("title", "Unknown"),
+                            "type": change["type"],
+                            "field": change["field"],
+                            "old_value": change["old_value"],
+                            "new_value": change["new_value"],
+                            "change_date": change["change_date"],
+                        }
+                    )
+
+            existing.append(entry)
+
+            with open(self.changes_history, "w", encoding="utf-8") as f:
+                json.dump(existing, f, indent=2, ensure_ascii=False)
+            print(f"💾 Changes history saved: {len(entry['changes'])} changes recorded")
+            return True
+        except Exception as e:
+            print(f"⚠️ Could not save changes history: {e}")
+            return False
+
+    def save_daily_stats(self, current_properties, new_listings, changed_properties, total_tracked):
+        """Save scan statistics"""
+        try:
+            stats = {
+                "date": datetime.now().isoformat(),
+                "total_listings": len(current_properties),
+                "total_tracked": total_tracked,
+                "new_listings": len(new_listings),
+                "changed_properties": len(changed_properties),
+            }
+            with open(self.daily_stats, "w", encoding="utf-8") as f:
+                json.dump(stats, f, indent=2)
+            print(f"💾 Scan stats saved")
+            return True
+        except Exception as e:
+            print(f"⚠️ Could not save scan stats: {e}")
+            return False
+
     def create_property_hash(self, title, price, auction_date, location, size):
         """
         Create a hash for duplicate detection (within a run).
@@ -1015,16 +1075,16 @@ class FixedFullScrapingPropertyMonitor:
     ):
         """Format daily summary with fixed scraping results (HTML for Telegram)"""
         now = datetime.now()
-        tomorrow = now + timedelta(days=1)
+        next_scan = now + timedelta(days=3)
 
         has_alerts = len(new_listings) > 0 or len(changed_properties) > 0
 
         if has_alerts:
-            message = "🚨 <b>PROPERTY ALERTS &amp; DAILY SUMMARY</b> 🚨\n\n"
+            message = "🚨 <b>PROPERTY ALERTS &amp; SCAN SUMMARY</b> 🚨\n\n"
         else:
-            message = "📊 <b>DAILY PROPERTY SUMMARY</b> 📊\n\n"
+            message = "📊 <b>PROPERTY SCAN SUMMARY</b> 📊\n\n"
 
-        message += "📅 <b>Daily Scan Report</b>\n"
+        message += "📅 <b>Scan Report (Every 3 Days)</b>\n"
         message += f"Date: {self.tg_escape_html(now.strftime('%d %b %Y, %I:%M %p'))}\n\n"
 
         # Key statistics
@@ -1034,7 +1094,7 @@ class FixedFullScrapingPropertyMonitor:
             f"• <b>Properties Analyzed</b>: {len(current_properties)} (REAL DATA)\n"
         )
         message += f"• <b>Total Properties Tracked</b>: {total_tracked}\n"
-        message += f"• <b>New Listings Today</b>: {len(new_listings)}\n"
+        message += f"• <b>New Listings</b>: {len(new_listings)}\n"
         message += f"• <b>Properties with Changes</b>: {len(changed_properties)}\n\n"
 
         coverage = scraping_stats.get("coverage_percentage", 0)
@@ -1064,7 +1124,7 @@ class FixedFullScrapingPropertyMonitor:
         # New listings (up to 25)
         if new_listings:
             message += (
-                f"🆕 <b>NEW LISTINGS TODAY ({len(new_listings)}):</b>\n"
+                f"🆕 <b>NEW LISTINGS ({len(new_listings)}):</b>\n"
             )
             for i, (prop_id, details) in enumerate(
                 list(new_listings.items())[:25], 1
@@ -1126,7 +1186,7 @@ class FixedFullScrapingPropertyMonitor:
         # Changed properties (up to 25, with strikethrough)
         if changed_properties:
             message += (
-                f"🔄 <b>PROPERTY CHANGES TODAY ({len(changed_properties)}):</b>\n"
+                f"🔄 <b>PROPERTY CHANGES ({len(changed_properties)}):</b>\n"
             )
             for i, (prop_id, data) in enumerate(
                 list(changed_properties.items())[:25], 1
@@ -1217,13 +1277,13 @@ class FixedFullScrapingPropertyMonitor:
 
         # System status
         message += "⚙️ <b>System Status:</b>\n"
-        message += "• Monitoring: ✅ Active (Daily)\n"
+        message += "• Monitoring: ✅ Active (Every 3 Days)\n"
         message += "• Fixed Full Scraping: ✅ Complete\n"
         message += f"• Real Data: ✅ {len(current_properties):,} properties\n"
         message += "• Duplicate Filtering: ✅ Active\n"
         message += f"• Price Validation: ✅ RM{self.min_price:,}+ only\n"
         message += (
-            f"• Next Scan: {self.tg_escape_html(tomorrow.strftime('%d %b %Y, 9:00 AM'))}\n"
+            f"• Next Scan: {self.tg_escape_html(next_scan.strftime('%d %b %Y, 9:00 PM'))}\n"
         )
         message += "• Coverage: KL + Selangor\n"
         message += (
@@ -1231,7 +1291,7 @@ class FixedFullScrapingPropertyMonitor:
         )
 
         message += "🔔 <b>Fixed Full Scraping Real-Time Monitoring</b>\n"
-        message += "📱 GitHub Actions • Daily at 9 AM\n"
+        message += "📱 GitHub Actions • Every 3 Days at 9 PM\n"
         message += (
             f"🌐 Analyzing {len(current_properties):,} of {total_on_site:,} live listings\n"
         )
@@ -1264,7 +1324,7 @@ class FixedFullScrapingPropertyMonitor:
                     "⚠️ <b>Fixed Scraping Failed</b> ⚠️\n\n"
                     f"Could not extract properties from {total_pages} pages.\n"
                     f"Total listings on site: {total_results:,}\n"
-                    "Will retry tomorrow at 9 AM."
+                    "Will retry in 3 days."
                 )
                 self.send_telegram_notification(error_message)
                 return "Fixed scraping failed"
@@ -1273,6 +1333,10 @@ class FixedFullScrapingPropertyMonitor:
                 current_properties, database
             )
             self.save_properties_database(database)
+            self.save_changes_history(new_listings, changed_properties)
+            self.save_daily_stats(
+                current_properties, new_listings, changed_properties, len(database)
+            )
 
             summary_message = self.format_fixed_daily_summary(
                 current_properties,
@@ -1284,12 +1348,12 @@ class FixedFullScrapingPropertyMonitor:
             )
 
             if self.send_telegram_notification(summary_message):
-                print("✅ Fixed full scraping daily summary notification sent")
+                print("✅ Fixed full scraping summary notification sent")
                 notifications_sent = True
             else:
-                print("❌ Failed to send daily summary notification")
+                print("❌ Failed to send summary notification")
                 notifications_sent = False
-                print("Fixed full scraping daily summary would be:")
+                print("Fixed full scraping summary would be:")
                 print(summary_message)
 
             coverage = scraping_stats.get("coverage_percentage", 0)
@@ -1314,8 +1378,8 @@ class FixedFullScrapingPropertyMonitor:
             print(
                 f"🔄 Duplicates filtered: {scraping_stats.get('duplicates_skipped', 0)}"
             )
-            print(f"📱 Daily summary sent: {'✅' if notifications_sent else '❌'}")
-            print("📅 Next scan: Tomorrow at 9 AM Malaysia time")
+            print(f"📱 Scan summary sent: {'✅' if notifications_sent else '❌'}")
+            print("📅 Next scan: In 3 days at 9 PM Malaysia time")
             print(
                 f"💾 Data persistence: {'✅' if self.use_persistent_storage else '⚠️ Temporary'}"
             )
@@ -1340,7 +1404,7 @@ class FixedFullScrapingPropertyMonitor:
                     "Fixed full scraping failed:\n"
                     f"<pre>{err_html}</pre>\n\n"
                     f"Time: {self.tg_escape_html(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}\n"
-                    "Will retry tomorrow at 9 AM."
+                    "Will retry in 3 days."
                 )
                 self.send_telegram_notification(error_notification)
 
