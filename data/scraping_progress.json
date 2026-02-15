@@ -1,5 +1,5 @@
 {
-  "start_time": "2026-02-14T13:16:47.645517",
+  "start_time": "2026-02-15T13:17:22.700209",
   "total_pages": 126,
   "total_results": 1503,
   "pages_completed": 126,
@@ -8,8 +8,8 @@
   "invalid_skipped": 0,
   "errors": [],
   "current_page": 126,
-  "last_update": "2026-02-14T13:24:26.548118",
-  "end_time": "2026-02-14T13:24:26.548134",
+  "last_update": "2026-02-15T13:24:57.471235",
+  "end_time": "2026-02-15T13:24:57.471251",
   "total_properties_extracted": 968,
   "success_rate": 100.0,
   "coverage_percentage": 64.40452428476381
