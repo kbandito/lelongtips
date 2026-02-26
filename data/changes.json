@@ -1,1 +1,1824 @@
-[]
+[
+  {
+    "scan_date": "2026-02-26T07:32:40.172046",
+    "new_listings_count": 94,
+    "changed_properties_count": 100,
+    "new_listing_ids": [
+      "shop_lot_selangor_3810_sqft",
+      "shop_lot_selangor_1496_sqft",
+      "shop_lot_selangor_11087_sqft",
+      "shop_lot_selangor_1378_sqft",
+      "shop_lot_selangor_4235_sqft",
+      "office_unit_selangor_8924_sqft",
+      "office_unit_kuala_lumpur_bandaraya_mrt_station__400_sqft",
+      "2_storey_semi_detached_house_kuala_lumpur_667_sqft",
+      "2_storey_semi_detached_house_selangor_750_sqft",
+      "25_storey_semi_detached_house_selangor_2499_sqft",
+      "25_storey_semi_detached_house_selangor_436_sqft",
+      "25_storey_semi_detached_house_selangor_1733_sqft",
+      "25_storey_semi_detached_house_selangor_3735_sqft",
+      "25_storey_semi_detached_house_selangor_1500_sqft",
+      "4_storey_detached_house_kuala_lumpur_5180_sqft",
+      "vacant_land_kuala_lumpur_3286_sqft",
+      "3_storey_semi_detached_house_kuala_lumpur_764_sqft",
+      "3_storey_semi_detached_house_selangor_2940_sqft",
+      "2_storey_detached_house_selangor_548_sqft",
+      "shop_unit_selangor_3600_sqft",
+      "shop_unit_kuala_lumpur_8600_sqft",
+      "vacant_detached_house_lot_selangor_3197_sqft",
+      "vacant_detached_house_lot_selangor_1_1216_sqft",
+      "vacant_detached_house_lot_selangor_3714_sqft",
+      "vacant_detached_house_lot_selangor_4494_sqft",
+      "vacant_detached_house_lot_selangor_1650_sqft",
+      "vacant_detached_house_lot_selangor_2625_sqft",
+      "vacant_detached_house_lot_selangor_1300_sqft",
+      "vacant_detached_house_lot_selangor_1435_sqft",
+      "2_storey_semi_detached_house_selangor_592_sqft",
+      "2_storey_semi_detached_house_selangor_1860_sqft",
+      "shop_lot_selangor_293736_sqft",
+      "commercial_unit_selangor_2400_sqft",
+      "commercial_unit_selangor_15253_sqft",
+      "commercial_unit_selangor_3197_sqft",
+      "commercial_unit_selangor_4316_sqft",
+      "commercial_unit_selangor_625_sqft",
+      "commercial_unit_selangor_4671_sqft",
+      "commercial_unit_selangor_3498_sqft",
+      "commercial_unit_selangor_689_sqft",
+      "commercial_unit_selangor_6900_sqft",
+      "commercial_unit_selangor_2583_sqft",
+      "office_lot_selangor_3150_sqft",
+      "office_lot_selangor_1560_sqft",
+      "office_lot_selangor_1140_sqft",
+      "office_lot_selangor_7039_sqft",
+      "office_lot_selangor_756_sqft",
+      "office_lot_selangor_534_sqft",
+      "office_lot_selangor_471_sqft",
+      "office_lot_kuala_lumpur_4162_sqft",
+      "office_unit_selangor_6781_sqft",
+      "office_unit_selangor_2798_sqft",
+      "office_unit_selangor_883_sqft",
+      "strategic_location_in_pj_2_units_of_stratified_retail_lot_ideal_for_retail_studio_showroom_training_",
+      "1_storey_semi_detached_house_selangor_4686_sqft",
+      "1_storey_semi_detached_house_kuala_lumpur_12077_sqft",
+      "1_storey_semi_detached_house_selangor_8859_sqft",
+      "1_storey_semi_detached_house_selangor_4532_sqft",
+      "1_storey_semi_detached_house_selangor_1528_sqft",
+      "2_storey_semi_detached_house_selangor_4532_sqft",
+      "3_storey_shop_office_selangor_1528_sqft",
+      "retail_lot_selangor_377_sqft",
+      "retail_lot_selangor_728_sqft",
+      "2_storey_detached_house_kuala_lumpur_city_centre_trx_precinct_1539_sqft",
+      "2_adjoining_office_lots_kuala_lumpur_710_sqft",
+      "2_adjoining_office_lots_selangor_3364_sqft",
+      "2_adjoining_office_lots_selangor_8256_sqft",
+      "3_storey_semi_detached_house_selangor_30354_sqft",
+      "3_storey_semi_detached_house_selangor_28363_sqft",
+      "2_storey_detached_house_selangor_1970_sqft",
+      "4_storey_shop_office_kuala_lumpur_21872_sqft",
+      "gated_and_guarded_community_residential_land_8_min_to_lotuss_bandar_puteri_bangi_selangor_11323_sqft",
+      "gated_and_guarded_community_residential_land_8_min_to_lotuss_bandar_puteri_bangi_selangor_1650_sqft",
+      "gated_and_guarded_community_residential_land_8_min_to_lotuss_bandar_puteri_bangi_selangor_1600_sqft",
+      "gated_and_guarded_community_residential_land_8_min_to_lotuss_bandar_puteri_bangi_selangor_19989_sqft",
+      "gated_and_guarded_community_residential_land_8_min_to_lotuss_bandar_puteri_bangi_selangor_2293_sqft",
+      "shop_lot_kuala_lumpur_1485_sqft",
+      "shop_lot_selangor_3142_sqft",
+      "shop_lot_selangor_3000_sqft",
+      "shop_lot_selangor_1593_sqft",
+      "semi_detached_house_selangor_15224_sqft",
+      "semi_detached_house_selangor_517_sqft",
+      "semi_detached_house_selangor_1646_sqft",
+      "semi_detached_house_kuala_lumpur_5392_sqft",
+      "semi_detached_house_selangor_4263_sqft",
+      "semi_detached_house_selangor_3039_sqft",
+      "semi_detached_house_selangor_10214_sqft",
+      "semi_detached_house_selangor_12163_sqft",
+      "semi_detached_house_selangor_742_sqft",
+      "shop_unit_selangor_1561_sqft",
+      "shop_unit_kuala_lumpur_560_sqft",
+      "shop_unit_selangor_2970_sqft",
+      "shop_unit_selangor_265_sqft",
+      "shop_unit_selangor_1776_sqft"
+    ],
+    "changes": [
+      {
+        "property_id": "shop_lot_klselangor_rm380000_22_dec_2025_mon",
+        "title": "Shop Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM810,000",
+        "new_value": "RM990,000",
+        "change_date": "2026-02-26T07:32:38.548867"
+      },
+      {
+        "property_id": "shop_lot_klselangor_rm380000_22_dec_2025_mon",
+        "title": "Shop Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Jan 2026 (Tue)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:38.548867"
+      },
+      {
+        "property_id": "shop_lot_selangor_1404_sqft",
+        "title": "Shop Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM561",
+        "new_value": "RM455",
+        "change_date": "2026-02-26T07:24:40.465558"
+      },
+      {
+        "property_id": "shop_lot_selangor_1404_sqft",
+        "title": "Shop Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "28 Jan 2026 (Wed)",
+        "new_value": "26 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:24:40.465558"
+      },
+      {
+        "property_id": "shop_lot_selangor_667_sqft",
+        "title": "Shop Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM312",
+        "new_value": "RM282",
+        "change_date": "2026-02-26T07:24:40.479740"
+      },
+      {
+        "property_id": "shop_lot_selangor_667_sqft",
+        "title": "Shop Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Jan 2026 (Tue)",
+        "new_value": "10 Mar 2026 (Tue)",
+        "change_date": "2026-02-26T07:24:40.479740"
+      },
+      {
+        "property_id": "shop_lot_selangor_4350_sqft",
+        "title": "Shop Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM317",
+        "new_value": "RM285",
+        "change_date": "2026-02-26T07:24:40.507895"
+      },
+      {
+        "property_id": "shop_lot_selangor_4350_sqft",
+        "title": "Shop Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Feb 2026 (Thu)",
+        "new_value": "26 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:24:40.507895"
+      },
+      {
+        "property_id": "shop_lot_selangor_506_sqft",
+        "title": "Shop Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM377",
+        "new_value": "RM340",
+        "change_date": "2026-02-26T07:24:40.535998"
+      },
+      {
+        "property_id": "shop_lot_selangor_506_sqft",
+        "title": "Shop Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "28 Jan 2026 (Wed)",
+        "new_value": "4 Mar 2026 (Wed)",
+        "change_date": "2026-02-26T07:24:40.535998"
+      },
+      {
+        "property_id": "shop_lot_selangor_436_sqft",
+        "title": "Shop Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM351",
+        "new_value": "RM317",
+        "change_date": "2026-02-26T07:24:40.550293"
+      },
+      {
+        "property_id": "shop_lot_selangor_436_sqft",
+        "title": "Shop Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Jan 2026 (Tue)",
+        "new_value": "10 Mar 2026 (Tue)",
+        "change_date": "2026-02-26T07:24:40.550293"
+      },
+      {
+        "property_id": "office_unit_klselangor_rm115474_13_jan_2026_tue",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,300,000",
+        "new_value": "RM490,000",
+        "change_date": "2026-02-26T07:32:31.042316"
+      },
+      {
+        "property_id": "office_unit_klselangor_rm115474_13_jan_2026_tue",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Feb 2026 (Thu)",
+        "new_value": "20 Feb 2026 (Fri)",
+        "change_date": "2026-02-26T07:32:31.042316"
+      },
+      {
+        "property_id": "25_storey_bungalow_house_with_an_elegant_private_swimming_pool_klselangor_rm3454370_6_jan_2026_tue",
+        "title": "2.5 Storey Bungalow House with an Elegant Private Swimming Pool",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "6 Jan 2026 (Tue)",
+        "new_value": "31 Mar 2026 (Tue)",
+        "change_date": "2026-02-26T07:24:40.571650"
+      },
+      {
+        "property_id": "25_storey_bungalow_house_with_an_elegant_private_swimming_pool_selangor_rm3454370_6_jan_2026_tue",
+        "title": "2.5 Storey Bungalow House with an Elegant Private Swimming Pool",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "6 Jan 2026 (Tue)",
+        "new_value": "31 Mar 2026 (Tue)",
+        "change_date": "2026-02-26T07:24:40.574567"
+      },
+      {
+        "property_id": "shop_unit_klselangor_rm4450000_17_dec_2025_wed",
+        "title": "Shop Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM380,000",
+        "new_value": "RM990,000",
+        "change_date": "2026-02-26T07:32:38.526316"
+      },
+      {
+        "property_id": "shop_unit_klselangor_rm4450000_17_dec_2025_wed",
+        "title": "Shop Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "11 Feb 2026 (Wed)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:38.526316"
+      },
+      {
+        "property_id": "2_storey_detached_house_selangor_4083_sqft",
+        "title": "2 Storey Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM241",
+        "new_value": "RM217",
+        "change_date": "2026-02-26T07:24:44.455870"
+      },
+      {
+        "property_id": "2_storey_detached_house_selangor_4083_sqft",
+        "title": "2 Storey Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "20 Aug 2025 (Wed)",
+        "new_value": "11 Mar 2026 (Wed)",
+        "change_date": "2026-02-26T07:24:44.455870"
+      },
+      {
+        "property_id": "2_storey_cluster_semi_detached_house_klselangor_rm585000_17_dec_2025_wed",
+        "title": "2 Storey Cluster Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM393,660",
+        "new_value": "RM567,000",
+        "change_date": "2026-02-26T07:27:13.734077"
+      },
+      {
+        "property_id": "2_storey_cluster_semi_detached_house_klselangor_rm585000_17_dec_2025_wed",
+        "title": "2 Storey Cluster Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "9 Feb 2026 (Mon)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:27:13.734077"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_rm692550_22_oct_2025_wed",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM321",
+        "new_value": "RM623,300",
+        "change_date": "2026-02-26T07:24:44.500679"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_rm692550_22_oct_2025_wed",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "18 Mar 2026 (Wed)",
+        "new_value": "16 Mar 2026 (Mon)",
+        "change_date": "2026-02-26T07:24:44.500679"
+      },
+      {
+        "property_id": "office_lot_klselangor_rm243000_17_dec_2025_wed",
+        "title": "Office Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM378,000",
+        "new_value": "RM1,377,000",
+        "change_date": "2026-02-26T07:32:38.540702"
+      },
+      {
+        "property_id": "office_lot_klselangor_rm243000_17_dec_2025_wed",
+        "title": "Office Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "10 Feb 2026 (Tue)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:38.540702"
+      },
+      {
+        "property_id": "office_unit_selangor_2088_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM241",
+        "new_value": "RM217",
+        "change_date": "2026-02-26T07:24:48.274010"
+      },
+      {
+        "property_id": "office_unit_selangor_2088_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "23 Feb 2026 (Mon)",
+        "new_value": "16 Mar 2026 (Mon)",
+        "change_date": "2026-02-26T07:24:48.274010"
+      },
+      {
+        "property_id": "office_unit_selangor_689_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM247",
+        "new_value": "RM222",
+        "change_date": "2026-02-26T07:24:48.287922"
+      },
+      {
+        "property_id": "office_unit_selangor_689_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "28 Jan 2026 (Wed)",
+        "new_value": "3 Mar 2026 (Tue)",
+        "change_date": "2026-02-26T07:24:48.287922"
+      },
+      {
+        "property_id": "office_unit_selangor_2253_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM324",
+        "new_value": "RM291",
+        "change_date": "2026-02-26T07:24:48.315933"
+      },
+      {
+        "property_id": "office_unit_selangor_2253_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "17 Nov 2025 (Mon)",
+        "new_value": "31 Mar 2026 (Tue)",
+        "change_date": "2026-02-26T07:24:48.315933"
+      },
+      {
+        "property_id": "office_unit_selangor_3122_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM259",
+        "new_value": "RM234",
+        "change_date": "2026-02-26T07:24:48.329896"
+      },
+      {
+        "property_id": "office_unit_selangor_3122_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Nov 2025 (Wed)",
+        "new_value": "1 Apr 2026 (Wed)",
+        "change_date": "2026-02-26T07:24:48.329896"
+      },
+      {
+        "property_id": "office_unit_selangor_3218_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM312",
+        "new_value": "RM365",
+        "change_date": "2026-02-26T07:24:48.372094"
+      },
+      {
+        "property_id": "office_unit_selangor_3218_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "24 Feb 2026 (Tue)",
+        "new_value": "4 Mar 2026 (Wed)",
+        "change_date": "2026-02-26T07:24:48.372094"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_rm810000_5_nov_2025_wed",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM810,000",
+        "new_value": "RM729,000",
+        "change_date": "2026-02-26T07:24:48.431608"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_rm810000_5_nov_2025_wed",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Nov 2025 (Wed)",
+        "new_value": "1 Apr 2026 (Wed)",
+        "change_date": "2026-02-26T07:24:48.431608"
+      },
+      {
+        "property_id": "sofo_klselangor_rm440000_25_jun_2025_wed",
+        "title": "SOFO",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,701,000",
+        "new_value": "RM180,000",
+        "change_date": "2026-02-26T07:26:16.436861"
+      },
+      {
+        "property_id": "sofo_klselangor_rm440000_25_jun_2025_wed",
+        "title": "SOFO",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "4 Mar 2026 (Wed)",
+        "new_value": "6 Mar 2026 (Fri)",
+        "change_date": "2026-02-26T07:26:16.436861"
+      },
+      {
+        "property_id": "sofo_kuala_lumpur_936_sqft",
+        "title": "SOFO",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM769",
+        "new_value": "RM346",
+        "change_date": "2026-02-26T07:24:52.167835"
+      },
+      {
+        "property_id": "sofo_kuala_lumpur_936_sqft",
+        "title": "SOFO",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "25 Aug 2025 (Mon)",
+        "new_value": "9 Mar 2026 (Mon)",
+        "change_date": "2026-02-26T07:24:52.167835"
+      },
+      {
+        "property_id": "1_storey_semi_detached_house_klselangor_rm393660_10_dec_2025_wed",
+        "title": "1 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM480,000",
+        "new_value": "RM450,000",
+        "change_date": "2026-02-26T07:32:23.554556"
+      },
+      {
+        "property_id": "1_storey_semi_detached_house_klselangor_rm393660_10_dec_2025_wed",
+        "title": "1 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Jan 2026 (Tue)",
+        "new_value": "12 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:32:23.554556"
+      },
+      {
+        "property_id": "stratified_office_unit_klselangor_rm332100_15_dec_2025_mon",
+        "title": "Stratified Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM936,000",
+        "new_value": "RM324,000",
+        "change_date": "2026-02-26T07:24:52.213635"
+      },
+      {
+        "property_id": "stratified_office_unit_klselangor_rm332100_15_dec_2025_mon",
+        "title": "Stratified Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "25 Feb 2026 (Wed)",
+        "new_value": "9 Mar 2026 (Mon)",
+        "change_date": "2026-02-26T07:24:52.213635"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_2684_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM361",
+        "new_value": "RM325",
+        "change_date": "2026-02-26T07:24:59.705103"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_2684_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "14 Oct 2025 (Tue)",
+        "new_value": "11 Mar 2026 (Wed)",
+        "change_date": "2026-02-26T07:24:59.705103"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_kuala_lumpur_430_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM698",
+        "new_value": "RM628",
+        "change_date": "2026-02-26T07:24:59.718578"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_kuala_lumpur_430_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Feb 2026 (Thu)",
+        "new_value": "26 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:24:59.718578"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_kuala_lumpur_1163_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM585",
+        "new_value": "RM526",
+        "change_date": "2026-02-26T07:24:59.745587"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_kuala_lumpur_1163_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "13 Nov 2025 (Thu)",
+        "new_value": "2 Apr 2026 (Thu)",
+        "change_date": "2026-02-26T07:24:59.745587"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_2240_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM348",
+        "new_value": "RM321",
+        "change_date": "2026-02-26T07:24:59.786188"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_2240_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "28 Jul 2025 (Mon)",
+        "new_value": "18 Mar 2026 (Wed)",
+        "change_date": "2026-02-26T07:24:59.786188"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_321574_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Oct 2025 (Mon)",
+        "new_value": "5 Mar 2026 (Thu)",
+        "change_date": "2026-02-26T07:24:59.799694"
+      },
+      {
+        "property_id": "strategic_location_high_visibility_shop_office_vibrant_location_ensuring_a_steady_flow_of_potential_",
+        "title": "[Strategic location; High Visibility] Shop Office [Vibrant location ensuring a steady flow of potential customers]",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "25 Feb 2026 (Wed)",
+        "new_value": "30 Apr 2026 (Thu)",
+        "change_date": "2026-02-26T07:25:30.373587"
+      },
+      {
+        "property_id": "vacant_land_klselangor_rm300000_12_jan_2026_mon",
+        "title": "Vacant Land",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM550,000",
+        "new_value": "RM1,600,000",
+        "change_date": "2026-02-26T07:32:34.874910"
+      },
+      {
+        "property_id": "vacant_land_klselangor_rm300000_12_jan_2026_mon",
+        "title": "Vacant Land",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "24 Feb 2026 (Tue)",
+        "new_value": "12 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:32:34.874910"
+      },
+      {
+        "property_id": "vacant_land_selangor_3286_sqft",
+        "title": "Vacant Land",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM990,000",
+        "new_value": "RM639",
+        "change_date": "2026-02-26T07:25:33.960053"
+      },
+      {
+        "property_id": "vacant_land_selangor_3286_sqft",
+        "title": "Vacant Land",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "26 Feb 2026 (Thu)",
+        "new_value": "20 Apr 2026 (Mon)",
+        "change_date": "2026-02-26T07:25:33.960053"
+      },
+      {
+        "property_id": "vacant_land_selangor_3595_sqft",
+        "title": "Vacant Land",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM135",
+        "new_value": "RM362",
+        "change_date": "2026-02-26T07:25:33.987874"
+      },
+      {
+        "property_id": "vacant_land_selangor_3595_sqft",
+        "title": "Vacant Land",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "16 Feb 2026 (Mon)",
+        "new_value": "26 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:25:33.987874"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_klselangor_rm1350000_8_jan_2026_thu",
+        "title": "3 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM486,000",
+        "new_value": "RM2,250,000",
+        "change_date": "2026-02-26T07:32:38.532537"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_klselangor_rm1350000_8_jan_2026_thu",
+        "title": "3 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "16 Feb 2026 (Mon)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:38.532537"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_selangor_829_sqft",
+        "title": "3 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM374",
+        "new_value": "RM157",
+        "change_date": "2026-02-26T07:25:37.887618"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_selangor_829_sqft",
+        "title": "3 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "14 Nov 2025 (Fri)",
+        "new_value": "11 Mar 2026 (Wed)",
+        "change_date": "2026-02-26T07:25:37.887618"
+      },
+      {
+        "property_id": "semi_detached_house_klselangor_rm5454000_3_feb_2025_mon",
+        "title": "Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM530,000",
+        "new_value": "RM378,000",
+        "change_date": "2026-02-26T07:32:34.841939"
+      },
+      {
+        "property_id": "semi_detached_house_klselangor_rm5454000_3_feb_2025_mon",
+        "title": "Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "4 Feb 2026 (Wed)",
+        "new_value": "10 Feb 2026 (Tue)",
+        "change_date": "2026-02-26T07:32:34.841939"
+      },
+      {
+        "property_id": "shop_office_klselangor_rm2020000_9_dec_2025_tue",
+        "title": "Shop Office",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM2,430,000",
+        "new_value": "RM2,106,000",
+        "change_date": "2026-02-26T07:32:38.543446"
+      },
+      {
+        "property_id": "shop_office_klselangor_rm2020000_9_dec_2025_tue",
+        "title": "Shop Office",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Jan 2026 (Tue)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:38.543446"
+      },
+      {
+        "property_id": "2_storey_detached_house_kuala_lumpur_1668_sqft",
+        "title": "2 Storey Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM388",
+        "new_value": "RM755",
+        "change_date": "2026-02-26T07:25:45.472607"
+      },
+      {
+        "property_id": "2_storey_detached_house_kuala_lumpur_1668_sqft",
+        "title": "2 Storey Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "22 Jan 2026 (Thu)",
+        "new_value": "3 Mar 2026 (Tue)",
+        "change_date": "2026-02-26T07:25:45.472607"
+      },
+      {
+        "property_id": "shop_klselangor_rm765000_8_dec_2025_mon",
+        "title": "Shop",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM440,000",
+        "new_value": "RM315,000",
+        "change_date": "2026-02-26T07:32:19.771210"
+      },
+      {
+        "property_id": "shop_klselangor_rm765000_8_dec_2025_mon",
+        "title": "Shop",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "9 Feb 2026 (Mon)",
+        "new_value": "24 Feb 2026 (Tue)",
+        "change_date": "2026-02-26T07:32:19.771210"
+      },
+      {
+        "property_id": "shop_unit_selangor_1722_sqft",
+        "title": "Shop Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM225",
+        "new_value": "RM214",
+        "change_date": "2026-02-26T07:25:49.382924"
+      },
+      {
+        "property_id": "shop_unit_selangor_1722_sqft",
+        "title": "Shop Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "18 Dec 2025 (Thu)",
+        "new_value": "26 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:25:49.382924"
+      },
+      {
+        "property_id": "shop_unit_selangor_3595_sqft",
+        "title": "Shop Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM135",
+        "new_value": "RM250",
+        "change_date": "2026-02-26T07:25:53.115342"
+      },
+      {
+        "property_id": "shop_unit_selangor_3595_sqft",
+        "title": "Shop Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "16 Feb 2026 (Mon)",
+        "new_value": "12 Mar 2026 (Thu)",
+        "change_date": "2026-02-26T07:25:53.115342"
+      },
+      {
+        "property_id": "shop_unit_selangor_3200_sqft",
+        "title": "Shop Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM253",
+        "new_value": "RM703",
+        "change_date": "2026-02-26T07:32:38.461344"
+      },
+      {
+        "property_id": "shop_unit_selangor_3200_sqft",
+        "title": "Shop Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "29 Jan 2026 (Thu)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:38.461344"
+      },
+      {
+        "property_id": "shop_unit_selangor_5500_sqft",
+        "title": "Shop Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM691",
+        "new_value": "RM382",
+        "change_date": "2026-02-26T07:25:53.142369"
+      },
+      {
+        "property_id": "shop_unit_selangor_5500_sqft",
+        "title": "Shop Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "26 Feb 2026 (Thu)",
+        "new_value": "16 Mar 2026 (Mon)",
+        "change_date": "2026-02-26T07:25:53.142369"
+      },
+      {
+        "property_id": "vacant_detached_house_lot_klselangor_rm1930500_27_aug_2025_wed",
+        "title": "Vacant Detached House Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,738,000",
+        "new_value": "RM625,000",
+        "change_date": "2026-02-26T07:25:57.114767"
+      },
+      {
+        "property_id": "vacant_detached_house_lot_klselangor_rm1930500_27_aug_2025_wed",
+        "title": "Vacant Detached House Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Mar 2026 (Thu)",
+        "new_value": "27 Feb 2026 (Fri)",
+        "change_date": "2026-02-26T07:25:57.114767"
+      },
+      {
+        "property_id": "2_storey_service_twin_villa_klselangor_rm375000_11_jun_2025_wed",
+        "title": "2 Storey Service Twin Villa",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM495,000",
+        "new_value": "RM480,000",
+        "change_date": "2026-02-26T07:25:57.140392"
+      },
+      {
+        "property_id": "2_storey_service_twin_villa_klselangor_rm375000_11_jun_2025_wed",
+        "title": "2 Storey Service Twin Villa",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Feb 2026 (Thu)",
+        "new_value": "4 Mar 2026 (Wed)",
+        "change_date": "2026-02-26T07:25:57.140392"
+      },
+      {
+        "property_id": "residential_land_klselangor_rm1329000_21_jan_2026_wed",
+        "title": "Residential Land",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,336,500",
+        "new_value": "RM1,193,373",
+        "change_date": "2026-02-26T07:26:04.995498"
+      },
+      {
+        "property_id": "residential_land_klselangor_rm1329000_21_jan_2026_wed",
+        "title": "Residential Land",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "19 Jan 2026 (Mon)",
+        "new_value": "17 Mar 2026 (Tue)",
+        "change_date": "2026-02-26T07:26:04.995498"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_4671_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM451",
+        "new_value": "RM257",
+        "change_date": "2026-02-26T07:26:04.905230"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_4671_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Mar 2026 (Thu)",
+        "new_value": "26 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:04.905230"
+      },
+      {
+        "property_id": "office_suites_klselangor_size_not_specified",
+        "title": "Office Suites",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM880,000",
+        "new_value": "RM270,000",
+        "change_date": "2026-02-26T07:26:04.984761"
+      },
+      {
+        "property_id": "office_suites_klselangor_size_not_specified",
+        "title": "Office Suites",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "31 Mar 2026 (Tue)",
+        "new_value": "10 Mar 2026 (Tue)",
+        "change_date": "2026-02-26T07:26:04.984761"
+      },
+      {
+        "property_id": "commercial_unit_klselangor_size_not_specified",
+        "title": "Commercial Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM300,000",
+        "new_value": "RM470,000",
+        "change_date": "2026-02-26T07:26:12.623770"
+      },
+      {
+        "property_id": "commercial_unit_klselangor_size_not_specified",
+        "title": "Commercial Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "26 Feb 2026 (Thu)",
+        "new_value": "21 May 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:12.623770"
+      },
+      {
+        "property_id": "3_storey_bungalow_house_klselangor_rm1677000_3_sep_2025_wed",
+        "title": "3 Storey Bungalow House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM2,106,000",
+        "new_value": "RM1,968,300",
+        "change_date": "2026-02-26T07:27:02.148399"
+      },
+      {
+        "property_id": "3_storey_bungalow_house_klselangor_rm1677000_3_sep_2025_wed",
+        "title": "3 Storey Bungalow House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Mar 2026 (Thu)",
+        "new_value": "5 Jan 2026 (Mon)",
+        "change_date": "2026-02-26T07:27:02.148399"
+      },
+      {
+        "property_id": "vacant_land_selangor_420_sqft",
+        "title": "Vacant Land",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM476",
+        "new_value": "RM429",
+        "change_date": "2026-02-26T07:26:16.394605"
+      },
+      {
+        "property_id": "vacant_land_selangor_420_sqft",
+        "title": "Vacant Land",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Feb 2026 (Thu)",
+        "new_value": "6 Mar 2026 (Fri)",
+        "change_date": "2026-02-26T07:26:16.394605"
+      },
+      {
+        "property_id": "office_lot_selangor_2885_sqft",
+        "title": "Office Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM421",
+        "new_value": "RM430",
+        "change_date": "2026-02-26T07:26:20.052459"
+      },
+      {
+        "property_id": "office_lot_selangor_2885_sqft",
+        "title": "Office Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "9 Dec 2025 (Tue)",
+        "new_value": "6 Mar 2026 (Fri)",
+        "change_date": "2026-02-26T07:26:20.052459"
+      },
+      {
+        "property_id": "office_lot_selangor_3595_sqft",
+        "title": "Office Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM350",
+        "new_value": "RM473",
+        "change_date": "2026-02-26T07:26:20.105768"
+      },
+      {
+        "property_id": "office_lot_selangor_3595_sqft",
+        "title": "Office Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Mar 2026 (Thu)",
+        "new_value": "4 Mar 2026 (Wed)",
+        "change_date": "2026-02-26T07:26:20.105768"
+      },
+      {
+        "property_id": "3_storey_terrace_shop_office_klselangor_rm1458000_6_jan_2026_tue",
+        "title": "3 Storey Terrace Shop Office",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM800,000",
+        "new_value": "RM1,458,000",
+        "change_date": "2026-02-26T07:31:21.523648"
+      },
+      {
+        "property_id": "3_storey_terrace_shop_office_klselangor_rm1458000_6_jan_2026_tue",
+        "title": "3 Storey Terrace Shop Office",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "8 Jan 2026 (Thu)",
+        "new_value": "6 Jan 2026 (Tue)",
+        "change_date": "2026-02-26T07:31:21.523648"
+      },
+      {
+        "property_id": "office_unit_kuala_lumpur_34018_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM463",
+        "new_value": "RM417",
+        "change_date": "2026-02-26T07:26:23.880634"
+      },
+      {
+        "property_id": "office_unit_kuala_lumpur_34018_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Oct 2025 (Mon)",
+        "new_value": "19 Mar 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:23.880634"
+      },
+      {
+        "property_id": "office_unit_kuala_lumpur_603_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM207,000",
+        "new_value": "RM783",
+        "change_date": "2026-02-26T07:26:23.893880"
+      },
+      {
+        "property_id": "office_unit_kuala_lumpur_603_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "22 Jan 2026 (Thu)",
+        "new_value": "19 Mar 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:23.893880"
+      },
+      {
+        "property_id": "office_unit_selangor_2080_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM317",
+        "new_value": "RM303",
+        "change_date": "2026-02-26T07:26:23.907233"
+      },
+      {
+        "property_id": "office_unit_selangor_2080_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "25 Feb 2026 (Wed)",
+        "new_value": "19 Mar 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:23.907233"
+      },
+      {
+        "property_id": "office_unit_selangor_3300_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM276",
+        "new_value": "RM364",
+        "change_date": "2026-02-26T07:26:23.946873"
+      },
+      {
+        "property_id": "office_unit_selangor_3300_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "9 Dec 2025 (Tue)",
+        "new_value": "6 Apr 2026 (Mon)",
+        "change_date": "2026-02-26T07:26:23.946873"
+      },
+      {
+        "property_id": "office_unit_selangor_5005_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM110",
+        "new_value": "RM364",
+        "change_date": "2026-02-26T07:26:23.973244"
+      },
+      {
+        "property_id": "office_unit_selangor_5005_sqft",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "2 Mar 2026 (Mon)",
+        "new_value": "18 Mar 2026 (Wed)",
+        "change_date": "2026-02-26T07:26:23.973244"
+      },
+      {
+        "property_id": "1_storey_semi_detached_house_selangor_3595_sqft",
+        "title": "1 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM362",
+        "new_value": "RM122",
+        "change_date": "2026-02-26T07:26:27.814672"
+      },
+      {
+        "property_id": "1_storey_semi_detached_house_selangor_3595_sqft",
+        "title": "1 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "26 Feb 2026 (Thu)",
+        "new_value": "5 Mar 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:27.814672"
+      },
+      {
+        "property_id": "1_storey_semi_detached_house_selangor_4273_sqft",
+        "title": "1 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM284",
+        "new_value": "RM105",
+        "change_date": "2026-02-26T07:26:27.842248"
+      },
+      {
+        "property_id": "1_storey_semi_detached_house_selangor_4273_sqft",
+        "title": "1 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "10 Jul 2025 (Thu)",
+        "new_value": "26 Mar 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:27.842248"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_selangor_3595_sqft",
+        "title": "3 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM486,000",
+        "new_value": "RM438,000",
+        "change_date": "2026-02-26T07:26:27.939811"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_selangor_3595_sqft",
+        "title": "3 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "16 Feb 2026 (Mon)",
+        "new_value": "5 Mar 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:27.939811"
+      },
+      {
+        "property_id": "1_storey_detached_house_selangor_rm920000_23_dec_2025_tue",
+        "title": "1 Storey Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM920,000",
+        "new_value": "RM820,000",
+        "change_date": "2026-02-26T07:26:27.943369"
+      },
+      {
+        "property_id": "1_storey_detached_house_selangor_rm920000_23_dec_2025_tue",
+        "title": "1 Storey Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "23 Dec 2025 (Tue)",
+        "new_value": "13 Mar 2026 (Fri)",
+        "change_date": "2026-02-26T07:26:27.943369"
+      },
+      {
+        "property_id": "1_storey_detached_house_selangor_rm500000_17_dec_2025_wed",
+        "title": "1 Storey Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "15 Jan 2026 (Thu)",
+        "new_value": "26 Mar 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:27.946981"
+      },
+      {
+        "property_id": "5_min_to_great_eastern_mall_office_suite_9_min_to_suria_klcc_pavilion_kuala_lumpur_avenue_k_klselang",
+        "title": "[5 min to Great Eastern Mall] Office Suite [9 min to Suria KLCC, Pavilion Kuala Lumpur & Avenue K]",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM349,000",
+        "new_value": "RM1,260,000",
+        "change_date": "2026-02-26T07:27:17.514848"
+      },
+      {
+        "property_id": "5_min_to_great_eastern_mall_office_suite_9_min_to_suria_klcc_pavilion_kuala_lumpur_avenue_k_klselang",
+        "title": "[5 min to Great Eastern Mall] Office Suite [9 min to Suria KLCC, Pavilion Kuala Lumpur & Avenue K]",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "30 Jan 2026 (Fri)",
+        "new_value": "16 Feb 2026 (Mon)",
+        "change_date": "2026-02-26T07:27:17.514848"
+      },
+      {
+        "property_id": "retail_kiosk_klselangor_rm66000_25_nov_2025_tue",
+        "title": "Retail Kiosk",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM178,459",
+        "new_value": "RM60,000",
+        "change_date": "2026-02-26T07:26:35.763526"
+      },
+      {
+        "property_id": "2_storey_detached_house_kuala_lumpur_1636_sqft",
+        "title": "2 Storey Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM413",
+        "new_value": "RM296",
+        "change_date": "2026-02-26T07:26:43.121379"
+      },
+      {
+        "property_id": "2_storey_detached_house_kuala_lumpur_1636_sqft",
+        "title": "2 Storey Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "26 Feb 2026 (Thu)",
+        "new_value": "27 Jan 2026 (Tue)",
+        "change_date": "2026-02-26T07:26:43.121379"
+      },
+      {
+        "property_id": "2_storey_detached_house_selangor_301_sqft",
+        "title": "2 Storey Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM166",
+        "new_value": "RM427",
+        "change_date": "2026-02-26T07:26:46.985370"
+      },
+      {
+        "property_id": "2_storey_detached_house_selangor_301_sqft",
+        "title": "2 Storey Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Feb 2026 (Thu)",
+        "new_value": "20 Feb 2026 (Fri)",
+        "change_date": "2026-02-26T07:26:46.985370"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_3078_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM261",
+        "new_value": "RM235",
+        "change_date": "2026-02-26T07:26:50.585681"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_3078_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Jan 2026 (Tue)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:26:50.585681"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_kuala_lumpur_2669_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM260",
+        "new_value": "RM234",
+        "change_date": "2026-02-26T07:26:50.598914"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_kuala_lumpur_2669_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "22 Dec 2025 (Mon)",
+        "new_value": "27 Jan 2026 (Tue)",
+        "change_date": "2026-02-26T07:26:50.598914"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_kuala_lumpur_1335_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM399",
+        "new_value": "RM360",
+        "change_date": "2026-02-26T07:26:50.625454"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_kuala_lumpur_1335_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "22 Dec 2025 (Mon)",
+        "new_value": "27 Jan 2026 (Tue)",
+        "change_date": "2026-02-26T07:26:50.625454"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_1195_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM318",
+        "new_value": "RM286",
+        "change_date": "2026-02-26T07:26:50.638749"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_1195_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "22 Dec 2025 (Mon)",
+        "new_value": "27 Jan 2026 (Tue)",
+        "change_date": "2026-02-26T07:26:50.638749"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_1556_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM301",
+        "new_value": "RM318",
+        "change_date": "2026-02-26T07:26:50.691534"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_1556_sqft",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Feb 2026 (Thu)",
+        "new_value": "5 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:26:50.691534"
+      },
+      {
+        "property_id": "bungalow_land_klselangor_rm1020600_8_dec_2025_mon",
+        "title": "Bungalow Land",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM401,000",
+        "new_value": "RM196,830",
+        "change_date": "2026-02-26T07:26:58.390152"
+      },
+      {
+        "property_id": "bungalow_land_klselangor_rm1020600_8_dec_2025_mon",
+        "title": "Bungalow Land",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Feb 2026 (Thu)",
+        "new_value": "20 Feb 2026 (Fri)",
+        "change_date": "2026-02-26T07:26:58.390152"
+      },
+      {
+        "property_id": "bungalow_land_selangor_1539_sqft",
+        "title": "Bungalow Land",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM213",
+        "new_value": "RM128",
+        "change_date": "2026-02-26T07:26:58.384245"
+      },
+      {
+        "property_id": "bungalow_land_selangor_1539_sqft",
+        "title": "Bungalow Land",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "7 Jan 2026 (Wed)",
+        "new_value": "20 Feb 2026 (Fri)",
+        "change_date": "2026-02-26T07:26:58.384245"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_4359_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM403",
+        "new_value": "RM130",
+        "change_date": "2026-02-26T07:27:13.672910"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_4359_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "29 Jan 2026 (Thu)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:27:13.672910"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_1356_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM188",
+        "new_value": "RM345",
+        "change_date": "2026-02-26T07:27:21.450364"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_1356_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "6 Jan 2026 (Tue)",
+        "new_value": "19 Jan 2026 (Mon)",
+        "change_date": "2026-02-26T07:27:21.450364"
+      },
+      {
+        "property_id": "3_storey_detached_house_with_a_lower_ground_floor_klselangor_rm2100000_26_nov_2025_wed",
+        "title": "3 Storey Detached House with a lower ground floor",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM2,200,000",
+        "new_value": "RM1,890,000",
+        "change_date": "2026-02-26T07:27:25.205402"
+      },
+      {
+        "property_id": "3_storey_detached_house_with_a_lower_ground_floor_klselangor_rm2100000_26_nov_2025_wed",
+        "title": "3 Storey Detached House with a lower ground floor",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "26 Jan 2026 (Mon)",
+        "new_value": "19 Jan 2026 (Mon)",
+        "change_date": "2026-02-26T07:27:25.205402"
+      },
+      {
+        "property_id": "2_adjoining_office_lots_klselangor_size_not_specified",
+        "title": "2 adjoining Office lots",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM612,000",
+        "new_value": "RM2,200,000",
+        "change_date": "2026-02-26T07:27:28.855609"
+      },
+      {
+        "property_id": "2_adjoining_office_lots_klselangor_size_not_specified",
+        "title": "2 adjoining Office lots",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "2 Apr 2026 (Thu)",
+        "new_value": "26 Jan 2026 (Mon)",
+        "change_date": "2026-02-26T07:27:28.855609"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_rm1300000_5_jan_2026_mon",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,300,000",
+        "new_value": "RM366",
+        "change_date": "2026-02-26T07:31:40.665807"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_selangor_rm1300000_5_jan_2026_mon",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Jan 2026 (Mon)",
+        "new_value": "19 Jan 2026 (Mon)",
+        "change_date": "2026-02-26T07:31:40.665807"
+      },
+      {
+        "property_id": "25_storey_detached_house_selangor_3197_sqft",
+        "title": "2.5 Storey Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM473",
+        "new_value": "RM418",
+        "change_date": "2026-02-26T07:31:36.637465"
+      },
+      {
+        "property_id": "25_storey_detached_house_selangor_3197_sqft",
+        "title": "2.5 Storey Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "13 Jan 2026 (Tue)",
+        "new_value": "7 Jan 2026 (Wed)",
+        "change_date": "2026-02-26T07:31:36.637465"
+      },
+      {
+        "property_id": "1_storey_semi_detached_cluster_house_klselangor_rm378000_15_jan_2026_thu",
+        "title": "1 Storey Semi Detached Cluster House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,575,000",
+        "new_value": "RM378,000",
+        "change_date": "2026-02-26T07:31:36.763410"
+      },
+      {
+        "property_id": "1_storey_semi_detached_cluster_house_klselangor_rm378000_15_jan_2026_thu",
+        "title": "1 Storey Semi Detached Cluster House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "13 Jan 2026 (Tue)",
+        "new_value": "15 Jan 2026 (Thu)",
+        "change_date": "2026-02-26T07:31:36.763410"
+      },
+      {
+        "property_id": "2_storey_terrace_factory_klselangor_rm1550000_15_jan_2026_thu",
+        "title": "2 Storey Terrace Factory",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM720,000",
+        "new_value": "RM1,417,500",
+        "change_date": "2026-02-26T07:32:00.882532"
+      },
+      {
+        "property_id": "2_storey_terrace_factory_klselangor_rm1550000_15_jan_2026_thu",
+        "title": "2 Storey Terrace Factory",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "29 Jan 2026 (Thu)",
+        "new_value": "28 Jan 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:00.882532"
+      },
+      {
+        "property_id": "2_storey_detached_house_selangor_3197_sqft",
+        "title": "2 Storey Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM366",
+        "new_value": "RM473",
+        "change_date": "2026-02-26T07:31:48.087605"
+      },
+      {
+        "property_id": "2_storey_detached_house_selangor_3197_sqft",
+        "title": "2 Storey Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "19 Jan 2026 (Mon)",
+        "new_value": "13 Jan 2026 (Tue)",
+        "change_date": "2026-02-26T07:31:48.087605"
+      },
+      {
+        "property_id": "freehold_6_storey_shop_office_with_basement_klselangor_rm3624300_15_jan_2026_thu",
+        "title": "Freehold 6 Storey Shop Office with Basement",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM3,748,500",
+        "new_value": "RM149,850",
+        "change_date": "2026-02-26T07:31:53.200909"
+      },
+      {
+        "property_id": "hotel_suite_klselangor_rm380000_15_apr_2025_tue",
+        "title": "Hotel Suite",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM342,000",
+        "new_value": "RM6,570,000",
+        "change_date": "2026-02-26T07:32:00.855875"
+      },
+      {
+        "property_id": "hotel_suite_klselangor_rm380000_15_apr_2025_tue",
+        "title": "Hotel Suite",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "22 Jan 2026 (Thu)",
+        "new_value": "27 Jan 2026 (Tue)",
+        "change_date": "2026-02-26T07:32:00.855875"
+      },
+      {
+        "property_id": "4_storey_shop_office_selangor_2045_sqft",
+        "title": "4 Storey Shop Office",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM173",
+        "new_value": "RM156",
+        "change_date": "2026-02-26T07:32:04.596396"
+      },
+      {
+        "property_id": "4_storey_shop_office_selangor_2045_sqft",
+        "title": "4 Storey Shop Office",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "18 Sep 2025 (Thu)",
+        "new_value": "5 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:32:04.596396"
+      },
+      {
+        "property_id": "villa_unit_selangor_rm500000_5_nov_2025_wed",
+        "title": "Villa Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM171",
+        "new_value": "RM450,000",
+        "change_date": "2026-02-26T07:32:08.401414"
+      },
+      {
+        "property_id": "villa_unit_klselangor_rm500000_5_nov_2025_wed",
+        "title": "Villa Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM150,000",
+        "new_value": "RM486,000",
+        "change_date": "2026-02-26T07:32:08.407230"
+      },
+      {
+        "property_id": "villa_unit_klselangor_rm500000_5_nov_2025_wed",
+        "title": "Villa Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Feb 2026 (Thu)",
+        "new_value": "7 Jan 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:08.407230"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_selangor_2949_sqft",
+        "title": "3 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM139",
+        "new_value": "RM51",
+        "change_date": "2026-02-26T07:32:12.068281"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_selangor_2949_sqft",
+        "title": "3 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "24 Feb 2026 (Tue)",
+        "new_value": "5 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:32:12.068281"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_2949_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM51",
+        "new_value": "RM139",
+        "change_date": "2026-02-26T07:32:15.794042"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_2949_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Feb 2026 (Thu)",
+        "new_value": "24 Feb 2026 (Tue)",
+        "change_date": "2026-02-26T07:32:15.794042"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_2080_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM317",
+        "new_value": "RM529",
+        "change_date": "2026-02-26T07:32:15.846478"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_2080_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "25 Feb 2026 (Wed)",
+        "new_value": "5 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:32:15.846478"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_size_not_specified",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM90",
+        "new_value": "RM81",
+        "change_date": "2026-02-26T07:32:15.872698"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_size_not_specified",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "11 Feb 2026 (Wed)",
+        "new_value": "25 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:15.872698"
+      },
+      {
+        "property_id": "residential_land_designated_for_detached_house_klselangor_rm657000_19_aug_2025_tue",
+        "title": "Residential Land Designated for Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,707,000",
+        "new_value": "RM592,000",
+        "change_date": "2026-02-26T07:32:15.951460"
+      },
+      {
+        "property_id": "residential_land_designated_for_detached_house_klselangor_rm657000_19_aug_2025_tue",
+        "title": "Residential Land Designated for Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Feb 2026 (Thu)",
+        "new_value": "5 Feb 2026 (Thu)",
+        "change_date": "2026-02-26T07:32:15.951460"
+      },
+      {
+        "property_id": "gated_and_guarded_community_residential_land_8_min_to_lotuss_bandar_puteri_bangi_klselangor_rm562000",
+        "title": "[Gated and Guarded Community] Residential Land [8 min to Lotus's Bandar Puteri Bangi]",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM445,000",
+        "new_value": "RM800,000",
+        "change_date": "2026-02-26T07:32:19.737280"
+      },
+      {
+        "property_id": "gated_and_guarded_community_residential_land_8_min_to_lotuss_bandar_puteri_bangi_klselangor_rm562000",
+        "title": "[Gated and Guarded Community] Residential Land [8 min to Lotus's Bandar Puteri Bangi]",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "29 Jan 2026 (Thu)",
+        "new_value": "11 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:19.737280"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_420_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM486",
+        "new_value": "RM364",
+        "change_date": "2026-02-26T07:32:27.204830"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_selangor_420_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "22 Jan 2026 (Thu)",
+        "new_value": "10 Feb 2026 (Tue)",
+        "change_date": "2026-02-26T07:32:27.204830"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_kuala_lumpur_1906_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM834",
+        "new_value": "RM637",
+        "change_date": "2026-02-26T07:32:27.255117"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_kuala_lumpur_1906_sqft",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Mar 2025 (Thu)",
+        "new_value": "27 Jan 2026 (Tue)",
+        "change_date": "2026-02-26T07:32:27.255117"
+      },
+      {
+        "property_id": "office_unit_selangor_1119_sqft",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM536",
+        "new_value": "RM480,000",
+        "change_date": "2026-02-26T07:32:27.292902"
+      },
+      {
+        "property_id": "shop_lot_kuala_lumpur_689_sqft",
+        "title": "Shop Lot",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM886",
+        "new_value": "RM496",
+        "change_date": "2026-02-26T07:32:30.914409"
+      },
+      {
+        "property_id": "shop_lot_kuala_lumpur_689_sqft",
+        "title": "Shop Lot",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "3 Feb 2026 (Tue)",
+        "new_value": "27 Jan 2026 (Tue)",
+        "change_date": "2026-02-26T07:32:30.914409"
+      },
+      {
+        "property_id": "semi_detached_house_selangor_size_not_specified",
+        "title": "Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM81",
+        "new_value": "RM90",
+        "change_date": "2026-02-26T07:32:34.711812"
+      },
+      {
+        "property_id": "semi_detached_house_selangor_size_not_specified",
+        "title": "Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "25 Feb 2026 (Wed)",
+        "new_value": "11 Feb 2026 (Wed)",
+        "change_date": "2026-02-26T07:32:34.711812"
+      }
+    ]
+  }
+]
