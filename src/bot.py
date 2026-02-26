@@ -33,8 +33,17 @@ class PropertyBot:
         self.stats_file = self.data_path / "daily_stats.json"
         self.progress_file = self.data_path / "scraping_progress.json"
 
+        # GitHub raw URL for fetching latest data (set via env var)
+        self.github_repo = os.getenv(
+            "GITHUB_REPO", "kbandito/lelongtips"
+        )
+        self.github_branch = os.getenv("GITHUB_BRANCH", "main")
+        self.github_token = os.getenv("GITHUB_TOKEN", "")
+
         self.last_update_id = 0
         self.properties = {}
+        self.data_loaded_at = datetime.now()
+        self.auto_refresh_days = 4
         self.load_data()
 
     def esc(self, text):
@@ -42,15 +51,53 @@ class PropertyBot:
         return html.escape(str(text), quote=True)
 
     def load_data(self):
-        """Load all data files."""
+        """Load data from local files, or fetch from GitHub if local files are missing."""
+        loaded = False
         try:
             if self.properties_file.exists():
                 with open(self.properties_file, "r", encoding="utf-8") as f:
                     self.properties = json.load(f)
-            print(f"Loaded {len(self.properties)} properties")
+                loaded = True
         except Exception as e:
-            print(f"Error loading properties: {e}")
-            self.properties = {}
+            print(f"Error loading local properties: {e}")
+
+        if not loaded or len(self.properties) == 0:
+            print("Local data missing, trying GitHub...")
+            self.fetch_from_github()
+
+        self.data_loaded_at = datetime.now()
+        print(f"Loaded {len(self.properties):,} properties")
+
+    def fetch_from_github(self):
+        """Fetch latest data files from GitHub repository."""
+        base = f"https://raw.githubusercontent.com/{self.github_repo}/{self.github_branch}"
+        headers = {}
+        if self.github_token:
+            headers["Authorization"] = f"token {self.github_token}"
+
+        files_to_fetch = {
+            "data/properties.json": self.properties_file,
+            "data/changes.json": self.changes_file,
+            "data/daily_stats.json": self.stats_file,
+            "data/scraping_progress.json": self.progress_file,
+        }
+
+        for remote_path, local_path in files_to_fetch.items():
+            try:
+                resp = requests.get(f"{base}/{remote_path}", headers=headers, timeout=60)
+                if resp.status_code == 200:
+                    local_path.parent.mkdir(parents=True, exist_ok=True)
+                    with open(local_path, "w", encoding="utf-8") as f:
+                        f.write(resp.text)
+                    if remote_path == "data/properties.json":
+                        self.properties = resp.json()
+                    print(f"Fetched {remote_path}")
+                else:
+                    print(f"Could not fetch {remote_path}: {resp.status_code}")
+            except Exception as e:
+                print(f"Error fetching {remote_path}: {e}")
+
+        self.data_loaded_at = datetime.now()
 
     def load_json(self, filepath):
         """Load a JSON file."""
@@ -134,7 +181,7 @@ class PropertyBot:
         msg += "/new - New listings from last scan\n"
         msg += "/changes - Recent property changes\n"
         msg += "/summary - Market summary by type\n"
-        msg += "/reload - Reload data from files\n"
+        msg += "/reload - Refresh latest data from GitHub\n"
         self.send_message(chat_id, msg)
 
     def cmd_status(self, chat_id):
@@ -487,8 +534,11 @@ class PropertyBot:
         elif command == "/summary":
             self.cmd_summary(chat_id)
         elif command == "/reload":
-            self.load_data()
-            self.send_message(chat_id, f"🔄 Data reloaded: {len(self.properties):,} properties")
+            self.fetch_from_github()
+            self.send_message(
+                chat_id,
+                f"🔄 Data refreshed from GitHub: {len(self.properties):,} properties"
+            )
         else:
             self.send_message(chat_id, f"Unknown command. Send /help to see available commands.")
 
@@ -499,6 +549,12 @@ class PropertyBot:
 
         while True:
             try:
+                # Auto-refresh data from GitHub periodically
+                days_since_load = (datetime.now() - self.data_loaded_at).days
+                if days_since_load >= self.auto_refresh_days:
+                    print("Auto-refreshing data from GitHub...")
+                    self.fetch_from_github()
+
                 resp = requests.get(
                     f"{self.api_url}/getUpdates",
                     params={"offset": self.last_update_id + 1, "timeout": 30},

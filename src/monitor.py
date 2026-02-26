@@ -1073,234 +1073,85 @@ class FixedFullScrapingPropertyMonitor:
         total_on_site,
         scraping_stats,
     ):
-        """Format daily summary with fixed scraping results (HTML for Telegram)"""
+        """Format scan summary for Telegram (HTML). Compact, scannable format."""
         now = datetime.now()
         next_scan = now + timedelta(days=3)
-
+        esc = self.tg_escape_html
         has_alerts = len(new_listings) > 0 or len(changed_properties) > 0
 
+        # Header
         if has_alerts:
-            message = "🚨 <b>PROPERTY ALERTS &amp; SCAN SUMMARY</b> 🚨\n\n"
+            msg = f"🚨 <b>LELONG SCAN</b> — {esc(now.strftime('%d %b %Y'))}\n\n"
         else:
-            message = "📊 <b>PROPERTY SCAN SUMMARY</b> 📊\n\n"
+            msg = f"📊 <b>LELONG SCAN</b> — {esc(now.strftime('%d %b %Y'))}\n\n"
 
-        message += "📅 <b>Scan Report (Every 3 Days)</b>\n"
-        message += f"Date: {self.tg_escape_html(now.strftime('%d %b %Y, %I:%M %p'))}\n\n"
-
-        # Key statistics
-        message += "📈 <b>Key Statistics:</b>\n"
-        message += f"• <b>Total Listings on Lelong</b>: {total_on_site:,} 🌐\n"
-        message += (
-            f"• <b>Properties Analyzed</b>: {len(current_properties)} (REAL DATA)\n"
-        )
-        message += f"• <b>Total Properties Tracked</b>: {total_tracked}\n"
-        message += f"• <b>New Listings</b>: {len(new_listings)}\n"
-        message += f"• <b>Properties with Changes</b>: {len(changed_properties)}\n\n"
-
-        coverage = scraping_stats.get("coverage_percentage", 0)
-        message += "🔍 <b>Scraping Performance:</b>\n"
-        message += (
-            f"• Pages Scraped: {scraping_stats['pages_completed']}/"
-            f"{scraping_stats['total_pages']}\n"
-        )
-        message += f"• Success Rate: {scraping_stats['success_rate']:.1f}%\n"
-        message += f"• Coverage: {coverage:.1f}% of total market\n"
-        message += (
-            f"• Duplicates Filtered: {scraping_stats.get('duplicates_skipped', 0)}\n\n"
+        # Headline stats
+        msg += (
+            f"<b>{total_tracked:,}</b> tracked · "
+            f"<b>{len(new_listings)}</b> new · "
+            f"<b>{len(changed_properties)}</b> changed\n"
         )
 
-        # Breakdown by type
-        property_types = {}
-        for prop in current_properties.values():
-            prop_type = prop.get("property_type", "Commercial")
-            property_types[prop_type] = property_types.get(prop_type, 0) + 1
-
-        if property_types:
-            message += "📋 <b>Property Breakdown (Real Data):</b>\n"
-            for prop_type, count in sorted(property_types.items()):
-                message += f"• {self.tg_escape_html(prop_type)}: {count}\n"
-            message += "\n"
-
-        # New listings (up to 25)
+        # New listings (top 5, compact)
         if new_listings:
-            message += (
-                f"🆕 <b>NEW LISTINGS ({len(new_listings)}):</b>\n"
-            )
-            for i, (prop_id, details) in enumerate(
-                list(new_listings.items())[:25], 1
-            ):
-                header_line1 = (
-                    details.get("header_short")
-                    or details.get("header")
-                    or details.get("location")
-                    or details.get("title", "Untitled")
-                )
-                header_line2 = details.get("header_full")
+            msg += f"\n🆕 <b>NEW ({len(new_listings)}):</b>\n"
+            for i, (prop_id, d) in enumerate(list(new_listings.items())[:5], 1):
+                title = esc(d.get("title", "Untitled"))
+                loc = esc(d.get("location", ""))
+                ptype = esc(d.get("property_type", ""))
+                size = esc(d.get("size", ""))
+                price = esc(d.get("price", ""))
+                auction = esc(d.get("auction_date", ""))
+                url = d.get("listing_url") or d.get("url", "")
 
-                header1_html = self.tg_escape_html(header_line1)
-                header2_html = (
-                    self.tg_escape_html(header_line2)
-                    if header_line2 and header_line2 != header_line1
-                    else None
-                )
+                msg += f"\n{i}. <b>{title}</b>"
+                if loc:
+                    msg += f" — {loc}"
+                msg += "\n"
 
-                title_html = self.tg_escape_html(details.get("title", "Untitled"))
-                ptype_html = self.tg_escape_html(
-                    details.get("property_type", "-")
-                )
-                price_html = self.tg_escape_html(details.get("price", "-"))
-                loc_html = self.tg_escape_html(
-                    details.get("location", "Location TBD")
-                )
-                size_html = self.tg_escape_html(
-                    details.get("size", "Size TBD")
-                )
-                date_html = self.tg_escape_html(
-                    details.get("auction_date", "Date TBD")
-                )
+                details = [x for x in [ptype, size, price, auction] if x and x != "-"]
+                if details:
+                    msg += f"   {' · '.join(details)}\n"
 
-                message += f"{i}. <b>{header1_html}</b>\n"
-                if header2_html:
-                    message += f"   {header2_html}\n"
+                if url:
+                    msg += f'   <a href="{esc(url)}">View listing</a>\n'
 
-                message += f"   🏷 {title_html} ({ptype_html})\n"
-                message += f"   💰 {price_html}\n"
-                message += f"   📍 {loc_html}\n"
-                message += f"   📏 {size_html}\n"
-                message += f"   📅 {date_html}\n"
+            if len(new_listings) > 5:
+                msg += f"\n   <i>+{len(new_listings) - 5} more — send /new to see all</i>\n"
 
-                raw_url = details.get("listing_url") or details.get("url")
-                if raw_url:
-                    url_html = self.tg_escape_html(raw_url)
-                    message += (
-                        f'   🔗 <a href="{url_html}">View Listing</a>\n'
-                    )
-
-                message += "\n"
-
-            if len(new_listings) > 25:
-                message += (
-                    f"   ...and {len(new_listings) - 25} more new listings!\n\n"
-                )
-
-        # Changed properties (up to 25, with strikethrough)
+        # Changed properties (top 5, compact)
         if changed_properties:
-            message += (
-                f"🔄 <b>PROPERTY CHANGES ({len(changed_properties)}):</b>\n"
-            )
-            for i, (prop_id, data) in enumerate(
-                list(changed_properties.items())[:25], 1
-            ):
+            msg += f"\n🔄 <b>CHANGES ({len(changed_properties)}):</b>\n"
+            for i, (prop_id, data) in enumerate(list(changed_properties.items())[:5], 1):
                 prop = data["property"]
                 changes = data["changes"]
+                title = esc(prop.get("title", "Untitled"))
+                url = prop.get("listing_url") or prop.get("url", "")
 
-                header_line1 = (
-                    prop.get("header_short")
-                    or prop.get("header")
-                    or prop.get("location")
-                    or prop.get("title", "Untitled")
-                )
-                header_line2 = prop.get("header_full")
-
-                header1_html = self.tg_escape_html(header_line1)
-                header2_html = (
-                    self.tg_escape_html(header_line2)
-                    if header_line2 and header_line2 != header_line1
-                    else None
-                )
-
-                title_html = self.tg_escape_html(prop.get("title", "Untitled"))
-                ptype_html = self.tg_escape_html(
-                    prop.get("property_type", "-")
-                )
-
-                message += f"{i}. <b>{header1_html}</b>\n"
-                if header2_html:
-                    message += f"   {header2_html}\n"
-
-                message += f"   🏷 {title_html} ({ptype_html})\n"
-
+                msg += f"\n{i}. <b>{title}</b>\n"
                 for change in changes:
-                    old_html = self.tg_escape_html(change["old_value"])
-                    new_html = self.tg_escape_html(change["new_value"])
-
+                    old = esc(change["old_value"])
+                    new = esc(change["new_value"])
                     if change["type"] == "price_change":
-                        message += (
-                            f"   💰 <s>{old_html}</s> → {new_html}\n"
-                        )
+                        msg += f"   💰 <s>{old}</s> → <b>{new}</b>\n"
                     elif change["type"] == "auction_date_change":
-                        message += (
-                            f"   📅 <s>{old_html}</s> → {new_html}\n"
-                        )
+                        msg += f"   📅 <s>{old}</s> → <b>{new}</b>\n"
 
-                raw_url = prop.get("listing_url") or prop.get("url")
-                if raw_url:
-                    url_html = self.tg_escape_html(raw_url)
-                    message += (
-                        f'   🔗 <a href="{url_html}">View Listing</a>\n'
-                    )
+                if url:
+                    msg += f'   <a href="{esc(url)}">View listing</a>\n'
 
-                message += "\n"
+            if len(changed_properties) > 5:
+                msg += f"\n   <i>+{len(changed_properties) - 5} more — send /changes to see all</i>\n"
 
-            if len(changed_properties) > 25:
-                message += (
-                    f"   ...and {len(changed_properties) - 25} more changes!\n\n"
-                )
-
-        # Market insights
-        if current_properties:
-            prices = []
-            for prop in current_properties.values():
-                price_value = prop.get("price_value", 0)
-                if price_value > 0:
-                    prices.append(price_value)
-
-            if prices:
-                avg_price = sum(prices) / len(prices)
-                min_price = min(prices)
-                max_price = max(prices)
-
-                message += "💡 <b>Market Insights (Real Data):</b>\n"
-                message += f"• Average Price: RM{avg_price:,.0f}\n"
-                message += (
-                    f"• Price Range: RM{min_price:,.0f} - RM{max_price:,.0f}\n"
-                )
-                message += (
-                    f"• <b>Total Market Size</b>: {total_on_site:,} listings 🌐\n"
-                )
-                message += (
-                    f"• <b>Real Data Coverage</b>: {coverage:.1f}%\n"
-                )
-                message += (
-                    f"• Properties Analyzed: {len(current_properties):,} REAL listings\n\n"
-                )
-
-        # System status
-        message += "⚙️ <b>System Status:</b>\n"
-        message += "• Monitoring: ✅ Active (Every 3 Days)\n"
-        message += "• Fixed Full Scraping: ✅ Complete\n"
-        message += f"• Real Data: ✅ {len(current_properties):,} properties\n"
-        message += "• Duplicate Filtering: ✅ Active\n"
-        message += f"• Price Validation: ✅ RM{self.min_price:,}+ only\n"
-        message += (
-            f"• Next Scan: {self.tg_escape_html(next_scan.strftime('%d %b %Y, 9:00 PM'))}\n"
-        )
-        message += "• Coverage: KL + Selangor\n"
-        message += (
-            f"• Storage: {'✅ Persistent' if self.use_persistent_storage else '⚠️ Temporary'}\n\n"
-        )
-
-        message += "🔔 <b>Fixed Full Scraping Real-Time Monitoring</b>\n"
-        message += "📱 GitHub Actions • Every 3 Days at 9 PM\n"
-        message += (
-            f"🌐 Analyzing {len(current_properties):,} of {total_on_site:,} live listings\n"
-        )
-        message += "📊 100% Real Lelong Data • No Over-Extraction"
-
+        # No alerts
         if not has_alerts:
-            message += "\n✨ No changes detected - market is stable!"
+            msg += "\n✨ No new listings or changes — market is stable.\n"
 
-        return message
+        # Footer
+        msg += f"\n⏭ Next scan: {esc(next_scan.strftime('%d %b %Y, 9:00 PM'))}\n"
+        msg += "🔍 Send /help to search properties"
+
+        return msg
 
     # ---------- Main ----------
     def run_monitoring(self):
