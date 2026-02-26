@@ -8,6 +8,7 @@ Reads from the same data files used by the scraper.
 import json
 import os
 import re
+import subprocess
 import time
 import html
 import requests
@@ -44,6 +45,9 @@ class PropertyBot:
         self.properties = {}
         self.data_loaded_at = datetime.now()
         self.auto_refresh_hours = 6  # refresh from GitHub every 6 hours
+
+        # Pull latest data on startup, then load from local files
+        self.git_pull()
         self.load_data()
 
     def esc(self, text):
@@ -51,48 +55,47 @@ class PropertyBot:
         return html.escape(str(text), quote=True)
 
     def load_data(self):
-        """Load data from local files, or fetch from GitHub if local files are missing."""
-        loaded = False
+        """Load property data from local files into memory."""
         try:
             if self.properties_file.exists():
                 with open(self.properties_file, "r", encoding="utf-8") as f:
                     self.properties = json.load(f)
-                loaded = True
         except Exception as e:
             print(f"Error loading local properties: {e}")
-
-        if not loaded or len(self.properties) == 0:
-            print("Local data missing, trying GitHub...")
-            self.fetch_from_github()
 
         self.data_loaded_at = datetime.now()
         print(f"Loaded {len(self.properties):,} properties")
 
-    def check_github_for_updates(self):
-        """Check if GitHub has newer data than what we have locally."""
+    def git_pull(self):
+        """Pull latest data from GitHub using git (works with existing repo auth)."""
         try:
-            base = f"https://raw.githubusercontent.com/{self.github_repo}/{self.github_branch}"
-            headers = {}
-            if self.github_token:
-                headers["Authorization"] = f"token {self.github_token}"
-            resp = requests.get(
-                f"{base}/data/daily_stats.json", headers=headers, timeout=15
+            result = subprocess.run(
+                ["git", "pull", "origin", self.github_branch],
+                cwd=str(self.base_path),
+                capture_output=True, text=True, timeout=120,
             )
-            if resp.status_code == 200:
-                remote_stats = resp.json()
-                remote_date = remote_stats.get("date", "")
-                local_stats = self.load_json(self.stats_file)
-                local_date = local_stats.get("date", "") if local_stats else ""
-                if remote_date and remote_date != local_date:
-                    print(f"New data available: {remote_date} (local: {local_date})")
-                    return True
-            return False
+            if result.returncode == 0:
+                print(f"git pull: {result.stdout.strip()}")
+                return True
+            else:
+                print(f"git pull failed: {result.stderr.strip()}")
+                return False
         except Exception as e:
-            print(f"Error checking for updates: {e}")
+            print(f"git pull error: {e}")
             return False
 
-    def fetch_from_github(self):
-        """Fetch latest data files from GitHub repository."""
+    def refresh_data(self):
+        """Pull latest data from repo and reload into memory."""
+        pulled = self.git_pull()
+        if not pulled:
+            print("git pull failed, trying raw GitHub fetch as fallback...")
+            self._fetch_from_github_raw()
+
+        # Reload data from local files regardless
+        self.load_data()
+
+    def _fetch_from_github_raw(self):
+        """Fallback: fetch data files via raw GitHub URLs."""
         base = f"https://raw.githubusercontent.com/{self.github_repo}/{self.github_branch}"
         headers = {}
         if self.github_token:
@@ -112,16 +115,11 @@ class PropertyBot:
                     local_path.parent.mkdir(parents=True, exist_ok=True)
                     with open(local_path, "w", encoding="utf-8") as f:
                         f.write(resp.text)
-                    if remote_path == "data/properties.json":
-                        self.properties = resp.json()
                     print(f"Fetched {remote_path}")
                 else:
                     print(f"Could not fetch {remote_path}: {resp.status_code}")
             except Exception as e:
                 print(f"Error fetching {remote_path}: {e}")
-
-        self.data_loaded_at = datetime.now()
-        print(f"Data refreshed: {len(self.properties):,} properties")
 
     def load_json(self, filepath):
         """Load a JSON file."""
@@ -525,15 +523,11 @@ class PropertyBot:
         self.send_message(chat_id, msg)
 
     def maybe_refresh(self):
-        """Refresh data from GitHub if stale or newer data is available."""
+        """Refresh data from GitHub if enough time has passed."""
         hours_since_load = (datetime.now() - self.data_loaded_at).total_seconds() / 3600
         if hours_since_load >= self.auto_refresh_hours:
-            if self.check_github_for_updates():
-                print("Newer data found on GitHub, refreshing...")
-                self.fetch_from_github()
-            else:
-                # Reset timer even if no update, so we don't check too frequently
-                self.data_loaded_at = datetime.now()
+            print(f"Data is {hours_since_load:.1f}h old, refreshing...")
+            self.refresh_data()
 
     def handle_message(self, message):
         """Process an incoming message."""
@@ -570,10 +564,10 @@ class PropertyBot:
         elif command == "/summary":
             self.cmd_summary(chat_id)
         elif command == "/reload":
-            self.fetch_from_github()
+            self.refresh_data()
             self.send_message(
                 chat_id,
-                f"🔄 Data refreshed from GitHub: {len(self.properties):,} properties"
+                f"🔄 Data refreshed: {len(self.properties):,} properties"
             )
         else:
             self.send_message(chat_id, f"Unknown command. Send /help to see available commands.")
