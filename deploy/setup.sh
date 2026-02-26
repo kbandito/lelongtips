@@ -6,11 +6,9 @@ set -e
 
 echo "=== Lelong Property Bot - VM Setup ==="
 
-# Check Python
-if ! command -v python3 &> /dev/null; then
-    echo "Installing Python 3..."
-    sudo apt-get update && sudo apt-get install -y python3 python3-pip python3-venv
-fi
+# Install required system packages
+echo "Installing system dependencies..."
+sudo apt-get update && sudo apt-get install -y git python3 python3-pip python3-venv
 
 # Setup directory
 APP_DIR="/opt/lelong-bot"
