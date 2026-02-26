@@ -1028,10 +1028,16 @@ class FixedFullScrapingPropertyMonitor:
             max_length = 4000
 
             if len(message) > max_length:
-                parts = [
-                    message[i : i + max_length]
-                    for i in range(0, len(message), max_length)
-                ]
+                # Split on newline boundaries to avoid breaking HTML tags
+                parts = []
+                remaining = message
+                while len(remaining) > max_length:
+                    split_at = remaining.rfind("\n", 0, max_length)
+                    if split_at == -1:
+                        split_at = max_length
+                    parts.append(remaining[:split_at])
+                    remaining = remaining[split_at:].lstrip("\n")
+                parts.append(remaining)
                 for i, part in enumerate(parts):
                     data = {
                         "chat_id": self.telegram_chat_id,
