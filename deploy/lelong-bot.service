@@ -1,0 +1,15 @@
+[Unit]
+Description=Lelong Property Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/lelong-bot/repo
+EnvironmentFile=/opt/lelong-bot/.env
+ExecStart=/opt/lelong-bot/venv/bin/python src/bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
