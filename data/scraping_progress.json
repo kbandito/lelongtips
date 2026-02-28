@@ -1,16 +1,16 @@
 {
-  "start_time": "2026-02-26T07:24:36.752806",
-  "total_pages": 126,
-  "total_results": 1509,
-  "pages_completed": 126,
-  "properties_extracted": 1015,
-  "duplicates_skipped": 938,
+  "start_time": "2026-02-28T13:17:19.764944",
+  "total_pages": 127,
+  "total_results": 1520,
+  "pages_completed": 127,
+  "properties_extracted": 1041,
+  "duplicates_skipped": 1016,
   "invalid_skipped": 0,
   "errors": [],
-  "current_page": 126,
-  "last_update": "2026-02-26T07:32:38.551298",
-  "end_time": "2026-02-26T07:32:38.551315",
-  "total_properties_extracted": 1015,
+  "current_page": 127,
+  "last_update": "2026-02-28T13:24:44.734725",
+  "end_time": "2026-02-28T13:24:44.734734",
+  "total_properties_extracted": 1041,
   "success_rate": 100.0,
-  "coverage_percentage": 67.26308813783963
+  "coverage_percentage": 68.48684210526315
 }
