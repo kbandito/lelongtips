@@ -704,6 +704,41 @@ class FixedFullScrapingPropertyMonitor:
             if discount_match:
                 property_data["discount"] = discount_match.group(1)
 
+            # ---------- IMAGE ----------
+            image_url = None
+            try:
+                for node in search_nodes:
+                    img_tags = node.find_all("img", src=True)
+                    for img in img_tags:
+                        src = img.get("src", "")
+                        if any(skip in src.lower() for skip in [
+                            "logo", "icon", "avatar", "pixel", "blank",
+                            "spacer", "tracking", "1x1"
+                        ]):
+                            continue
+                        if src.startswith("data:"):
+                            continue
+                        image_url = urllib.parse.urljoin(self.root_url, src)
+                        break
+                    if image_url:
+                        break
+                # Check lazy-loaded images
+                if not image_url:
+                    for node in search_nodes:
+                        for img in node.find_all("img", attrs={"data-src": True}):
+                            src = img["data-src"]
+                            if not src.startswith("data:"):
+                                image_url = urllib.parse.urljoin(
+                                    self.root_url, src
+                                )
+                                break
+                        if image_url:
+                            break
+            except Exception:
+                pass
+            if image_url:
+                property_data["image_url"] = image_url
+
             # ---------- URL / META ----------
             if listing_url:
                 property_data["listing_url"] = listing_url
