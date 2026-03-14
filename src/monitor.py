@@ -389,12 +389,13 @@ class FixedFullScrapingPropertyMonitor:
                 class_=re.compile(r"stretched-link"),
             )
 
+            seen_containers = set()  # track by element id to avoid duplicates
             for link in property_links:
                 try:
                     container = link.parent
                     container_attempts = 0
 
-                    while container and container.name != "html" and container_attempts < 10:
+                    while container and container.name != "html" and container_attempts < 6:
                         container_text = container.get_text()
 
                         has_price = bool(re.search(r"RM[\d,]+", container_text))
@@ -405,19 +406,32 @@ class FixedFullScrapingPropertyMonitor:
                         )
 
                         if has_price and has_date:
-                            container_hash = hashlib.md5(
-                                container_text.encode()
-                            ).hexdigest()
-                            if container_hash not in [
-                                p.get("container_hash") for p in potential_properties
-                            ]:
-                                potential_properties.append(
-                                    {
-                                        "container": container,
-                                        "container_text": container_text,
-                                        "container_hash": container_hash,
-                                    }
-                                )
+                            # Prefer smallest container: check it doesn't contain
+                            # multiple prices (which would mean it wraps several cards)
+                            price_count = len(re.findall(r"RM[\d,]+", container_text))
+                            if price_count > 2:
+                                # Container too large (multiple listings), keep walking
+                                container = container.parent
+                                container_attempts += 1
+                                continue
+
+                            # Deduplicate by actual DOM element identity
+                            elem_id = id(container)
+                            if elem_id not in seen_containers:
+                                seen_containers.add(elem_id)
+                                container_hash = hashlib.md5(
+                                    container_text.encode()
+                                ).hexdigest()
+                                if container_hash not in [
+                                    p.get("container_hash") for p in potential_properties
+                                ]:
+                                    potential_properties.append(
+                                        {
+                                            "container": container,
+                                            "container_text": container_text,
+                                            "container_hash": container_hash,
+                                        }
+                                    )
                             break
 
                         container = container.parent
@@ -470,6 +484,7 @@ class FixedFullScrapingPropertyMonitor:
                 f"Found {len(potential_properties)} potential property containers"
             )
 
+            rejection_reasons = {}
             for i, prop_info in enumerate(potential_properties):
                 try:
                     property_data = self.extract_and_validate_property(
@@ -479,7 +494,7 @@ class FixedFullScrapingPropertyMonitor:
                         i,
                     )
 
-                    if property_data:
+                    if isinstance(property_data, dict):
                         prop_hash = self.create_property_hash(
                             property_data["title"],
                             property_data["price"],
@@ -494,16 +509,26 @@ class FixedFullScrapingPropertyMonitor:
                             properties.append(property_data)
                         else:
                             page_duplicates += 1
+                    elif isinstance(property_data, str):
+                        # Rejection reason string
+                        rejection_reasons[property_data] = rejection_reasons.get(property_data, 0) + 1
+                        page_invalid += 1
                     else:
+                        rejection_reasons["unknown"] = rejection_reasons.get("unknown", 0) + 1
                         page_invalid += 1
                 except Exception as e:
                     print(f"⚠️ Error processing property {i} on page {page_num}: {e}")
                     page_invalid += 1
                     continue
 
+            reason_str = ""
+            if rejection_reasons:
+                reason_str = " | rejected: " + ", ".join(
+                    f"{k}={v}" for k, v in sorted(rejection_reasons.items())
+                )
             print(
                 f"✅ Page {page_num}: Extracted {len(properties)} valid properties "
-                f"(skipped {page_duplicates} duplicates, {page_invalid} invalid)"
+                f"(skipped {page_duplicates} duplicates, {page_invalid} invalid{reason_str})"
             )
             return properties
 
@@ -649,11 +674,11 @@ class FixedFullScrapingPropertyMonitor:
             # ---------- PRICE ----------
             price_match = re.search(r"RM([\d,]+)", container_text)
             if not price_match:
-                return None
+                return "no_price"
             price_str = f"RM{price_match.group(1)}"
             is_valid_price, price_value = self.validate_price(price_str)
             if not is_valid_price:
-                return None
+                return "bad_price"
             property_data["price"] = price_str
             property_data["price_value"] = price_value
 
@@ -662,10 +687,10 @@ class FixedFullScrapingPropertyMonitor:
                 r"(\d{1,2}\s+\w{3}\s+\d{4}\s+\(\w{3}\))", container_text
             )
             if not date_match:
-                return None
+                return "no_date"
             auction_date = date_match.group(1)
             if not self.validate_auction_date(auction_date):
-                return None
+                return "expired"
             property_data["auction_date"] = auction_date
 
             # ---------- SIZE ----------
@@ -826,8 +851,8 @@ class FixedFullScrapingPropertyMonitor:
             property_data["_stable_key"] = self.generate_stable_key(property_data)
 
             return property_data
-        except Exception:
-            return None
+        except Exception as e:
+            return f"error:{e}"
 
     # ---------- Scraping loop ----------
     def scrape_all_pages(self, total_pages, total_results):
