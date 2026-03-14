@@ -169,7 +169,7 @@ def write_data_files(properties, changes_history, daily_stats):
     with open(os.path.join(data_dir, "stats.json"), "w") as f:
         json.dump(stats_data, f, separators=(",", ":"))
 
-    return stats_data
+    return stats_data, active_data, changes_data
 
 
 def generate_page():
@@ -180,7 +180,9 @@ def generate_page():
     os.makedirs(DOCS_DIR, exist_ok=True)
 
     # Write data files
-    stats = write_data_files(properties, changes_history, daily_stats)
+    stats, active_data, changes_data = write_data_files(
+        properties, changes_history, daily_stats
+    )
 
     # Format scan date for initial display
     scan_date = stats.get("scan_date", "N/A")
@@ -193,7 +195,13 @@ def generate_page():
     else:
         scan_date_display = "N/A"
 
-    page_html = build_html(stats, scan_date_display)
+    # Inline JSON data into the HTML
+    inline_stats = json.dumps(stats, separators=(",", ":"))
+    inline_active = json.dumps(active_data, separators=(",", ":"))
+    inline_changes = json.dumps(changes_data, separators=(",", ":"))
+
+    page_html = build_html(stats, scan_date_display,
+                           inline_stats, inline_active, inline_changes)
 
     out_path = os.path.join(DOCS_DIR, "index.html")
     with open(out_path, "w") as f:
@@ -204,7 +212,7 @@ def generate_page():
     print(f"  New: {stats['new_count']}, Changed: {stats['changed_count']}")
 
 
-def build_html(stats, scan_date_display):
+def build_html(stats, scan_date_display, inline_stats, inline_active, inline_changes):
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1145,16 +1153,14 @@ footer {{
     }};
   }}
 
-  // --- Load data ---
+  // --- Load data (inlined at build time) ---
   function init() {{
-    Promise.all([
-      fetch('data/stats.json').then(r => r.json()),
-      fetch('data/active.json').then(r => r.json()),
-      fetch('data/changes.json').then(r => r.json()),
-    ]).then(function([stats, active, changes]) {{
-      statsData = stats;
-      allProps = active;
-      changesData = changes;
+    var stats = JSON.parse(document.getElementById('__stats__').textContent);
+    var active = JSON.parse(document.getElementById('__active__').textContent);
+    var changes = JSON.parse(document.getElementById('__changes__').textContent);
+    statsData = stats;
+    allProps = active;
+    changesData = changes;
 
       // Pre-compute search strings
       const allEntries = Object.entries(active);
@@ -1273,15 +1279,14 @@ footer {{
       document.getElementById('more-changes').addEventListener('click', () => loadMore('changes'));
       document.getElementById('more-all').addEventListener('click', () => loadMore('all'));
 
-    }}).catch(function(err) {{
-      console.error('Failed to load data:', err);
-      document.getElementById('hot-deals').innerHTML = '<div class="empty"><p>Failed to load data. Please try refreshing.</p></div>';
-    }});
   }}
 
   init();
 }})();
 </script>
+<script id="__stats__" type="application/json">{inline_stats}</script>
+<script id="__active__" type="application/json">{inline_active}</script>
+<script id="__changes__" type="application/json">{inline_changes}</script>
 </body>
 </html>"""
 
