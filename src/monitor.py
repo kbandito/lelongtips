@@ -129,13 +129,16 @@ class FixedFullScrapingPropertyMonitor:
     def generate_stable_key(self, prop):
         """
         Generate a stable identity key for a property:
-        title + location + size (normalized).
+        title + location + size + address (normalized).
         This should not change when price/auction date change.
+        Address is critical to distinguish properties with generic titles
+        like 'Shop Office' or 'Retail Lot'.
         """
         title = self.normalize_text(prop.get("title", ""))
         location = self.normalize_text(prop.get("location", ""))
         size = self.normalize_size(prop.get("size", ""))
-        return f"{title}|{location}|{size}"
+        address = self.normalize_text(prop.get("header_full", "") or "")
+        return f"{title}|{location}|{size}|{address}"
 
     # ---------- DB ----------
     def load_properties_database(self):
@@ -239,22 +242,23 @@ class FixedFullScrapingPropertyMonitor:
         content = f"{title}_{price}_{auction_date}_{location}_{size}".lower()
         return hashlib.md5(content.encode()).hexdigest()
 
-    def create_property_id(self, title, location, size):
+    def create_property_id(self, title, location, size, address=""):
         """
         Create a (relatively) stable property ID.
 
         IMPORTANT: does NOT include price or auction_date, so a price change
-        does not create a "new" property. We rely on title+location+size.
+        does not create a "new" property. We rely on title+location+size+address.
         """
         clean_title = re.sub(r"[^\w\s]", "", title)
         clean_location = re.sub(r"[^\w\s]", "", location)
         clean_size = re.sub(r"[^\w\s]", "", size)
+        clean_address = re.sub(r"[^\w\s]", "", address or "")
 
-        base = f"{clean_title}_{clean_location}_{clean_size}".strip()
+        base = f"{clean_title}_{clean_location}_{clean_size}_{clean_address}".strip()
         base = re.sub(r"\s+", "_", base).lower()
         if not base:
             base = "property"
-        return base[:100]
+        return base[:150]
 
     # ---------- Validation ----------
     def validate_price(self, price_str):
@@ -807,6 +811,7 @@ class FixedFullScrapingPropertyMonitor:
                         prop_data["title"],
                         prop_data["location"],
                         prop_data["size"],
+                        prop_data.get("header_full", ""),
                     )
                     prop_data["total_results_on_site"] = total_results
                     all_properties[property_id] = prop_data
@@ -951,33 +956,59 @@ class FixedFullScrapingPropertyMonitor:
             existing_id = None
             existing_data = None
 
-            # 1) Match by listing_id (URL base64 ID) — best signal
             cur_lid = current_data.get("listing_id")
+            cur_addr = self.normalize_text(
+                current_data.get("header_full", "") or ""
+            )
+            cur_size = self.normalize_size(current_data.get("size", ""))
+
+            # 1) Match by listing_id — but validate address matches
+            #    listing_ids can be shared across different properties
             if cur_lid and cur_lid in listing_id_index:
-                existing_id = listing_id_index[cur_lid]
-                existing_data = database[existing_id]
-            # 2) Direct match by key
-            elif current_id in database:
-                existing_id = current_id
-                existing_data = database[current_id]
-            # 3) Match by stable key
-            elif sk in stable_index:
+                candidate_id = listing_id_index[cur_lid]
+                candidate = database[candidate_id]
+                cand_addr = self.normalize_text(
+                    candidate.get("header_full", "") or ""
+                )
+                # Accept if addresses match, or if one side has no address
+                if (
+                    not cur_addr
+                    or not cand_addr
+                    or cur_addr == cand_addr
+                ):
+                    existing_id = candidate_id
+                    existing_data = candidate
+
+            # 2) Direct match by property_id key
+            if not existing_id and current_id in database:
+                candidate = database[current_id]
+                cand_addr = self.normalize_text(
+                    candidate.get("header_full", "") or ""
+                )
+                if (
+                    not cur_addr
+                    or not cand_addr
+                    or cur_addr == cand_addr
+                ):
+                    existing_id = current_id
+                    existing_data = candidate
+
+            # 3) Match by stable key (now includes address, much safer)
+            if not existing_id and sk in stable_index:
                 existing_id = stable_index[sk]
                 existing_data = database[existing_id]
-            # 4) Match by address (for properties with same address but different titles)
-            else:
-                cur_addr = current_data.get("header_full", "")
-                if cur_addr:
-                    norm_addr = self.normalize_text(cur_addr)
-                    cur_size = self.normalize_size(current_data.get("size", ""))
-                    if norm_addr and len(norm_addr) > 20 and norm_addr in address_index:
-                        candidate_id = address_index[norm_addr]
-                        candidate = database[candidate_id]
-                        # Only match if size also matches (same address, same size = same unit)
-                        cand_size = self.normalize_size(candidate.get("size", ""))
-                        if cur_size and cand_size and cur_size == cand_size:
-                            existing_id = candidate_id
-                            existing_data = candidate
+
+            # 4) Match by address + size (same address, same size = same unit)
+            if not existing_id and cur_addr and len(cur_addr) > 20:
+                if cur_addr in address_index:
+                    candidate_id = address_index[cur_addr]
+                    candidate = database[candidate_id]
+                    cand_size = self.normalize_size(
+                        candidate.get("size", "")
+                    )
+                    if cur_size and cand_size and cur_size == cand_size:
+                        existing_id = candidate_id
+                        existing_data = candidate
 
             if existing_id is None:
                 # Truly new listing
@@ -1245,35 +1276,55 @@ class FixedFullScrapingPropertyMonitor:
         return msg
 
     # ---------- Main ----------
+    def save_snapshot(self, properties, scraping_stats):
+        """Save raw scrape snapshot to data/snapshots/YYYY-MM-DD.json"""
+        snapshots_dir = self.data_dir / "snapshots"
+        snapshots_dir.mkdir(exist_ok=True)
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        snapshot_path = snapshots_dir / f"{date_str}.json"
+        snapshot = {
+            "scan_date": datetime.now().isoformat(),
+            "scraping_stats": scraping_stats,
+            "properties": properties,
+        }
+        with open(snapshot_path, "w") as f:
+            json.dump(snapshot, f, indent=2, ensure_ascii=False)
+        print(f"Snapshot saved: {snapshot_path} ({len(properties)} properties)")
+        return snapshot_path
+
     def run_monitoring(self):
-        """Main monitoring function with fixed full scraping"""
+        """Main monitoring function: scrape, save snapshot, then reprocess."""
         print(
-            f"🚀 Starting FIXED FULL SCRAPING Lelong property monitoring at {datetime.now()}"
+            f"Starting scrape at {datetime.now()}"
         )
 
         try:
-            database = self.load_properties_database()
-            print(f"📊 Loaded database with {len(database)} existing properties")
-
             total_results, total_pages = self.get_total_pages_and_results()
             current_properties, scraping_stats = self.scrape_all_pages(
                 total_pages, total_results
             )
 
             if not current_properties:
-                print("⚠️ No properties extracted from fixed scraping")
+                print("No properties extracted")
                 error_message = (
-                    "⚠️ <b>Fixed Scraping Failed</b> ⚠️\n\n"
+                    "<b>Scraping Failed</b>\n\n"
                     f"Could not extract properties from {total_pages} pages.\n"
                     f"Total listings on site: {total_results:,}\n"
                     "Will retry in 3 days."
                 )
                 self.send_telegram_notification(error_message)
-                return "Fixed scraping failed"
+                return "Scraping failed"
 
-            new_listings, changed_properties = self.detect_changes(
-                current_properties, database
+            # Save raw snapshot — this is the source of truth
+            self.save_snapshot(current_properties, scraping_stats)
+
+            # Reprocess all snapshots to rebuild database
+            from reprocess import reprocess_all
+            database, new_listings, changed_properties = reprocess_all(
+                self.data_dir
             )
+
+            # Save derived data files
             self.save_properties_database(database)
             self.save_changes_history(new_listings, changed_properties)
             self.save_daily_stats(
@@ -1290,66 +1341,32 @@ class FixedFullScrapingPropertyMonitor:
             )
 
             if self.send_telegram_notification(summary_message):
-                print("✅ Fixed full scraping summary notification sent")
-                notifications_sent = True
+                print("Summary notification sent")
             else:
-                print("❌ Failed to send summary notification")
-                notifications_sent = False
-                print("Fixed full scraping summary would be:")
+                print("Failed to send notification")
                 print(summary_message)
 
             coverage = scraping_stats.get("coverage_percentage", 0)
-            print("\n" + "=" * 80)
-            print("📊 FIXED FULL SCRAPING MONITORING SUMMARY")
-            print("=" * 80)
-            print(f"🌐 Total listings on Lelong: {total_results:,}")
-            print(
-                f"📄 Pages scraped: {scraping_stats['pages_completed']}/{total_pages}"
-            )
-            print(
-                f"🏠 Properties extracted: {len(current_properties)} (REAL DATA)"
-            )
-            print(
-                f"📈 Coverage: {coverage:.1f}% (should be ~100%)"
-            )
-            print(f"📈 Total properties tracked: {len(database)}")
-            print(f"🆕 New listings found: {len(new_listings)}")
-            print(
-                f"🔄 Properties with changes: {len(changed_properties)}"
-            )
-            print(
-                f"🔄 Duplicates filtered: {scraping_stats.get('duplicates_skipped', 0)}"
-            )
-            print(f"📱 Scan summary sent: {'✅' if notifications_sent else '❌'}")
-            print("📅 Next scan: In 3 days at 9 PM Malaysia time")
-            print(
-                f"💾 Data persistence: {'✅' if self.use_persistent_storage else '⚠️ Temporary'}"
-            )
-            print("✅ Over-extraction fixed: Coverage should be reasonable")
-            print("✨ System status: Fixed full scraping operational")
-            print("=" * 80)
+            print(f"\nScrape complete: {len(current_properties)} extracted, "
+                  f"{len(new_listings)} new, {len(changed_properties)} changed, "
+                  f"{coverage:.1f}% coverage, {len(database)} total tracked")
 
             return (
-                f"Fixed full scraping complete: {total_results:,} total on site, "
-                f"{len(current_properties)} extracted (REAL), "
-                f"{len(new_listings)} new, {len(changed_properties)} changed, "
-                f"{coverage:.1f}% coverage"
+                f"Scrape complete: {total_results:,} on site, "
+                f"{len(current_properties)} extracted, "
+                f"{len(new_listings)} new, {len(changed_properties)} changed"
             )
         except Exception as e:
-            error_msg = f"❌ Error in fixed full scraping monitoring: {e}"
-            print(error_msg)
-
+            print(f"Error: {e}")
             if self.telegram_bot_token and self.telegram_chat_id:
                 err_html = self.tg_escape_html(str(e))
                 error_notification = (
-                    "🚨 <b>Fixed Full Scraping Monitor Error</b> 🚨\n\n"
-                    "Fixed full scraping failed:\n"
+                    "<b>Scraping Error</b>\n\n"
                     f"<pre>{err_html}</pre>\n\n"
                     f"Time: {self.tg_escape_html(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}\n"
                     "Will retry in 3 days."
                 )
                 self.send_telegram_notification(error_notification)
-
             raise e
 
 
