@@ -359,15 +359,16 @@ class FixedFullScrapingPropertyMonitor:
             if page_numbers:
                 total_pages = max(page_numbers)
             else:
-                if total_results > 20:
-                    total_pages = min((total_results + 19) // 20, 100)
+                # 12 listings per page
+                if total_results > 12:
+                    total_pages = min((total_results + 11) // 12, 600)
 
             print(f"📊 Found {total_results:,} total results across {total_pages} pages")
             return total_results, total_pages
 
         except Exception as e:
             print(f"❌ Error getting pagination info: {e}")
-            return 1650, 83  # Fallback
+            return 7000, 590  # Fallback (~7000 listings, 12 per page)
 
     # ---------- Extraction ----------
     def extract_properties_from_page(self, page_content, page_num):
