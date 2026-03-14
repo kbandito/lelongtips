@@ -36,6 +36,9 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         WHATSAPP_API_KEY: ${{ secrets.WHATSAPP_API_KEY }}
         WHATSAPP_PHONE_NUMBER: ${{ secrets.WHATSAPP_PHONE_NUMBER }}
+        # Set to "true" for the one-time full collection (includes expired listings).
+        # Remove or set to "false" for ongoing monitoring (future auction dates only).
+        # INCLUDE_EXPIRED: "true"
       run: |
         cd src
         python monitor.py
