@@ -1278,7 +1278,7 @@ class FixedFullScrapingPropertyMonitor:
     # ---------- Main ----------
     def save_snapshot(self, properties, scraping_stats):
         """Save raw scrape snapshot to data/snapshots/YYYY-MM-DD.json"""
-        snapshots_dir = self.data_dir / "snapshots"
+        snapshots_dir = self.data_path / "snapshots"
         snapshots_dir.mkdir(exist_ok=True)
         date_str = datetime.now().strftime("%Y-%m-%d")
         snapshot_path = snapshots_dir / f"{date_str}.json"
@@ -1321,7 +1321,7 @@ class FixedFullScrapingPropertyMonitor:
             # Reprocess all snapshots to rebuild database
             from reprocess import reprocess_all
             database, new_listings, changed_properties = reprocess_all(
-                self.data_dir
+                self.data_path
             )
 
             # Save derived data files
