@@ -540,12 +540,20 @@ footer {
 .data-table tr:hover td { background: #F9FAFB; }
 .data-table tr.urgent td { background: var(--orange-light); }
 .data-table .td-title {
-  max-width: 180px;
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 600;
   color: var(--text);
   cursor: pointer;
+}
+.data-table .td-title .td-scheme {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-sec);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .data-table .td-title:hover { color: var(--accent); }
 .data-table .td-price { color: var(--accent); font-weight: 700; }
@@ -717,7 +725,7 @@ footer {
       <table class="data-table" id="data-table">
         <thead>
           <tr>
-            <th data-sort="title" class="sortable">Title</th>
+            <th data-sort="title" class="sortable">Property</th>
             <th data-sort="price" class="sortable">Price</th>
             <th data-sort="type" class="sortable">Type</th>
             <th data-sort="location" class="sortable">Location</th>
@@ -983,6 +991,27 @@ footer {
     items.sort(sorters[col] || sorters.auction);
   }
 
+  // Extract scheme/building name from address string
+  function schemeName(addr, title) {
+    if (!addr || addr === title) return '';
+    // Try to find a named place (contains uppercase words, parentheses, or known patterns)
+    // First try: text in parentheses like "Kenanga Wholesale City (KWC Fashion Wholesale)"
+    const paren = addr.match(/\(([^)]+)\)/);
+    // Try: named buildings/parks - look for sequences with capitals after Block/Lot prefix
+    const named = addr.match(/(?:,\s*)?([A-Z][A-Za-z\s]+(?:Park|Centre|Point|Plaza|Place|Heights|Residences?|Tower|City|Garden|Court|Square|Perdagangan|Komersial|Damansara|Business|Mall|Complex|Kompleks)[A-Za-z\s]*)/);
+    if (named) return named[1].trim();
+    if (paren) return paren[1].trim();
+    // Fallback: use first meaningful segment of address (skip Block/Lot prefixes)
+    const parts = addr.split(',').map(function(s) { return s.trim(); });
+    for (let k = 0; k < parts.length && k < 3; k++) {
+      const seg = parts[k];
+      if (seg && !/^\d/.test(seg) && !/^(Lot|Block|No\.|Unit|Level|Ground|First|Second)/i.test(seg) && seg.length > 5) {
+        return seg.length > 50 ? seg.substring(0, 47) + '...' : seg;
+      }
+    }
+    return parts[0] || '';
+  }
+
   function renderTableRows(items, start, count) {
     const tbody = document.getElementById('table-body');
     let html = '';
@@ -999,8 +1028,12 @@ footer {
       const expandBtn = hasHist
         ? '<button class="expand-btn" data-row="'+rowId+'" title="'+hist.length+' rounds">&#9654; '+hist.length+'</button>'
         : '';
+      const scheme = schemeName(p.a, p.t);
+      const nameHtml = scheme
+        ? esc(scheme) + '<span class="td-scheme">'+esc(p.t)+'</span>'
+        : esc(p.a || p.t);
       html += '<tr class="'+urgClass+'" id="'+rowId+'">'
-        + '<td class="td-title" onclick="window._openDetail(\''+esc(item.id)+'\')">'+ expandBtn + esc(p.t)+'</td>'
+        + '<td class="td-title" onclick="window._openDetail(\''+esc(item.id)+'\')">'+ expandBtn + nameHtml+'</td>'
         + '<td class="td-price">'+esc(p.p)+'</td>'
         + '<td>'+esc(p.pt)+'</td>'
         + '<td>'+esc(p.l)+'</td>'
@@ -1009,7 +1042,7 @@ footer {
         + '<td class="td-discount">'+esc(p.d || '-')+'</td>'
         + '<td class="link-cell">'+(p.u ? '<a href="'+esc(p.u)+'" target="_blank" rel="noopener">View</a>' : '-')+'</td>'
         + '</tr>';
-      // Hidden history sub-rows (all except last which is current)
+      // Hidden history sub-rows showing each previous auction round
       if (hasHist) {
         for (let j = 0; j < hist.length - 1; j++) {
           const h = hist[j];
@@ -1020,9 +1053,11 @@ footer {
           const adCell = h.ad ? (adChanged ? '<span class="hist-changed">'+esc(h.ad)+'</span>' : esc(h.ad)) : '-';
           const link = h.u ? '<a href="'+esc(h.u)+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:0.7rem">View</a>' : '-';
           html += '<tr class="hist-row" data-parent="'+rowId+'" style="display:none">'
-            + '<td style="padding-left:28px"><span class="hist-label">'+esc(h.d)+'</span></td>'
+            + '<td style="padding-left:28px"><span class="hist-label">Seen '+esc(h.d)+'</span></td>'
             + '<td>'+pCell+'</td>'
-            + '<td colspan="3"></td>'
+            + '<td>'+esc(p.pt)+'</td>'
+            + '<td>'+esc(p.l)+'</td>'
+            + '<td>'+esc(p.s && p.s !== 'Size not specified' ? p.s : '-')+'</td>'
             + '<td>'+adCell+'</td>'
             + '<td></td>'
             + '<td class="link-cell">'+link+'</td>'
