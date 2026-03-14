@@ -21,8 +21,8 @@ import html  # for Telegram HTML escaping
 
 class FixedFullScrapingPropertyMonitor:
     def __init__(self):
-        # One-time mode: set INCLUDE_EXPIRED=true to collect all listings including past auction dates
-        self.include_expired = os.environ.get("INCLUDE_EXPIRED", "").lower() == "true"
+        # Set to False to skip expired auction dates; True to collect all listings
+        self.include_expired = os.environ.get("INCLUDE_EXPIRED", "true").lower() != "false"
 
         # Try to use repository data directory, fall back to temp if no write permissions
         self.base_path = (
