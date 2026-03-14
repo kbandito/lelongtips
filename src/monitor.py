@@ -1276,35 +1276,55 @@ class FixedFullScrapingPropertyMonitor:
         return msg
 
     # ---------- Main ----------
+    def save_snapshot(self, properties, scraping_stats):
+        """Save raw scrape snapshot to data/snapshots/YYYY-MM-DD.json"""
+        snapshots_dir = self.data_dir / "snapshots"
+        snapshots_dir.mkdir(exist_ok=True)
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        snapshot_path = snapshots_dir / f"{date_str}.json"
+        snapshot = {
+            "scan_date": datetime.now().isoformat(),
+            "scraping_stats": scraping_stats,
+            "properties": properties,
+        }
+        with open(snapshot_path, "w") as f:
+            json.dump(snapshot, f, indent=2, ensure_ascii=False)
+        print(f"Snapshot saved: {snapshot_path} ({len(properties)} properties)")
+        return snapshot_path
+
     def run_monitoring(self):
-        """Main monitoring function with fixed full scraping"""
+        """Main monitoring function: scrape, save snapshot, then reprocess."""
         print(
-            f"🚀 Starting FIXED FULL SCRAPING Lelong property monitoring at {datetime.now()}"
+            f"Starting scrape at {datetime.now()}"
         )
 
         try:
-            database = self.load_properties_database()
-            print(f"📊 Loaded database with {len(database)} existing properties")
-
             total_results, total_pages = self.get_total_pages_and_results()
             current_properties, scraping_stats = self.scrape_all_pages(
                 total_pages, total_results
             )
 
             if not current_properties:
-                print("⚠️ No properties extracted from fixed scraping")
+                print("No properties extracted")
                 error_message = (
-                    "⚠️ <b>Fixed Scraping Failed</b> ⚠️\n\n"
+                    "<b>Scraping Failed</b>\n\n"
                     f"Could not extract properties from {total_pages} pages.\n"
                     f"Total listings on site: {total_results:,}\n"
                     "Will retry in 3 days."
                 )
                 self.send_telegram_notification(error_message)
-                return "Fixed scraping failed"
+                return "Scraping failed"
 
-            new_listings, changed_properties = self.detect_changes(
-                current_properties, database
+            # Save raw snapshot — this is the source of truth
+            self.save_snapshot(current_properties, scraping_stats)
+
+            # Reprocess all snapshots to rebuild database
+            from reprocess import reprocess_all
+            database, new_listings, changed_properties = reprocess_all(
+                self.data_dir
             )
+
+            # Save derived data files
             self.save_properties_database(database)
             self.save_changes_history(new_listings, changed_properties)
             self.save_daily_stats(
@@ -1321,66 +1341,32 @@ class FixedFullScrapingPropertyMonitor:
             )
 
             if self.send_telegram_notification(summary_message):
-                print("✅ Fixed full scraping summary notification sent")
-                notifications_sent = True
+                print("Summary notification sent")
             else:
-                print("❌ Failed to send summary notification")
-                notifications_sent = False
-                print("Fixed full scraping summary would be:")
+                print("Failed to send notification")
                 print(summary_message)
 
             coverage = scraping_stats.get("coverage_percentage", 0)
-            print("\n" + "=" * 80)
-            print("📊 FIXED FULL SCRAPING MONITORING SUMMARY")
-            print("=" * 80)
-            print(f"🌐 Total listings on Lelong: {total_results:,}")
-            print(
-                f"📄 Pages scraped: {scraping_stats['pages_completed']}/{total_pages}"
-            )
-            print(
-                f"🏠 Properties extracted: {len(current_properties)} (REAL DATA)"
-            )
-            print(
-                f"📈 Coverage: {coverage:.1f}% (should be ~100%)"
-            )
-            print(f"📈 Total properties tracked: {len(database)}")
-            print(f"🆕 New listings found: {len(new_listings)}")
-            print(
-                f"🔄 Properties with changes: {len(changed_properties)}"
-            )
-            print(
-                f"🔄 Duplicates filtered: {scraping_stats.get('duplicates_skipped', 0)}"
-            )
-            print(f"📱 Scan summary sent: {'✅' if notifications_sent else '❌'}")
-            print("📅 Next scan: In 3 days at 9 PM Malaysia time")
-            print(
-                f"💾 Data persistence: {'✅' if self.use_persistent_storage else '⚠️ Temporary'}"
-            )
-            print("✅ Over-extraction fixed: Coverage should be reasonable")
-            print("✨ System status: Fixed full scraping operational")
-            print("=" * 80)
+            print(f"\nScrape complete: {len(current_properties)} extracted, "
+                  f"{len(new_listings)} new, {len(changed_properties)} changed, "
+                  f"{coverage:.1f}% coverage, {len(database)} total tracked")
 
             return (
-                f"Fixed full scraping complete: {total_results:,} total on site, "
-                f"{len(current_properties)} extracted (REAL), "
-                f"{len(new_listings)} new, {len(changed_properties)} changed, "
-                f"{coverage:.1f}% coverage"
+                f"Scrape complete: {total_results:,} on site, "
+                f"{len(current_properties)} extracted, "
+                f"{len(new_listings)} new, {len(changed_properties)} changed"
             )
         except Exception as e:
-            error_msg = f"❌ Error in fixed full scraping monitoring: {e}"
-            print(error_msg)
-
+            print(f"Error: {e}")
             if self.telegram_bot_token and self.telegram_chat_id:
                 err_html = self.tg_escape_html(str(e))
                 error_notification = (
-                    "🚨 <b>Fixed Full Scraping Monitor Error</b> 🚨\n\n"
-                    "Fixed full scraping failed:\n"
+                    "<b>Scraping Error</b>\n\n"
                     f"<pre>{err_html}</pre>\n\n"
                     f"Time: {self.tg_escape_html(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}\n"
                     "Will retry in 3 days."
                 )
                 self.send_telegram_notification(error_notification)
-
             raise e
 
 
