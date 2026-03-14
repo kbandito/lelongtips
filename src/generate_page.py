@@ -934,7 +934,7 @@ footer {{
       }}
     }}
 
-    return '<div class="card" data-id="'+esc(id)+'" onclick="window._openDetail(\''+esc(id)+'\')">'
+    return '<div class="card" data-id="'+esc(id)+'" onclick="window._openDetail(this.dataset.id)">'
       + '<div class="card-top">'
       + '<div class="card-img">'+imgHtml+'</div>'
       + '<div class="card-body">'
