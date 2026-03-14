@@ -121,6 +121,64 @@ def trim_property(prop):
         elif current_pv >= 10000:
             current_price = f"RM{current_pv:,}"
 
+    # Build combined auction history from price + auction_date histories
+    # Each entry represents a snapshot: date seen, price, auction date, url
+    adh = prop.get("auction_date_history", [])
+    # Merge all events by date into snapshots
+    snapshots = {}  # date -> {price, auction_date, url}
+    for h in ph:
+        d = h.get("date", "")[:10]
+        if not d:
+            continue
+        if d not in snapshots:
+            snapshots[d] = {}
+        price = h.get("price", "")
+        if is_valid_price(price):
+            snapshots[d]["p"] = price
+        snapshots[d]["u"] = h.get("url", "") or listing_url
+    for h in adh:
+        d = h.get("date", "")[:10]
+        if not d:
+            continue
+        if d not in snapshots:
+            snapshots[d] = {}
+        ad_val = h.get("auction_date", "")
+        # Strip day-of-week in parens
+        ad_clean = re.split(r"\s*\(", ad_val)[0].strip()
+        if ad_clean:
+            snapshots[d]["ad"] = ad_clean
+        if "u" not in snapshots[d]:
+            snapshots[d]["u"] = listing_url
+
+    # Build sorted history, carrying forward last known values
+    history = []
+    last_price = ""
+    last_ad = ""
+    for d in sorted(snapshots.keys()):
+        s = snapshots[d]
+        if "p" in s:
+            last_price = s["p"]
+        if "ad" in s:
+            last_ad = s["ad"]
+        entry = {"d": d}
+        if last_price:
+            entry["p"] = last_price
+        if last_ad:
+            entry["ad"] = last_ad
+        url = s.get("u", "")
+        if url:
+            entry["u"] = url
+        history.append(entry)
+
+    # Deduplicate consecutive identical entries (same price + auction date)
+    deduped = []
+    for h in history:
+        if deduped and h.get("p") == deduped[-1].get("p") and h.get("ad") == deduped[-1].get("ad"):
+            continue
+        deduped.append(h)
+    # Keep last 10
+    trimmed_hist = deduped[-10:]
+
     return {
         "t": prop.get("title", ""),
         "p": current_price,
@@ -134,6 +192,7 @@ def trim_property(prop):
         "img": prop.get("image_url", ""),
         "a": (prop.get("header_full", "") or "")[:120],
         "ph": trimmed_ph,
+        "hist": trimmed_hist if len(trimmed_hist) > 1 else [],
     }
 
 
@@ -745,6 +804,107 @@ footer {{
   .container {{ padding: 12px; }}
   .card-img {{ width: 64px; height: 48px; }}
 }}
+
+/* Table view */
+.table-wrap {{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px;
+  padding: 0 16px;
+}}
+.data-table {{
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  background: var(--card-bg);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}}
+.data-table thead {{ position: sticky; top: 42px; z-index: 50; }}
+.data-table th {{
+  background: var(--accent-light);
+  color: var(--text-sec);
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 10px 8px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--border);
+  user-select: none;
+}}
+.data-table th.sortable {{ cursor: pointer; }}
+.data-table th.sortable:hover {{ background: #DBEAFE; }}
+.data-table th.sorted-asc::after {{ content: ' \\25B2'; font-size: 0.6rem; }}
+.data-table th.sorted-desc::after {{ content: ' \\25BC'; font-size: 0.6rem; }}
+.data-table td {{
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  white-space: nowrap;
+}}
+.data-table tr:hover td {{ background: #F9FAFB; }}
+.data-table tr.urgent td {{ background: var(--orange-light); }}
+.data-table .td-title {{
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}}
+.data-table .td-title:hover {{ color: var(--accent); }}
+.data-table .td-price {{ color: var(--accent); font-weight: 700; }}
+.data-table .td-discount {{ color: var(--green); font-weight: 600; }}
+.data-table .td-days {{ font-size: 0.7rem; color: var(--text-muted); }}
+.data-table .link-cell a {{
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.75rem;
+}}
+.data-table .link-cell a:hover {{ text-decoration: underline; }}
+.data-table .expand-btn {{
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: var(--accent);
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: transform 0.15s;
+}}
+.data-table .expand-btn:hover {{ background: var(--accent-light); }}
+.data-table .expand-btn.open {{ transform: rotate(90deg); }}
+.data-table .hist-row td {{
+  background: #F9FAFB;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  color: var(--text-sec);
+  border-bottom: 1px solid #F3F4F6;
+}}
+.data-table .hist-row .hist-label {{
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}}
+.data-table .hist-row .hist-changed {{
+  background: var(--orange-light);
+  color: var(--orange);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}}
+@media(max-width: 600px) {{
+  .table-wrap {{ margin: 0 -12px; padding: 0 12px; }}
+  .data-table {{ font-size: 0.72rem; }}
+  .data-table th, .data-table td {{ padding: 6px 5px; }}
+  .data-table .td-title {{ max-width: 120px; }}
+}}
 </style>
 </head>
 <body>
@@ -778,6 +938,7 @@ footer {{
     <button class="tab" data-tab="new">New <span class="badge-count green">{stats['new_count']}</span></button>
     <button class="tab" data-tab="changes">Changes <span class="badge-count orange">{stats['changed_count']}</span></button>
     <button class="tab" data-tab="search">Search</button>
+    <button class="tab" data-tab="table">Table</button>
   </div>
 
   <div id="tab-dashboard" class="tab-content active">
@@ -855,6 +1016,32 @@ footer {{
     <button class="load-more" id="more-all" style="display:none">Load more</button>
   </div>
 
+  <div id="tab-table" class="tab-content">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="text" class="search-bar" id="search-table" placeholder="Filter table...">
+    </div>
+    <div class="count-label" id="count-table">Loading...</div>
+    <div class="table-wrap">
+      <table class="data-table" id="data-table">
+        <thead>
+          <tr>
+            <th data-sort="title" class="sortable">Title</th>
+            <th data-sort="price" class="sortable">Price</th>
+            <th data-sort="type" class="sortable">Type</th>
+            <th data-sort="location" class="sortable">Location</th>
+            <th data-sort="size" class="sortable">Size</th>
+            <th data-sort="auction" class="sortable sorted-asc">Auction</th>
+            <th data-sort="discount" class="sortable">Disc.</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <button class="load-more" id="more-table" style="display:none">Load more</button>
+  </div>
+
   <footer>
     LelongTips Property Monitor &middot; Auto-updated every 3 days
   </footer>
@@ -885,6 +1072,7 @@ footer {{
     new: {{ items: [], displayed: 0 }},
     changes: {{ items: [], displayed: 0 }},
     all: {{ items: [], displayed: 0 }},
+    table: {{ items: [], displayed: 0 }},
   }};
   let activeFilters = {{ types: new Set(), locs: new Set() }};
 
@@ -1076,6 +1264,146 @@ footer {{
     if (countEl) countEl.textContent = 'Showing ' + Math.min(view.displayed, view.items.length) + ' of ' + view.items.length + ' listings';
     if (moreBtn) moreBtn.style.display = view.displayed < view.items.length ? '' : 'none';
   }}
+
+  // --- Table view ---
+  const TABLE_PAGE = 50;
+  let tableItems = [];
+  let tableDisplayed = 0;
+  let tableSortCol = 'auction';
+  let tableSortDir = 'asc';
+
+  function parseSize(s) {{
+    if (!s) return 0;
+    const m = s.match(/[\d,]+/);
+    return m ? parseInt(m[0].replace(/,/g,'')) : 0;
+  }}
+
+  function sortTable(items, col, dir) {{
+    const mul = dir === 'asc' ? 1 : -1;
+    const sorters = {{
+      title: (a,b) => mul * a.prop.t.localeCompare(b.prop.t),
+      price: (a,b) => mul * ((a.prop.pv||0) - (b.prop.pv||0)),
+      type: (a,b) => mul * (a.prop.pt||'').localeCompare(b.prop.pt||''),
+      location: (a,b) => mul * (a.prop.l||'').localeCompare(b.prop.l||''),
+      size: (a,b) => mul * (parseSize(a.prop.s) - parseSize(b.prop.s)),
+      auction: (a,b) => mul * (daysUntil(a.prop.ad) - daysUntil(b.prop.ad)),
+      discount: (a,b) => mul * (parseDiscount(a.prop.d) - parseDiscount(b.prop.d)),
+    }};
+    items.sort(sorters[col] || sorters.auction);
+  }}
+
+  function renderTableRows(items, start, count) {{
+    const tbody = document.getElementById('table-body');
+    let html = '';
+    const end = Math.min(start + count, items.length);
+    for (let i = start; i < end; i++) {{
+      const item = items[i];
+      const p = item.prop;
+      const days = daysUntil(p.ad);
+      const daysText = days <= 0 ? 'Today' : days === 1 ? '1d' : days + 'd';
+      const urgClass = days <= 7 ? ' urgent' : '';
+      const hist = p.hist || [];
+      const hasHist = hist.length > 1;
+      const rowId = 'tr-' + i;
+      const expandBtn = hasHist
+        ? '<button class="expand-btn" data-row="'+rowId+'" title="'+hist.length+' rounds">&#9654; '+hist.length+'</button>'
+        : '';
+      html += '<tr class="'+urgClass+'" id="'+rowId+'">'
+        + '<td class="td-title" onclick="window._openDetail(\\\''+esc(item.id)+'\\\')">'+ expandBtn + esc(p.t)+'</td>'
+        + '<td class="td-price">'+esc(p.p)+'</td>'
+        + '<td>'+esc(p.pt)+'</td>'
+        + '<td>'+esc(p.l)+'</td>'
+        + '<td>'+esc(p.s && p.s !== 'Size not specified' ? p.s : '-')+'</td>'
+        + '<td>'+esc(p.ad)+' <span class="td-days">('+daysText+')</span></td>'
+        + '<td class="td-discount">'+esc(p.d || '-')+'</td>'
+        + '<td class="link-cell">'+(p.u ? '<a href="'+esc(p.u)+'" target="_blank" rel="noopener">View</a>' : '-')+'</td>'
+        + '</tr>';
+      // Hidden history sub-rows (all except last which is current)
+      if (hasHist) {{
+        for (let j = 0; j < hist.length - 1; j++) {{
+          const h = hist[j];
+          const prev = j > 0 ? hist[j-1] : null;
+          const priceChanged = prev && h.p && prev.p && h.p !== prev.p;
+          const adChanged = prev && h.ad && prev.ad && h.ad !== prev.ad;
+          const pCell = h.p ? (priceChanged ? '<span class="hist-changed">'+esc(h.p)+'</span>' : esc(h.p)) : '<span style="color:var(--text-muted)">-</span>';
+          const adCell = h.ad ? (adChanged ? '<span class="hist-changed">'+esc(h.ad)+'</span>' : esc(h.ad)) : '-';
+          const link = h.u ? '<a href="'+esc(h.u)+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:0.7rem">View</a>' : '-';
+          html += '<tr class="hist-row" data-parent="'+rowId+'" style="display:none">'
+            + '<td style="padding-left:28px"><span class="hist-label">'+esc(h.d)+'</span></td>'
+            + '<td>'+pCell+'</td>'
+            + '<td colspan="3"></td>'
+            + '<td>'+adCell+'</td>'
+            + '<td></td>'
+            + '<td class="link-cell">'+link+'</td>'
+            + '</tr>';
+        }}
+      }}
+    }}
+    if (start === 0) tbody.innerHTML = html;
+    else tbody.insertAdjacentHTML('beforeend', html);
+    return end;
+  }}
+
+  function filterTable() {{
+    const query = (document.getElementById('search-table').value || '').toLowerCase().trim();
+    let items = views.table.sourceItems || [];
+    if (query) {{
+      const tokens = query.split(/\s+/);
+      items = items.filter(item => {{
+        const s = item._search;
+        return tokens.every(t => s.includes(t));
+      }});
+    }}
+    sortTable(items, tableSortCol, tableSortDir);
+    tableItems = items;
+    tableDisplayed = renderTableRows(items, 0, TABLE_PAGE);
+    const countEl = document.getElementById('count-table');
+    const moreBtn = document.getElementById('more-table');
+    if (countEl) countEl.textContent = 'Showing ' + Math.min(tableDisplayed, items.length) + ' of ' + items.length + ' listings';
+    if (moreBtn) moreBtn.style.display = tableDisplayed < items.length ? '' : 'none';
+    if (items.length === 0) {{
+      document.getElementById('table-body').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">No listings found</td></tr>';
+    }}
+  }}
+
+  // Table header click → sort
+  document.getElementById('data-table').querySelector('thead').addEventListener('click', function(e) {{
+    const th = e.target.closest('th[data-sort]');
+    if (!th) return;
+    const col = th.dataset.sort;
+    if (tableSortCol === col) {{
+      tableSortDir = tableSortDir === 'asc' ? 'desc' : 'asc';
+    }} else {{
+      tableSortCol = col;
+      tableSortDir = 'asc';
+    }}
+    // Update header classes
+    this.querySelectorAll('th').forEach(h => h.classList.remove('sorted-asc','sorted-desc'));
+    th.classList.add('sorted-' + tableSortDir);
+    filterTable();
+  }});
+
+  document.getElementById('search-table').addEventListener('input', function() {{
+    filterTable();
+  }});
+
+  document.getElementById('more-table').addEventListener('click', function() {{
+    tableDisplayed = renderTableRows(tableItems, tableDisplayed, TABLE_PAGE);
+    const countEl = document.getElementById('count-table');
+    if (countEl) countEl.textContent = 'Showing ' + Math.min(tableDisplayed, tableItems.length) + ' of ' + tableItems.length + ' listings';
+    if (tableDisplayed >= tableItems.length) this.style.display = 'none';
+  }});
+
+  // Expand/collapse history sub-rows
+  document.getElementById('table-body').addEventListener('click', function(e) {{
+    const btn = e.target.closest('.expand-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    const rowId = btn.dataset.row;
+    const isOpen = btn.classList.toggle('open');
+    const subRows = this.querySelectorAll('tr[data-parent="'+rowId+'"]');
+    subRows.forEach(function(r) {{ r.style.display = isOpen ? '' : 'none'; }});
+  }});
 
   // --- Tabs ---
   document.getElementById('tab-bar').addEventListener('click', function(e) {{
@@ -1276,6 +1604,10 @@ footer {{
       // --- Search/browse tab ---
       const allItems = allEntries.map(([id, p]) => ({{ id, prop: p, _search: p._search }}));
       views.all.sourceItems = allItems;
+
+      // --- Table tab ---
+      views.table.sourceItems = allItems;
+      filterTable();
 
       // Build filter chips
       buildFilterChips('filters-type', stats.types || [], activeFilters.types, () => filterAndRender('all'));
