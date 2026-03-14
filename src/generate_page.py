@@ -75,21 +75,50 @@ def get_active_properties(properties):
     return active
 
 
+def extract_price_value(price_str):
+    """Extract numeric value from a price string like 'RM1,234,000'."""
+    m = re.search(r"[\d,]+", str(price_str))
+    if m:
+        return int(m.group().replace(",", ""))
+    return 0
+
+
+def is_valid_price(price_str):
+    """Check if a price string looks like a real property price (>= RM10,000)."""
+    return extract_price_value(price_str) >= 10000
+
+
 def trim_property(prop):
     """Reduce property to essential fields with short keys."""
     ph = prop.get("price_history", [])
-    # Keep last 5 price history entries
-    trimmed_ph = []
-    for h in ph[-5:]:
-        trimmed_ph.append({
-            "p": h.get("price", ""),
-            "d": h.get("date", "")[:10],
-        })
+
+    # Filter out corrupted price entries and keep last 5 valid ones
+    valid_ph = []
+    for h in ph:
+        price = h.get("price", "")
+        if is_valid_price(price):
+            valid_ph.append({
+                "p": price,
+                "d": h.get("date", "")[:10],
+            })
+    trimmed_ph = valid_ph[-5:]
+
+    # Use current price if valid, otherwise fall back to latest valid from history.
+    # If no valid history exists, use price_value (monitor.py already multiplied
+    # truncated prices by 1000) and format it.
+    current_price = prop.get("price", "")
+    current_pv = prop.get("price_value", 0)
+    if not is_valid_price(current_price):
+        if valid_ph:
+            current_price = valid_ph[-1]["p"]
+            current_pv = extract_price_value(current_price)
+        elif current_pv >= 10000:
+            current_price = f"RM{current_pv:,}"
 
     return {
         "t": prop.get("title", ""),
-        "p": prop.get("price", ""),
-        "pv": prop.get("price_value", 0),
+        "p": current_price,
+        "pv": current_pv,
         "l": normalize_location(prop.get("location", "")),
         "s": prop.get("size", ""),
         "ad": re.split(r"\s*\(", prop.get("auction_date", ""))[0].strip(),
