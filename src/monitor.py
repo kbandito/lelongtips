@@ -710,6 +710,15 @@ class FixedFullScrapingPropertyMonitor:
             else:
                 property_data["listing_url"] = f"{self.base_url}?page={page_num}"
 
+            # Extract listing_id from /property/<base64id>/... URL
+            listing_id = None
+            if listing_url and "/property/" in listing_url:
+                parts = listing_url.split("/property/")
+                if len(parts) > 1:
+                    listing_id = parts[1].split("/")[0]
+            if listing_id:
+                property_data["listing_id"] = listing_id
+
             property_data["url"] = f"{self.base_url}?page={page_num}"
             property_data["page_number"] = page_num
             now_iso = datetime.now().isoformat()
@@ -873,8 +882,10 @@ class FixedFullScrapingPropertyMonitor:
             f"🔍 Analyzing {len(current_properties)} current vs {len(database)} stored properties"
         )
 
-        # Pre-build a mapping from stable_key -> existing_id for quick lookup
-        stable_index = {}
+        # Pre-build indexes for matching
+        stable_index = {}  # stable_key -> existing_id
+        listing_id_index = {}  # listing_id -> existing_id
+        address_index = {}  # normalized_address -> existing_id
         for existing_id, existing_data in database.items():
             sk = existing_data.get("_stable_key")
             if not sk:
@@ -882,6 +893,18 @@ class FixedFullScrapingPropertyMonitor:
                 existing_data["_stable_key"] = sk
             if sk and sk not in stable_index:
                 stable_index[sk] = existing_id
+
+            # Index by listing_id (URL base64 ID) — most reliable
+            lid = existing_data.get("listing_id")
+            if lid and lid not in listing_id_index:
+                listing_id_index[lid] = existing_id
+
+            # Index by normalized address
+            addr = existing_data.get("header_full", "")
+            if addr:
+                norm_addr = self.normalize_text(addr)
+                if norm_addr and len(norm_addr) > 20 and norm_addr not in address_index:
+                    address_index[norm_addr] = existing_id
 
         for current_id, current_data in current_properties.items():
             # Ensure current stable key exists
@@ -893,14 +916,33 @@ class FixedFullScrapingPropertyMonitor:
             existing_id = None
             existing_data = None
 
-            # 1) Direct match by key
-            if current_id in database:
+            # 1) Match by listing_id (URL base64 ID) — best signal
+            cur_lid = current_data.get("listing_id")
+            if cur_lid and cur_lid in listing_id_index:
+                existing_id = listing_id_index[cur_lid]
+                existing_data = database[existing_id]
+            # 2) Direct match by key
+            elif current_id in database:
                 existing_id = current_id
                 existing_data = database[current_id]
-            # 2) Match by stable key
+            # 3) Match by stable key
             elif sk in stable_index:
                 existing_id = stable_index[sk]
                 existing_data = database[existing_id]
+            # 4) Match by address (for properties with same address but different titles)
+            else:
+                cur_addr = current_data.get("header_full", "")
+                if cur_addr:
+                    norm_addr = self.normalize_text(cur_addr)
+                    cur_size = self.normalize_size(current_data.get("size", ""))
+                    if norm_addr and len(norm_addr) > 20 and norm_addr in address_index:
+                        candidate_id = address_index[norm_addr]
+                        candidate = database[candidate_id]
+                        # Only match if size also matches (same address, same size = same unit)
+                        cand_size = self.normalize_size(candidate.get("size", ""))
+                        if cur_size and cand_size and cur_size == cand_size:
+                            existing_id = candidate_id
+                            existing_data = candidate
 
             if existing_id is None:
                 # Truly new listing
@@ -922,6 +964,8 @@ class FixedFullScrapingPropertyMonitor:
                 }
                 database[current_id]["_stable_key"] = sk
                 stable_index[sk] = current_id
+                if cur_lid:
+                    listing_id_index[cur_lid] = current_id
             else:
                 # Existing property - check for changes
                 changes = []
@@ -1010,6 +1054,9 @@ class FixedFullScrapingPropertyMonitor:
                     "first_seen", current_data["last_updated"]
                 )
                 database[existing_id]["_stable_key"] = sk
+                # Propagate listing_id to existing record
+                if cur_lid:
+                    database[existing_id]["listing_id"] = cur_lid
 
         print(
             f"📊 Analysis complete: {len(new_listings)} new, {len(changed_properties)} changed"
