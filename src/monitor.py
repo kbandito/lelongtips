@@ -129,13 +129,16 @@ class FixedFullScrapingPropertyMonitor:
     def generate_stable_key(self, prop):
         """
         Generate a stable identity key for a property:
-        title + location + size (normalized).
+        title + location + size + address (normalized).
         This should not change when price/auction date change.
+        Address is critical to distinguish properties with generic titles
+        like 'Shop Office' or 'Retail Lot'.
         """
         title = self.normalize_text(prop.get("title", ""))
         location = self.normalize_text(prop.get("location", ""))
         size = self.normalize_size(prop.get("size", ""))
-        return f"{title}|{location}|{size}"
+        address = self.normalize_text(prop.get("header_full", "") or "")
+        return f"{title}|{location}|{size}|{address}"
 
     # ---------- DB ----------
     def load_properties_database(self):
@@ -239,22 +242,23 @@ class FixedFullScrapingPropertyMonitor:
         content = f"{title}_{price}_{auction_date}_{location}_{size}".lower()
         return hashlib.md5(content.encode()).hexdigest()
 
-    def create_property_id(self, title, location, size):
+    def create_property_id(self, title, location, size, address=""):
         """
         Create a (relatively) stable property ID.
 
         IMPORTANT: does NOT include price or auction_date, so a price change
-        does not create a "new" property. We rely on title+location+size.
+        does not create a "new" property. We rely on title+location+size+address.
         """
         clean_title = re.sub(r"[^\w\s]", "", title)
         clean_location = re.sub(r"[^\w\s]", "", location)
         clean_size = re.sub(r"[^\w\s]", "", size)
+        clean_address = re.sub(r"[^\w\s]", "", address or "")
 
-        base = f"{clean_title}_{clean_location}_{clean_size}".strip()
+        base = f"{clean_title}_{clean_location}_{clean_size}_{clean_address}".strip()
         base = re.sub(r"\s+", "_", base).lower()
         if not base:
             base = "property"
-        return base[:100]
+        return base[:150]
 
     # ---------- Validation ----------
     def validate_price(self, price_str):
@@ -807,6 +811,7 @@ class FixedFullScrapingPropertyMonitor:
                         prop_data["title"],
                         prop_data["location"],
                         prop_data["size"],
+                        prop_data.get("header_full", ""),
                     )
                     prop_data["total_results_on_site"] = total_results
                     all_properties[property_id] = prop_data
@@ -951,33 +956,59 @@ class FixedFullScrapingPropertyMonitor:
             existing_id = None
             existing_data = None
 
-            # 1) Match by listing_id (URL base64 ID) — best signal
             cur_lid = current_data.get("listing_id")
+            cur_addr = self.normalize_text(
+                current_data.get("header_full", "") or ""
+            )
+            cur_size = self.normalize_size(current_data.get("size", ""))
+
+            # 1) Match by listing_id — but validate address matches
+            #    listing_ids can be shared across different properties
             if cur_lid and cur_lid in listing_id_index:
-                existing_id = listing_id_index[cur_lid]
-                existing_data = database[existing_id]
-            # 2) Direct match by key
-            elif current_id in database:
-                existing_id = current_id
-                existing_data = database[current_id]
-            # 3) Match by stable key
-            elif sk in stable_index:
+                candidate_id = listing_id_index[cur_lid]
+                candidate = database[candidate_id]
+                cand_addr = self.normalize_text(
+                    candidate.get("header_full", "") or ""
+                )
+                # Accept if addresses match, or if one side has no address
+                if (
+                    not cur_addr
+                    or not cand_addr
+                    or cur_addr == cand_addr
+                ):
+                    existing_id = candidate_id
+                    existing_data = candidate
+
+            # 2) Direct match by property_id key
+            if not existing_id and current_id in database:
+                candidate = database[current_id]
+                cand_addr = self.normalize_text(
+                    candidate.get("header_full", "") or ""
+                )
+                if (
+                    not cur_addr
+                    or not cand_addr
+                    or cur_addr == cand_addr
+                ):
+                    existing_id = current_id
+                    existing_data = candidate
+
+            # 3) Match by stable key (now includes address, much safer)
+            if not existing_id and sk in stable_index:
                 existing_id = stable_index[sk]
                 existing_data = database[existing_id]
-            # 4) Match by address (for properties with same address but different titles)
-            else:
-                cur_addr = current_data.get("header_full", "")
-                if cur_addr:
-                    norm_addr = self.normalize_text(cur_addr)
-                    cur_size = self.normalize_size(current_data.get("size", ""))
-                    if norm_addr and len(norm_addr) > 20 and norm_addr in address_index:
-                        candidate_id = address_index[norm_addr]
-                        candidate = database[candidate_id]
-                        # Only match if size also matches (same address, same size = same unit)
-                        cand_size = self.normalize_size(candidate.get("size", ""))
-                        if cur_size and cand_size and cur_size == cand_size:
-                            existing_id = candidate_id
-                            existing_data = candidate
+
+            # 4) Match by address + size (same address, same size = same unit)
+            if not existing_id and cur_addr and len(cur_addr) > 20:
+                if cur_addr in address_index:
+                    candidate_id = address_index[cur_addr]
+                    candidate = database[candidate_id]
+                    cand_size = self.normalize_size(
+                        candidate.get("size", "")
+                    )
+                    if cur_size and cand_size and cur_size == cand_size:
+                        existing_id = candidate_id
+                        existing_data = candidate
 
             if existing_id is None:
                 # Truly new listing
