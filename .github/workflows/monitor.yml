@@ -7,6 +7,15 @@ on:
   
   # Allow manual triggering
   workflow_dispatch:
+    inputs:
+      include_expired:
+        description: 'Include expired auction listings'
+        required: false
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+        default: 'true'
 
 jobs:
   monitor:
@@ -36,9 +45,7 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         WHATSAPP_API_KEY: ${{ secrets.WHATSAPP_API_KEY }}
         WHATSAPP_PHONE_NUMBER: ${{ secrets.WHATSAPP_PHONE_NUMBER }}
-        # Set to "true" for the one-time full collection (includes expired listings).
-        # Remove or set to "false" for ongoing monitoring (future auction dates only).
-        # INCLUDE_EXPIRED: "true"
+        INCLUDE_EXPIRED: ${{ github.event.inputs.include_expired || 'true' }}
       run: |
         cd src
         python monitor.py
