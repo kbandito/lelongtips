@@ -38,11 +38,14 @@ jobs:
         cd src
         python monitor.py
     
+    - name: Generate dashboard
+      run: python src/generate_page.py
+
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add data/
+        git add data/ docs/
         git diff --staged --quiet || git commit -m "Update property data - $(date '+%Y-%m-%d %H:%M:%S')"
         git push
       env:
