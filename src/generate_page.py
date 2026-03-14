@@ -93,14 +93,20 @@ def trim_property(prop):
     ph = prop.get("price_history", [])
 
     # Filter out corrupted price entries and keep last 5 valid ones
+    listing_url = prop.get("listing_url", "")
     valid_ph = []
     for h in ph:
         price = h.get("price", "")
         if is_valid_price(price):
-            valid_ph.append({
+            entry = {
                 "p": price,
                 "d": h.get("date", "")[:10],
-            })
+            }
+            # Use the entry's own URL, or fall back to the property's current URL
+            url = h.get("url", "") or listing_url
+            if url:
+                entry["u"] = url
+            valid_ph.append(entry)
     trimmed_ph = valid_ph[-5:]
 
     # Use current price if valid, otherwise fall back to latest valid from history.
