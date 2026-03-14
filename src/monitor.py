@@ -359,15 +359,16 @@ class FixedFullScrapingPropertyMonitor:
             if page_numbers:
                 total_pages = max(page_numbers)
             else:
-                if total_results > 20:
-                    total_pages = min((total_results + 19) // 20, 100)
+                # 12 listings per page
+                if total_results > 12:
+                    total_pages = min((total_results + 11) // 12, 600)
 
             print(f"📊 Found {total_results:,} total results across {total_pages} pages")
             return total_results, total_pages
 
         except Exception as e:
             print(f"❌ Error getting pagination info: {e}")
-            return 1650, 83  # Fallback
+            return 7000, 590  # Fallback (~7000 listings, 12 per page)
 
     # ---------- Extraction ----------
     def extract_properties_from_page(self, page_content, page_num):
@@ -380,12 +381,17 @@ class FixedFullScrapingPropertyMonitor:
             soup = BeautifulSoup(page_content, "html.parser")
             potential_properties = []
 
-            # Find price text nodes then walk up to container
-            price_elements = soup.find_all(string=re.compile(r"RM[\d,]+"))
+            # Strategy 1: find listing cards via /property/ links with stretched-link
+            # Each listing card has exactly one <a class="stretched-link" href="/property/...">
+            property_links = soup.find_all(
+                "a",
+                href=re.compile(r"/property/"),
+                class_=re.compile(r"stretched-link"),
+            )
 
-            for price_elem in price_elements:
+            for link in property_links:
                 try:
-                    container = price_elem.parent
+                    container = link.parent
                     container_attempts = 0
 
                     while container and container.name != "html" and container_attempts < 10:
@@ -418,6 +424,46 @@ class FixedFullScrapingPropertyMonitor:
                         container_attempts += 1
                 except Exception:
                     continue
+
+            # Strategy 2 (fallback): walk up from RM price text nodes
+            if not potential_properties:
+                price_elements = soup.find_all(string=re.compile(r"RM[\d,]+"))
+
+                for price_elem in price_elements:
+                    try:
+                        container = price_elem.parent
+                        container_attempts = 0
+
+                        while container and container.name != "html" and container_attempts < 10:
+                            container_text = container.get_text()
+
+                            has_price = bool(re.search(r"RM[\d,]+", container_text))
+                            has_date = bool(
+                                re.search(
+                                    r"\d{1,2}\s+\w{3}\s+\d{4}\s+\(\w{3}\)", container_text
+                                )
+                            )
+
+                            if has_price and has_date:
+                                container_hash = hashlib.md5(
+                                    container_text.encode()
+                                ).hexdigest()
+                                if container_hash not in [
+                                    p.get("container_hash") for p in potential_properties
+                                ]:
+                                    potential_properties.append(
+                                        {
+                                            "container": container,
+                                            "container_text": container_text,
+                                            "container_hash": container_hash,
+                                        }
+                                    )
+                                break
+
+                            container = container.parent
+                            container_attempts += 1
+                    except Exception:
+                        continue
 
             print(
                 f"📄 Page {page_num}: "
