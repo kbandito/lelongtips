@@ -988,6 +988,7 @@ class FixedFullScrapingPropertyMonitor:
                         {
                             "price": current_data["price"],
                             "date": current_data["last_updated"],
+                            "url": current_data.get("listing_url", ""),
                         }
                     ],
                     "auction_date_history": [
@@ -1027,12 +1028,14 @@ class FixedFullScrapingPropertyMonitor:
                                 "date": existing_data.get(
                                     "first_seen", current_data["last_updated"]
                                 ),
+                                "url": existing_data.get("listing_url", ""),
                             }
                         ]
                     existing_data["price_history"].append(
                         {
                             "price": current_data["price"],
                             "date": current_data["last_updated"],
+                            "url": current_data.get("listing_url", ""),
                         }
                     )
 
