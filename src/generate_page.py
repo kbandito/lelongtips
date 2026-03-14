@@ -121,6 +121,64 @@ def trim_property(prop):
         elif current_pv >= 10000:
             current_price = f"RM{current_pv:,}"
 
+    # Build combined auction history from price + auction_date histories
+    # Each entry represents a snapshot: date seen, price, auction date, url
+    adh = prop.get("auction_date_history", [])
+    # Merge all events by date into snapshots
+    snapshots = {}  # date -> {price, auction_date, url}
+    for h in ph:
+        d = h.get("date", "")[:10]
+        if not d:
+            continue
+        if d not in snapshots:
+            snapshots[d] = {}
+        price = h.get("price", "")
+        if is_valid_price(price):
+            snapshots[d]["p"] = price
+        snapshots[d]["u"] = h.get("url", "") or listing_url
+    for h in adh:
+        d = h.get("date", "")[:10]
+        if not d:
+            continue
+        if d not in snapshots:
+            snapshots[d] = {}
+        ad_val = h.get("auction_date", "")
+        # Strip day-of-week in parens
+        ad_clean = re.split(r"\s*\(", ad_val)[0].strip()
+        if ad_clean:
+            snapshots[d]["ad"] = ad_clean
+        if "u" not in snapshots[d]:
+            snapshots[d]["u"] = listing_url
+
+    # Build sorted history, carrying forward last known values
+    history = []
+    last_price = ""
+    last_ad = ""
+    for d in sorted(snapshots.keys()):
+        s = snapshots[d]
+        if "p" in s:
+            last_price = s["p"]
+        if "ad" in s:
+            last_ad = s["ad"]
+        entry = {"d": d}
+        if last_price:
+            entry["p"] = last_price
+        if last_ad:
+            entry["ad"] = last_ad
+        url = s.get("u", "")
+        if url:
+            entry["u"] = url
+        history.append(entry)
+
+    # Deduplicate consecutive identical entries (same price + auction date)
+    deduped = []
+    for h in history:
+        if deduped and h.get("p") == deduped[-1].get("p") and h.get("ad") == deduped[-1].get("ad"):
+            continue
+        deduped.append(h)
+    # Keep last 10
+    trimmed_hist = deduped[-10:]
+
     return {
         "t": prop.get("title", ""),
         "p": current_price,
@@ -134,6 +192,7 @@ def trim_property(prop):
         "img": prop.get("image_url", ""),
         "a": (prop.get("header_full", "") or "")[:120],
         "ph": trimmed_ph,
+        "hist": trimmed_hist if len(trimmed_hist) > 1 else [],
     }
 
 
@@ -807,6 +866,39 @@ footer {{
   font-size: 0.75rem;
 }}
 .data-table .link-cell a:hover {{ text-decoration: underline; }}
+.data-table .expand-btn {{
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: var(--accent);
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: transform 0.15s;
+}}
+.data-table .expand-btn:hover {{ background: var(--accent-light); }}
+.data-table .expand-btn.open {{ transform: rotate(90deg); }}
+.data-table .hist-row td {{
+  background: #F9FAFB;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  color: var(--text-sec);
+  border-bottom: 1px solid #F3F4F6;
+}}
+.data-table .hist-row .hist-label {{
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}}
+.data-table .hist-row .hist-changed {{
+  background: var(--orange-light);
+  color: var(--orange);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}}
 @media(max-width: 600px) {{
   .table-wrap {{ margin: 0 -12px; padding: 0 12px; }}
   .data-table {{ font-size: 0.72rem; }}
@@ -1210,8 +1302,14 @@ footer {{
       const days = daysUntil(p.ad);
       const daysText = days <= 0 ? 'Today' : days === 1 ? '1d' : days + 'd';
       const urgClass = days <= 7 ? ' urgent' : '';
-      html += '<tr class="'+urgClass+'">'
-        + '<td class="td-title" onclick="window._openDetail(\\\''+esc(item.id)+'\\\')">'+esc(p.t)+'</td>'
+      const hist = p.hist || [];
+      const hasHist = hist.length > 1;
+      const rowId = 'tr-' + i;
+      const expandBtn = hasHist
+        ? '<button class="expand-btn" data-row="'+rowId+'" title="'+hist.length+' rounds">&#9654; '+hist.length+'</button>'
+        : '';
+      html += '<tr class="'+urgClass+'" id="'+rowId+'">'
+        + '<td class="td-title" onclick="window._openDetail(\\\''+esc(item.id)+'\\\')">'+ expandBtn + esc(p.t)+'</td>'
         + '<td class="td-price">'+esc(p.p)+'</td>'
         + '<td>'+esc(p.pt)+'</td>'
         + '<td>'+esc(p.l)+'</td>'
@@ -1220,6 +1318,26 @@ footer {{
         + '<td class="td-discount">'+esc(p.d || '-')+'</td>'
         + '<td class="link-cell">'+(p.u ? '<a href="'+esc(p.u)+'" target="_blank" rel="noopener">View</a>' : '-')+'</td>'
         + '</tr>';
+      // Hidden history sub-rows (all except last which is current)
+      if (hasHist) {{
+        for (let j = 0; j < hist.length - 1; j++) {{
+          const h = hist[j];
+          const prev = j > 0 ? hist[j-1] : null;
+          const priceChanged = prev && h.p && prev.p && h.p !== prev.p;
+          const adChanged = prev && h.ad && prev.ad && h.ad !== prev.ad;
+          const pCell = h.p ? (priceChanged ? '<span class="hist-changed">'+esc(h.p)+'</span>' : esc(h.p)) : '<span style="color:var(--text-muted)">-</span>';
+          const adCell = h.ad ? (adChanged ? '<span class="hist-changed">'+esc(h.ad)+'</span>' : esc(h.ad)) : '-';
+          const link = h.u ? '<a href="'+esc(h.u)+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:0.7rem">View</a>' : '-';
+          html += '<tr class="hist-row" data-parent="'+rowId+'" style="display:none">'
+            + '<td style="padding-left:28px"><span class="hist-label">'+esc(h.d)+'</span></td>'
+            + '<td>'+pCell+'</td>'
+            + '<td colspan="3"></td>'
+            + '<td>'+adCell+'</td>'
+            + '<td></td>'
+            + '<td class="link-cell">'+link+'</td>'
+            + '</tr>';
+        }}
+      }}
     }}
     if (start === 0) tbody.innerHTML = html;
     else tbody.insertAdjacentHTML('beforeend', html);
@@ -1274,6 +1392,17 @@ footer {{
     const countEl = document.getElementById('count-table');
     if (countEl) countEl.textContent = 'Showing ' + Math.min(tableDisplayed, tableItems.length) + ' of ' + tableItems.length + ' listings';
     if (tableDisplayed >= tableItems.length) this.style.display = 'none';
+  }});
+
+  // Expand/collapse history sub-rows
+  document.getElementById('table-body').addEventListener('click', function(e) {{
+    const btn = e.target.closest('.expand-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    const rowId = btn.dataset.row;
+    const isOpen = btn.classList.toggle('open');
+    const subRows = this.querySelectorAll('tr[data-parent="'+rowId+'"]');
+    subRows.forEach(function(r) {{ r.style.display = isOpen ? '' : 'none'; }});
   }});
 
   // --- Tabs ---
