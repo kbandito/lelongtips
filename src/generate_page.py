@@ -1141,6 +1141,23 @@ footer {{
     return '<span class="sparkline"><svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="1.5"/></svg></span>';
   }}
 
+  // Extract scheme/building name from address string
+  function schemeName(addr, title) {{
+    if (!addr || addr === title) return '';
+    const paren = addr.match(/\(([^)]+)\)/);
+    const named = addr.match(/(?:,\s*)?([A-Z][A-Za-z\s]+(?:Park|Centre|Point|Plaza|Place|Heights|Residences?|Tower|City|Garden|Court|Square|Perdagangan|Komersial|Damansara|Business|Mall|Complex|Kompleks)[A-Za-z\s]*)/);
+    if (named) return named[1].trim();
+    if (paren) return paren[1].trim();
+    const parts = addr.split(',').map(function(s) {{ return s.trim(); }});
+    for (let k = 0; k < parts.length && k < 3; k++) {{
+      const seg = parts[k];
+      if (seg && !/^\d/.test(seg) && !/^(Lot|Block|No\.|Unit|Level|Ground|First|Second)\b/i.test(seg) && seg.length > 5) {{
+        return seg.length > 50 ? seg.substring(0, 47) + '...' : seg;
+      }}
+    }}
+    return parts[0] || '';
+  }}
+
   // --- Card rendering ---
   function renderCard(id, p, opts) {{
     opts = opts || {{}};
@@ -1169,11 +1186,14 @@ footer {{
       }}
     }}
 
+    const scheme = schemeName(p.a, p.t);
+    const displayTitle = scheme || p.a || p.t;
+
     return '<div class="card" data-id="'+esc(id)+'" onclick="window._openDetail(this.dataset.id)">'
       + '<div class="card-top">'
       + '<div class="card-img">'+imgHtml+'</div>'
       + '<div class="card-body">'
-      + '<div class="card-header"><div class="card-title">'+esc(p.t)+badgeHtml+'</div><div class="card-price">'+esc(p.p)+spark+'</div></div>'
+      + '<div class="card-header"><div class="card-title">'+esc(displayTitle)+badgeHtml+'</div><div class="card-price">'+esc(p.p)+spark+'</div></div>'
       + '<div class="card-meta">'
       + (p.pt ? '<span class="pill type">'+esc(p.pt)+'</span>' : '')
       + '<span class="pill loc">'+esc(p.l)+'</span>'
@@ -1300,27 +1320,6 @@ footer {{
     items.sort(sorters[col] || sorters.auction);
   }}
 
-  // Extract scheme/building name from address string
-  function schemeName(addr, title) {{
-    if (!addr || addr === title) return '';
-    // Try to find a named place (contains uppercase words, parentheses, or known patterns)
-    // First try: text in parentheses like "Kenanga Wholesale City (KWC Fashion Wholesale)"
-    const paren = addr.match(/\(([^)]+)\)/);
-    // Try: named buildings/parks - look for sequences with capitals after Block/Lot prefix
-    const named = addr.match(/(?:,\s*)?([A-Z][A-Za-z\s]+(?:Park|Centre|Point|Plaza|Place|Heights|Residences?|Tower|City|Garden|Court|Square|Perdagangan|Komersial|Damansara|Business|Mall|Complex|Kompleks)[A-Za-z\s]*)/);
-    if (named) return named[1].trim();
-    if (paren) return paren[1].trim();
-    // Fallback: use first meaningful segment of address (skip Block/Lot prefixes)
-    const parts = addr.split(',').map(function(s) {{ return s.trim(); }});
-    for (let k = 0; k < parts.length && k < 3; k++) {{
-      const seg = parts[k];
-      if (seg && !/^\d/.test(seg) && !/^(Lot|Block|No\.|Unit|Level|Ground|First|Second)\b/i.test(seg) && seg.length > 5) {{
-        return seg.length > 50 ? seg.substring(0, 47) + '...' : seg;
-      }}
-    }}
-    return parts[0] || '';
-  }}
-
   function renderTableRows(items, start, count) {{
     const tbody = document.getElementById('table-body');
     let html = '';
@@ -1362,7 +1361,7 @@ footer {{
           const adCell = h.ad ? (adChanged ? '<span class="hist-changed">'+esc(h.ad)+'</span>' : esc(h.ad)) : '-';
           const link = h.u ? '<a href="'+esc(h.u)+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:0.7rem">View</a>' : '-';
           html += '<tr class="hist-row" data-parent="'+rowId+'" style="display:none">'
-            + '<td style="padding-left:28px"><span class="hist-label">Seen '+esc(h.d)+'</span></td>'
+            + '<td style="padding-left:28px">'+esc(scheme || p.t)+'<br><span class="hist-label">'+esc(h.d)+'</span></td>'
             + '<td>'+pCell+'</td>'
             + '<td>'+esc(p.pt)+'</td>'
             + '<td>'+esc(p.l)+'</td>'
@@ -1490,9 +1489,13 @@ footer {{
       ? '<img src="'+esc(p.img)+'" style="width:100%;border-radius:10px;margin-bottom:12px" alt="">'
       : '';
 
+    const modalScheme = schemeName(p.a, p.t);
+    const modalTitle = modalScheme || p.a || p.t;
+
     const html = '<div class="modal-handle"></div>'
       + imgHtml
-      + '<h2>'+esc(p.t)+'</h2>'
+      + '<h2>'+esc(modalTitle)+'</h2>'
+      + (modalScheme ? '<div style="color:var(--text-muted);font-size:0.8rem;margin:-8px 0 12px">'+esc(p.t)+'</div>' : '')
       + '<div class="detail-row"><span class="detail-label">Price</span><span class="detail-value" style="color:#2563EB;font-size:1.1rem">'+esc(p.p)+'</span></div>'
       + (p.d ? '<div class="detail-row"><span class="detail-label">Discount</span><span class="detail-value" style="color:#059669">'+esc(p.d)+'</span></div>' : '')
       + '<div class="detail-row"><span class="detail-label">Auction Date</span><span class="detail-value">'+esc(p.ad)+' <span style="color:#D97706">('+daysText+')</span></span></div>'
