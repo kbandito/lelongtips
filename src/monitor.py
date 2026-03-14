@@ -50,7 +50,7 @@ class FixedFullScrapingPropertyMonitor:
         self.root_url = "https://www.lelongtips.com.my"
         self.search_params = {
             "keyword": "",
-            "property_type[]": ["7", "6", "8", "4", "5"],
+            "property_type[]": ["1", "2", "3", "4", "5", "6", "7", "8"],
             "state": "kl_sel",
             "bank": "",
             "listing_status": "",
