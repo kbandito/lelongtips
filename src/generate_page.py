@@ -833,6 +833,10 @@ footer {{
   </div>
 </div>
 
+<script id="__stats__" type="application/json">{inline_stats}</script>
+<script id="__active__" type="application/json">{inline_active}</script>
+<script id="__changes__" type="application/json">{inline_changes}</script>
+
 <script>
 (function() {{
   'use strict';
@@ -1284,9 +1288,6 @@ footer {{
   init();
 }})();
 </script>
-<script id="__stats__" type="application/json">{inline_stats}</script>
-<script id="__active__" type="application/json">{inline_active}</script>
-<script id="__changes__" type="application/json">{inline_changes}</script>
 </body>
 </html>"""
 
