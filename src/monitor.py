@@ -21,6 +21,9 @@ import html  # for Telegram HTML escaping
 
 class FixedFullScrapingPropertyMonitor:
     def __init__(self):
+        # One-time mode: set INCLUDE_EXPIRED=true to collect all listings including past auction dates
+        self.include_expired = os.environ.get("INCLUDE_EXPIRED", "").lower() == "true"
+
         # Try to use repository data directory, fall back to temp if no write permissions
         self.base_path = (
             Path(__file__).parent.parent
@@ -280,17 +283,26 @@ class FixedFullScrapingPropertyMonitor:
             return False, 0
 
     def validate_auction_date(self, date_str):
-        """Validate if auction date is reasonable"""
+        """Validate if auction date is reasonable.
+        In INCLUDE_EXPIRED mode, accept any parseable date.
+        In normal mode, only accept future/current auction dates.
+        """
         try:
             if not re.match(r"\d{1,2}\s+\w{3}\s+\d{4}\s+\(\w{3}\)", date_str):
                 return False
 
-            year_match = re.search(r"\d{4}", date_str)
-            if year_match:
-                year = int(year_match.group())
-                current_year = datetime.now().year
-                if current_year <= year <= current_year + 1:
-                    return True
+            if self.include_expired:
+                # Accept any valid-format date regardless of how old
+                return True
+
+            # Normal mode: accept only upcoming or current-year auctions
+            date_no_day = re.sub(r"\s*\(\w{3}\)", "", date_str).strip()
+            try:
+                auction_dt = datetime.strptime(date_no_day, "%d %b %Y")
+                # Accept if auction date is today or in the future
+                return auction_dt.date() >= datetime.now().date()
+            except ValueError:
+                pass
 
             return False
         except Exception:
