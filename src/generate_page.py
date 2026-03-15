@@ -88,7 +88,7 @@ def is_valid_price(price_str):
     return extract_price_value(price_str) >= 10000
 
 
-def trim_property(prop):
+def trim_property(prop, geocode_cache=None, scheme_cache=None):
     """Reduce property to essential fields with short keys."""
     ph = prop.get("price_history", [])
 
@@ -179,7 +179,7 @@ def trim_property(prop):
     # Keep last 10
     trimmed_hist = deduped[-10:]
 
-    return {
+    result = {
         "t": prop.get("title", ""),
         "p": current_price,
         "pv": current_pv,
@@ -194,6 +194,19 @@ def trim_property(prop):
         "ph": trimmed_ph,
         "hist": trimmed_hist if len(trimmed_hist) > 1 else [],
     }
+    addr = (prop.get("header_full") or "").strip()
+    # Add geocode if available
+    if geocode_cache:
+        geo = geocode_cache.get(addr)
+        if geo and geo.get("q") != "default":
+            result["lat"] = round(geo["lat"], 5)
+            result["lng"] = round(geo["lng"], 5)
+    # Add AI-extracted scheme name if available
+    if scheme_cache:
+        scheme = scheme_cache.get(addr, "")
+        if scheme:
+            result["sn"] = scheme
+    return result
 
 
 def write_data_files(properties, changes_history, daily_stats):
@@ -201,12 +214,26 @@ def write_data_files(properties, changes_history, daily_stats):
     data_dir = os.path.join(DOCS_DIR, "data")
     os.makedirs(data_dir, exist_ok=True)
 
+    # Load geocode cache if available
+    geocode_cache_path = os.path.join(DATA_DIR, "geocode_cache.json")
+    geocode_cache = None
+    if os.path.exists(geocode_cache_path):
+        with open(geocode_cache_path, "r") as f:
+            geocode_cache = json.load(f)
+
+    # Load scheme name cache if available
+    scheme_cache_path = os.path.join(DATA_DIR, "scheme_cache.json")
+    scheme_cache = None
+    if os.path.exists(scheme_cache_path):
+        with open(scheme_cache_path, "r") as f:
+            scheme_cache = json.load(f)
+
     active = get_active_properties(properties)
 
     # active.json - trimmed ALL listings (active + expired for search)
     active_data = {}
     for pid, p in properties.items():
-        trimmed = trim_property(p)
+        trimmed = trim_property(p, geocode_cache, scheme_cache)
         # Mark expired listings
         ad = p.get("auction_date", "")
         d = parse_auction_date(ad)
@@ -425,6 +452,8 @@ header h1 span {{ color: var(--accent); }}
   border-radius: 3px;
   flex-shrink: 0;
 }}
+.legend-item.clickable:hover {{ background: var(--accent-light); border-radius: 6px; }}
+.week-bar-row.clickable:hover {{ background: var(--accent-light); border-radius: 6px; }}
 .legend-label {{ color: var(--text-sec); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
 .legend-count {{ font-weight: 600; color: var(--text); font-size: 0.75rem; }}
 .legend-pct {{ color: var(--text-muted); font-size: 0.7rem; width: 36px; text-align: right; }}
@@ -707,6 +736,132 @@ header h1 span {{ color: var(--accent); }}
 .pill.expired {{ background: #F3F4F6; color: #6B7280; font-weight: 600; }}
 .card.is-expired {{ opacity: 0.7; }}
 .card.is-expired:hover {{ opacity: 1; }}
+.card.expanded {{ box-shadow: var(--shadow-lg); border-color: var(--accent); }}
+.card-expand {{
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  animation: expandIn 0.2s ease-out;
+}}
+@keyframes expandIn {{
+  from {{ opacity: 0; max-height: 0; }}
+  to {{ opacity: 1; max-height: 800px; }}
+}}
+.card-expand .detail-row {{
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}}
+.card-expand .detail-row:last-of-type {{ border-bottom: none; }}
+.card-expand .detail-label {{ color: var(--text-muted); }}
+.card-expand .detail-value {{ font-weight: 500; text-align: right; }}
+.card-expand .price-chart {{
+  margin: 12px 0;
+  padding: 10px;
+  background: var(--bg);
+  border-radius: 8px;
+}}
+.card-expand .price-chart h3 {{ font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }}
+
+/* Table inline detail */
+.table-detail-row td {{
+  padding: 0 !important;
+  border-bottom: 2px solid var(--accent) !important;
+}}
+.table-detail-content {{
+  padding: 14px 16px;
+  background: #F9FAFB;
+  animation: expandIn 0.2s ease-out;
+}}
+.table-detail-content .detail-row {{
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}}
+.table-detail-content .detail-label {{ color: var(--text-muted); }}
+.table-detail-content .detail-value {{ font-weight: 500; text-align: right; }}
+.table-detail-content .price-chart {{
+  margin: 10px 0;
+  padding: 10px;
+  background: var(--card-bg);
+  border-radius: 8px;
+}}
+.table-detail-content .price-chart h3 {{ font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }}
+
+/* Bookmark filters */
+.bm-add-btn {{
+  margin-left: auto;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}}
+.bm-add-btn:hover {{ opacity: 0.8; }}
+.bm-input-row {{
+  display: flex;
+  gap: 8px;
+}}
+.bm-input-row .search-bar {{ flex: 1; }}
+.bm-save-btn {{
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}}
+.bm-save-btn:hover {{ opacity: 0.8; }}
+.bm-list {{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}}
+.bm-chip {{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}}
+.bm-chip:hover {{ border-color: var(--accent); background: #DBEAFE; }}
+.bm-chip .bm-delete {{
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 2px;
+  border-radius: 50%;
+}}
+.bm-chip .bm-delete:hover {{ color: var(--red); }}
+.bm-chip .bm-count {{
+  font-size: 0.65rem;
+  background: var(--accent);
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 10px;
+}}
 .data-table tr.is-expired td {{ color: var(--text-muted); }}
 .data-table tr.is-expired .td-price {{ color: var(--text-muted); }}
 .filter-row {{
@@ -919,7 +1074,8 @@ footer {{
 /* Table view */
 .table-wrap {{
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: auto;
+  max-height: 75vh;
   -webkit-overflow-scrolling: touch;
   margin: 0 -16px;
   padding: 0 16px;
@@ -934,7 +1090,7 @@ footer {{
   border-radius: 10px;
   box-shadow: var(--shadow);
 }}
-.data-table thead th {{ position: sticky; top: 42px; z-index: 50; }}
+.data-table thead th {{ position: sticky; top: 0; z-index: 50; }}
 .data-table th {{
   background: var(--accent-light);
   color: var(--text-sec);
@@ -1061,9 +1217,24 @@ footer {{
     <button class="tab" data-tab="changes">Changes <span class="badge-count orange">{stats['changed_count']}</span></button>
     <button class="tab" data-tab="search">Search</button>
     <button class="tab" data-tab="table">Table</button>
+    <button class="tab" data-tab="map">Map</button>
   </div>
 
   <div id="tab-dashboard" class="tab-content active">
+    <div class="section-title">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 3C2 2.4 2.4 2 3 2H5L6 3H13C13.6 3 14 3.4 14 4V12C14 12.6 13.6 13 13 13H3C2.4 13 2 12.6 2 12V3Z" fill="currentColor"/></svg>
+      Saved Filters
+      <button class="bm-add-btn" id="bm-add" title="Add bookmark">+</button>
+    </div>
+    <div id="bm-input-wrap" style="display:none;margin-bottom:12px">
+      <div class="bm-input-row">
+        <input type="text" id="bm-query" class="search-bar" placeholder="e.g. landed under 500k in Selangor, condos KL above 300k...">
+        <button class="bm-save-btn" id="bm-save">Save</button>
+      </div>
+      <div id="bm-preview" style="display:none;margin-top:6px;font-size:0.75rem;color:var(--text-muted)"></div>
+    </div>
+    <div id="bm-list" class="bm-list"></div>
+
     <div class="section-title">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L10 5.5L15 6.2L11.5 9.5L12.4 14.5L8 12L3.6 14.5L4.5 9.5L1 6.2L6 5.5L8 1Z" fill="currentColor"/></svg>
       Hot Deals — Biggest Price Drops
@@ -1182,18 +1353,31 @@ footer {{
     <button class="load-more" id="more-table" style="display:none">Load more</button>
   </div>
 
+  <div id="tab-map" class="tab-content">
+    <div class="filter-row" style="margin-bottom:10px">
+      <label>Type:</label>
+      <select id="map-filter-type"><option value="">All Types</option></select>
+      <label>Status:</label>
+      <select id="map-filter-status">
+        <option value="active" selected>Active Only</option>
+        <option value="all">All</option>
+        <option value="expired">Expired Only</option>
+      </select>
+      <span id="map-count" style="font-size:0.75rem;color:var(--text-muted);margin-left:auto"></span>
+    </div>
+    <div id="property-map" style="height:70vh;border-radius:12px;border:1px solid var(--border)"></div>
+  </div>
+
   <footer>
     LelongTips Property Monitor &middot; Auto-updated every 3 days
   </footer>
 </div>
 
-<!-- Detail Modal -->
-<div class="modal-backdrop" id="modal-backdrop">
-  <div class="modal" id="modal">
-    <div class="modal-handle"></div>
-    <div id="modal-content"></div>
-  </div>
-</div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <script id="__stats__" type="application/json">{inline_stats}</script>
 <script id="__active__" type="application/json">{inline_active}</script>
@@ -1276,7 +1460,9 @@ footer {{
   }}
 
   // Extract scheme/building name from address string
-  function schemeName(addr, title) {{
+  function schemeName(addr, title, aiScheme) {{
+    // Use AI-extracted scheme name if available
+    if (aiScheme) return aiScheme;
     if (!addr || addr === title) return '';
     const paren = addr.match(/\(([^)]+)\)/);
     const named = addr.match(/(?:,\s*)?([A-Z][A-Za-z\s]+(?:Park|Centre|Point|Plaza|Place|Heights|Residences?|Tower|City|Garden|Court|Square|Perdagangan|Komersial|Damansara|Business|Mall|Complex|Kompleks)[A-Za-z\s]*)/);
@@ -1323,7 +1509,7 @@ footer {{
       }}
     }}
 
-    const scheme = schemeName(p.a, p.t);
+    const scheme = schemeName(p.a, p.t, p.sn);
     const displayTitle = scheme || p.a || p.t;
 
     const expClass = isExpired ? ' is-expired' : '';
@@ -1416,6 +1602,14 @@ footer {{
       if (maxPrice > 0) {{
         items = items.filter(item => (item.prop.pv || 0) <= maxPrice);
       }}
+      // Week date range filter (from dashboard click)
+      if (window._weekFilter) {{
+        const wf = window._weekFilter;
+        items = items.filter(item => {{
+          const ad = parseAuctionDate(item.prop.ad);
+          return ad && ad >= wf.start && ad <= wf.end;
+        }});
+      }}
     }}
 
     // Sort
@@ -1491,13 +1685,13 @@ footer {{
       const expandBtn = hasHist
         ? '<button class="expand-btn" data-row="'+rowId+'" title="'+hist.length+' rounds">&#9654; '+hist.length+'</button>'
         : '';
-      const scheme = schemeName(p.a, p.t);
+      const scheme = schemeName(p.a, p.t, p.sn);
       const nameHtml = scheme
         ? esc(scheme) + '<span class="td-scheme">'+esc(p.t)+'</span>'
         : esc(p.a || p.t);
       const expBadge = isExp ? ' <span class="pill expired" style="font-size:0.6rem;padding:1px 5px">EXPIRED</span>' : '';
-      html += '<tr class="'+rowClass+'" id="'+rowId+'">'
-        + '<td class="td-title" onclick="window._openDetail(\\\''+esc(item.id)+'\\\')">'+ expandBtn + nameHtml + expBadge+'</td>'
+      html += '<tr class="'+rowClass+'" id="'+rowId+'" data-pid="'+esc(item.id)+'">'
+        + '<td class="td-title" onclick="window._toggleTableDetail(this.parentElement)">'+ expandBtn + nameHtml + expBadge+'</td>'
         + '<td class="td-price">'+esc(p.p)+'</td>'
         + '<td>'+esc(p.pt)+'</td>'
         + '<td>'+esc(p.l)+'</td>'
@@ -1615,10 +1809,8 @@ footer {{
     document.getElementById('tab-' + tab).classList.add('active');
   }});
 
-  // --- Detail Modal ---
-  window._openDetail = function(id) {{
-    const p = allProps[id];
-    if (!p) return;
+  // --- Inline Detail Expansion ---
+  function buildDetailHtml(p) {{
     const days = daysUntil(p.ad);
     const daysText = days <= 0 ? 'Today' : days === 1 ? 'Tomorrow' : 'in ' + days + ' days';
 
@@ -1654,13 +1846,7 @@ footer {{
       ? '<img src="'+esc(p.img)+'" style="width:100%;border-radius:10px;margin-bottom:12px" alt="">'
       : '';
 
-    const modalScheme = schemeName(p.a, p.t);
-    const modalTitle = modalScheme || p.a || p.t;
-
-    const html = '<div class="modal-handle"></div>'
-      + imgHtml
-      + '<h2>'+esc(modalTitle)+'</h2>'
-      + (modalScheme ? '<div style="color:var(--text-muted);font-size:0.8rem;margin:-8px 0 12px">'+esc(p.t)+'</div>' : '')
+    return imgHtml
       + '<div class="detail-row"><span class="detail-label">Price</span><span class="detail-value" style="color:#2563EB;font-size:1.1rem">'+esc(p.p)+'</span></div>'
       + (p.d ? '<div class="detail-row"><span class="detail-label">Discount</span><span class="detail-value" style="color:#059669">'+esc(p.d)+'</span></div>' : '')
       + '<div class="detail-row"><span class="detail-label">Auction Date</span><span class="detail-value">'+esc(p.ad)+' <span style="color:#D97706">('+daysText+')</span></span></div>'
@@ -1669,25 +1855,70 @@ footer {{
       + (p.s && p.s !== 'Size not specified' ? '<div class="detail-row"><span class="detail-label">Size</span><span class="detail-value">'+esc(p.s)+'</span></div>' : '')
       + (p.a ? '<div class="detail-row"><span class="detail-label">Address</span><span class="detail-value" style="max-width:60%;text-align:right">'+esc(p.a)+'</span></div>' : '')
       + priceChartHtml
-      + (p.u ? '<a class="card-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" style="display:block;text-align:center;padding:10px;margin-top:12px;background:#EFF6FF;border-radius:8px;font-weight:600">View Original Listing &rarr;</a>' : '');
+      + (p.u ? '<a class="card-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:10px;margin-top:12px;background:#EFF6FF;border-radius:8px;font-weight:600">View Original Listing &rarr;</a>' : '');
+  }}
 
-    document.getElementById('modal-content').innerHTML = html;
-    document.getElementById('modal-backdrop').classList.add('open');
-    document.body.style.overflow = 'hidden';
+  window._openDetail = function(id) {{
+    const p = allProps[id];
+    if (!p) return;
+
+    // Find the card that was clicked
+    const card = document.querySelector('.card[data-id="'+CSS.escape(id)+'"]');
+    if (!card) return;
+
+    // If already expanded, collapse it
+    const existing = card.querySelector('.card-expand');
+    if (existing) {{
+      existing.remove();
+      card.classList.remove('expanded');
+      return;
+    }}
+
+    // Collapse any other expanded card
+    document.querySelectorAll('.card-expand').forEach(el => el.remove());
+    document.querySelectorAll('.card.expanded').forEach(el => el.classList.remove('expanded'));
+
+    // Create expansion panel
+    const expandDiv = document.createElement('div');
+    expandDiv.className = 'card-expand';
+    expandDiv.innerHTML = buildDetailHtml(p);
+    expandDiv.addEventListener('click', function(e) {{ e.stopPropagation(); }});
+    card.appendChild(expandDiv);
+    card.classList.add('expanded');
   }};
 
-  document.getElementById('modal-backdrop').addEventListener('click', function(e) {{
-    if (e.target === this) {{
-      this.classList.remove('open');
-      document.body.style.overflow = '';
-    }}
-  }});
+  // Table inline detail expansion
+  window._toggleTableDetail = function(tr) {{
+    const pid = tr.dataset.pid;
+    const p = allProps[pid];
+    if (!p) return;
 
-  // Close on Escape
+    // Check if already expanded
+    const existing = tr.nextElementSibling;
+    if (existing && existing.classList.contains('table-detail-row')) {{
+      existing.remove();
+      return;
+    }}
+
+    // Remove any other open detail rows
+    document.querySelectorAll('.table-detail-row').forEach(el => el.remove());
+
+    // Insert detail row after current row
+    const detailTr = document.createElement('tr');
+    detailTr.className = 'table-detail-row';
+    const td = document.createElement('td');
+    td.colSpan = 8;
+    td.innerHTML = '<div class="table-detail-content">' + buildDetailHtml(p) + '</div>';
+    detailTr.appendChild(td);
+    tr.after(detailTr);
+  }};
+
+  // Close expanded card on Escape
   document.addEventListener('keydown', function(e) {{
     if (e.key === 'Escape') {{
-      document.getElementById('modal-backdrop').classList.remove('open');
-      document.body.style.overflow = '';
+      document.querySelectorAll('.card-expand').forEach(el => el.remove());
+      document.querySelectorAll('.card.expanded').forEach(el => el.classList.remove('expanded'));
+      document.querySelectorAll('.table-detail-row').forEach(el => el.remove());
     }}
   }});
 
@@ -1712,6 +1943,44 @@ footer {{
       }}
       onChange();
     }});
+  }}
+
+  // --- Switch to search tab with filter ---
+  function switchToSearch(opts) {{
+    // Switch tab
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const searchBtn = document.querySelector('[data-tab="search"]');
+    searchBtn.classList.add('active');
+    document.getElementById('tab-search').classList.add('active');
+
+    // Clear existing filters
+    activeFilters.types.clear();
+    activeFilters.locs.clear();
+    document.querySelectorAll('#filters-type .chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#filters-loc .chip').forEach(c => c.classList.remove('active'));
+
+    // Apply type filter
+    if (opts && opts.type) {{
+      activeFilters.types.add(opts.type);
+      document.querySelectorAll('#filters-type .chip').forEach(c => {{
+        if (c.dataset.val === opts.type) c.classList.add('active');
+      }});
+    }}
+
+    // Apply date range filter via search box
+    if (opts && opts.dateRange) {{
+      // Store week range for filtering
+      window._weekFilter = opts.dateRange;
+    }} else {{
+      window._weekFilter = null;
+    }}
+
+    // Set status to active
+    document.getElementById('filter-status').value = 'active';
+
+    filterAndRender('all');
+    window.scrollTo(0, 0);
   }}
 
   // --- Debounce ---
@@ -1789,18 +2058,45 @@ footer {{
         ctx.fillText('active', cx, cy + 10);
       }}
 
-      // Legend
+      // Legend (clickable - switches to search with type filter)
       const legendEl = document.getElementById('type-legend');
       if (legendEl) {{
         legendEl.innerHTML = typeEntries.map(([type, count], i) => {{
           const pct = totalActive > 0 ? ((count / totalActive) * 100).toFixed(1) : '0';
-          return '<div class="legend-item">'
+          return '<div class="legend-item clickable" data-type="'+esc(type)+'" style="cursor:pointer">'
             + '<div class="legend-dot" style="background:'+pieColors[i % pieColors.length]+'"></div>'
             + '<span class="legend-label">'+esc(type)+'</span>'
             + '<span class="legend-count">'+count+'</span>'
             + '<span class="legend-pct">'+pct+'%</span>'
             + '</div>';
         }}).join('');
+        legendEl.addEventListener('click', function(e) {{
+          const item = e.target.closest('.legend-item');
+          if (item && item.dataset.type) switchToSearch({{ type: item.dataset.type }});
+        }});
+      }}
+
+      // Pie chart click detection
+      if (canvas) {{
+        canvas.style.cursor = 'pointer';
+        canvas.addEventListener('click', function(e) {{
+          const rect = canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left - 60;
+          const y = e.clientY - rect.top - 60;
+          const angle = Math.atan2(y, x);
+          const dist = Math.sqrt(x*x + y*y);
+          if (dist < 55 * 0.55 || dist > 55) return; // clicked center or outside
+          let normAngle = angle + Math.PI / 2;
+          if (normAngle < 0) normAngle += 2 * Math.PI;
+          let cumAngle = 0;
+          for (const [type, count] of typeEntries) {{
+            cumAngle += (count / totalActive) * 2 * Math.PI;
+            if (normAngle <= cumAngle) {{
+              switchToSearch({{ type: type }});
+              return;
+            }}
+          }}
+        }});
       }}
 
       // --- Dashboard: Auctions by week chart ---
@@ -1830,16 +2126,23 @@ footer {{
       const maxWeek = Math.max(...weekEntries.map(([_, w]) => w.count), 1);
       const weekEl = document.getElementById('week-chart');
       if (weekEl) {{
-        weekEl.innerHTML = weekEntries.map(([label, w]) => {{
+        weekEl.innerHTML = weekEntries.map(([label, w], idx) => {{
           const pct = (w.count / maxWeek * 100).toFixed(0);
           const isThisWeek = w.start <= now && now <= w.end;
           const barColor = isThisWeek ? 'var(--accent)' : '#93C5FD';
-          return '<div class="week-bar-row">'
+          return '<div class="week-bar-row clickable" data-week="'+idx+'" style="cursor:pointer">'
             + '<span class="week-label"'+(isThisWeek ? ' style="font-weight:600;color:var(--accent)"' : '')+'>'+esc(label)+'</span>'
             + '<div class="week-bar-bg"><div class="week-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'
             + '<span class="week-bar-count">'+w.count+'</span>'
             + '</div>';
         }}).join('');
+        weekEl.addEventListener('click', function(e) {{
+          const row = e.target.closest('.week-bar-row');
+          if (!row) return;
+          const idx = parseInt(row.dataset.week);
+          const [, w] = weekEntries[idx];
+          if (w && w.count > 0) switchToSearch({{ dateRange: {{ start: w.start, end: w.end }} }});
+        }});
       }}
 
       // --- Dashboard: Hot deals ---
@@ -1982,6 +2285,307 @@ footer {{
       document.getElementById('more-new').addEventListener('click', () => loadMore('new'));
       document.getElementById('more-changes').addEventListener('click', () => loadMore('changes'));
       document.getElementById('more-all').addEventListener('click', () => loadMore('all'));
+
+      // --- Map tab (lazy init) ---
+      let mapInited = false;
+      let leafletMap = null;
+      let markerCluster = null;
+
+      // Populate map type filter
+      const mapTypeSelect = document.getElementById('map-filter-type');
+      if (mapTypeSelect) {{
+        const types = [...new Set(allEntries.map(([_,p]) => p.pt).filter(Boolean))].sort();
+        types.forEach(t => {{
+          const opt = document.createElement('option');
+          opt.value = t;
+          opt.textContent = t;
+          mapTypeSelect.appendChild(opt);
+        }});
+      }}
+
+      function initMap() {{
+        if (mapInited) return;
+        mapInited = true;
+        leafletMap = L.map('property-map').setView([3.139, 101.6869], 10);
+        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/light_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+          maxZoom: 19
+        }}).addTo(leafletMap);
+        markerCluster = L.markerClusterGroup({{ chunkedLoading: true, maxClusterRadius: 50 }});
+        leafletMap.addLayer(markerCluster);
+        refreshMapMarkers();
+
+        document.getElementById('map-filter-type').addEventListener('change', refreshMapMarkers);
+        document.getElementById('map-filter-status').addEventListener('change', refreshMapMarkers);
+      }}
+
+      function refreshMapMarkers() {{
+        if (!markerCluster) return;
+        markerCluster.clearLayers();
+        const typeFilter = document.getElementById('map-filter-type').value;
+        const statusFilter = document.getElementById('map-filter-status').value;
+        let count = 0;
+        const markers = [];
+        for (const [id, p] of allEntries) {{
+          if (!p.lat || !p.lng) continue;
+          if (typeFilter && p.pt !== typeFilter) continue;
+          if (statusFilter === 'active' && p.exp) continue;
+          if (statusFilter === 'expired' && !p.exp) continue;
+          const scheme = schemeName(p.a, p.t, p.sn);
+          const title = scheme || p.a || p.t;
+          const marker = L.marker([p.lat, p.lng]);
+          marker.bindPopup(
+            '<div style="min-width:180px">'
+            + '<strong style="font-size:0.85rem">'+esc(title)+'</strong>'
+            + '<div style="color:#2563EB;font-weight:700;margin:4px 0">'+esc(p.p)+'</div>'
+            + '<div style="font-size:0.75rem;color:#6B7280">'
+            + (p.pt ? '<span style="background:#EFF6FF;padding:2px 6px;border-radius:4px;margin-right:4px">'+esc(p.pt)+'</span>' : '')
+            + (p.s && p.s !== 'Size not specified' ? esc(p.s) : '')
+            + '</div>'
+            + '<div style="font-size:0.72rem;color:#9CA3AF;margin-top:4px">'+esc(p.ad)+'</div>'
+            + (p.u ? '<a href="'+esc(p.u)+'" target="_blank" rel="noopener" style="font-size:0.75rem;color:#2563EB;text-decoration:none;display:block;margin-top:6px">View Listing &rarr;</a>' : '')
+            + '</div>'
+          );
+          markers.push(marker);
+          count++;
+        }}
+        markerCluster.addLayers(markers);
+        document.getElementById('map-count').textContent = count + ' properties on map';
+      }}
+
+      // Lazy-init map when tab clicked
+      const origTabHandler = document.getElementById('tab-bar');
+      origTabHandler.addEventListener('click', function(e) {{
+        const btn = e.target.closest('.tab');
+        if (btn && btn.dataset.tab === 'map') {{
+          setTimeout(function() {{
+            initMap();
+            if (leafletMap) leafletMap.invalidateSize();
+          }}, 100);
+        }}
+      }});
+
+      // --- Bookmark filter system ---
+      const BM_KEY = 'lelongtips_bookmarks';
+
+      function parseFilterQuery(query) {{
+        const q = query.toLowerCase().trim();
+        const filter = {{ label: query, search: '' }};
+
+        // Type detection
+        const typeMap = {{
+          'landed': 'Landed', 'house': 'Landed', 'houses': 'Landed', 'bungalow': 'Landed',
+          'terrace': 'Landed', 'semi-d': 'Landed', 'semi detached': 'Landed',
+          'condo': 'High-rise', 'condos': 'High-rise', 'condominium': 'High-rise',
+          'apartment': 'High-rise', 'high-rise': 'High-rise', 'highrise': 'High-rise',
+          'flat': 'High-rise', 'soho': 'High-rise',
+          'commercial': 'Commercial', 'shop': 'Commercial', 'office': 'Commercial', 'retail': 'Commercial',
+          'industrial': 'Industrial', 'factory': 'Industrial', 'warehouse': 'Industrial',
+          'land': 'Land',
+        }};
+        for (const [keyword, type] of Object.entries(typeMap)) {{
+          if (q.includes(keyword)) {{
+            filter.type = type;
+            break;
+          }}
+        }}
+
+        // Price extraction
+        const pricePatterns = [
+          /under\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i,
+          /below\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i,
+          /less\s+than\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i,
+          /max\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i,
+          /above\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i,
+          /over\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i,
+          /more\s+than\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i,
+          /min\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i,
+          /(\d[\d,.]*)\s*(k|m)?\s*(?:to|-)\s*(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i,
+        ];
+
+        function parseNum(n, unit) {{
+          let v = parseFloat(n.replace(/,/g, ''));
+          if (unit === 'k' || unit === 'K') v *= 1000;
+          if (unit === 'm' || unit === 'M') v *= 1000000;
+          return v;
+        }}
+
+        // Range pattern (e.g., "200k to 500k")
+        const rangeMatch = q.match(/(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?\s*(?:to|-)\s*(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i);
+        if (rangeMatch) {{
+          filter.minPrice = parseNum(rangeMatch[1], rangeMatch[2]);
+          filter.maxPrice = parseNum(rangeMatch[3], rangeMatch[4]);
+        }} else {{
+          // Under/below
+          const underMatch = q.match(/(?:under|below|less\s+than|max|budget)\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i);
+          if (underMatch) filter.maxPrice = parseNum(underMatch[1], underMatch[2]);
+          // Above/over
+          const overMatch = q.match(/(?:above|over|more\s+than|min|from)\s+(?:rm\s*)?(\d[\d,.]*)\s*(k|m)?/i);
+          if (overMatch) filter.minPrice = parseNum(overMatch[1], overMatch[2]);
+        }}
+
+        // Location detection
+        const locations = ['kuala lumpur', 'kl', 'selangor', 'johor', 'penang', 'perak',
+          'kedah', 'kelantan', 'terengganu', 'pahang', 'negeri sembilan', 'melaka',
+          'sabah', 'sarawak', 'putrajaya', 'labuan', 'kl/selangor'];
+        for (const loc of locations) {{
+          if (q.includes(loc)) {{
+            filter.location = loc === 'kl' ? 'Kuala Lumpur' : loc.split(' ').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+            break;
+          }}
+        }}
+
+        // Remaining text as search keywords (strip parsed parts)
+        let remainder = q;
+        // Strip recognized tokens
+        for (const key of Object.keys(typeMap)) remainder = remainder.replace(new RegExp('\\\\b' + key + 's?\\\\b', 'gi'), '');
+        remainder = remainder.replace(/(?:under|below|above|over|less|more|than|max|min|from|budget|rm|in)\s*/gi, '');
+        remainder = remainder.replace(/\d[\d,.]*\s*[km]?\s*(?:to|-)\s*\d[\d,.]*\s*[km]?/gi, '');
+        remainder = remainder.replace(/\d[\d,.]*\s*[km]?/gi, '');
+        for (const loc of locations) remainder = remainder.replace(new RegExp(loc, 'gi'), '');
+        remainder = remainder.replace(/\s+/g, ' ').trim();
+        if (remainder.length > 2) filter.search = remainder;
+
+        return filter;
+      }}
+
+      function loadBookmarks() {{
+        try {{ return JSON.parse(localStorage.getItem(BM_KEY)) || []; }}
+        catch {{ return []; }}
+      }}
+
+      function saveBookmarks(bms) {{
+        localStorage.setItem(BM_KEY, JSON.stringify(bms));
+      }}
+
+      function countMatchingItems(filter) {{
+        let items = allItems.filter(i => !i.prop.exp);
+        if (filter.type) items = items.filter(i => i.prop.pt === filter.type);
+        if (filter.minPrice) items = items.filter(i => (i.prop.pv || 0) >= filter.minPrice);
+        if (filter.maxPrice) items = items.filter(i => (i.prop.pv || 0) <= filter.maxPrice);
+        if (filter.location) {{
+          const loc = filter.location.toLowerCase();
+          items = items.filter(i => (i.prop.l || '').toLowerCase().includes(loc));
+        }}
+        if (filter.search) {{
+          const tokens = filter.search.toLowerCase().split(/\s+/);
+          items = items.filter(i => tokens.every(t => (i._search || '').includes(t)));
+        }}
+        return items.length;
+      }}
+
+      function applyBookmark(filter) {{
+        // Clear existing
+        activeFilters.types.clear();
+        activeFilters.locs.clear();
+        document.querySelectorAll('#filters-type .chip, #filters-loc .chip').forEach(c => c.classList.remove('active'));
+        window._weekFilter = null;
+
+        // Apply type
+        if (filter.type) {{
+          activeFilters.types.add(filter.type);
+          document.querySelectorAll('#filters-type .chip').forEach(c => {{
+            if (c.dataset.val === filter.type) c.classList.add('active');
+          }});
+        }}
+
+        // Apply price
+        document.getElementById('filter-price-min').value = filter.minPrice || '';
+        document.getElementById('filter-price-max').value = filter.maxPrice || '';
+
+        // Apply search text
+        document.getElementById('search-all').value = filter.search || '';
+
+        // Set status to active
+        document.getElementById('filter-status').value = 'active';
+
+        // Switch to search tab
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelector('[data-tab="search"]').classList.add('active');
+        document.getElementById('tab-search').classList.add('active');
+
+        filterAndRender('all');
+        window.scrollTo(0, 0);
+      }}
+
+      function renderBookmarks() {{
+        const bms = loadBookmarks();
+        const container = document.getElementById('bm-list');
+        if (!bms.length) {{
+          container.innerHTML = '<span style="font-size:0.75rem;color:var(--text-muted)">No saved filters yet. Click + to add one.</span>';
+          return;
+        }}
+        container.innerHTML = bms.map((bm, i) => {{
+          const count = countMatchingItems(bm);
+          return '<div class="bm-chip" data-idx="'+i+'">'
+            + '<span class="bm-text">'+esc(bm.label)+'</span>'
+            + '<span class="bm-count">'+count+'</span>'
+            + '<span class="bm-delete" data-del="'+i+'" title="Delete">&times;</span>'
+            + '</div>';
+        }}).join('');
+      }}
+
+      // Bookmark UI events
+      document.getElementById('bm-add').addEventListener('click', function() {{
+        const wrap = document.getElementById('bm-input-wrap');
+        wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
+        if (wrap.style.display !== 'none') document.getElementById('bm-query').focus();
+      }});
+
+      document.getElementById('bm-query').addEventListener('input', debounce(function() {{
+        const q = this.value.trim();
+        if (!q) {{ document.getElementById('bm-preview').style.display = 'none'; return; }}
+        const filter = parseFilterQuery(q);
+        const parts = [];
+        if (filter.type) parts.push('Type: ' + filter.type);
+        if (filter.minPrice) parts.push('Min: RM' + filter.minPrice.toLocaleString());
+        if (filter.maxPrice) parts.push('Max: RM' + filter.maxPrice.toLocaleString());
+        if (filter.location) parts.push('Location: ' + filter.location);
+        if (filter.search) parts.push('Keywords: ' + filter.search);
+        const count = countMatchingItems(filter);
+        const preview = document.getElementById('bm-preview');
+        preview.style.display = '';
+        preview.innerHTML = parts.join(' &middot; ') + ' &mdash; <strong>' + count + ' listings</strong>';
+      }}, 300));
+
+      document.getElementById('bm-save').addEventListener('click', function() {{
+        const q = document.getElementById('bm-query').value.trim();
+        if (!q) return;
+        const filter = parseFilterQuery(q);
+        const bms = loadBookmarks();
+        bms.push(filter);
+        saveBookmarks(bms);
+        document.getElementById('bm-query').value = '';
+        document.getElementById('bm-preview').style.display = 'none';
+        document.getElementById('bm-input-wrap').style.display = 'none';
+        renderBookmarks();
+      }});
+
+      document.getElementById('bm-query').addEventListener('keydown', function(e) {{
+        if (e.key === 'Enter') document.getElementById('bm-save').click();
+      }});
+
+      document.getElementById('bm-list').addEventListener('click', function(e) {{
+        const del = e.target.closest('.bm-delete');
+        if (del) {{
+          e.stopPropagation();
+          const idx = parseInt(del.dataset.del);
+          const bms = loadBookmarks();
+          bms.splice(idx, 1);
+          saveBookmarks(bms);
+          renderBookmarks();
+          return;
+        }}
+        const chip = e.target.closest('.bm-chip');
+        if (chip) {{
+          const idx = parseInt(chip.dataset.idx);
+          const bms = loadBookmarks();
+          if (bms[idx]) applyBookmark(bms[idx]);
+        }}
+      }});
+
+      renderBookmarks();
 
   }}
 
