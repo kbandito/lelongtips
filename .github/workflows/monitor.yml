@@ -41,6 +41,8 @@ jobs:
     
     - name: Scrape & reprocess (monitor.py → reprocess.py)
       env:
+        LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
+        LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         WHATSAPP_API_KEY: ${{ secrets.WHATSAPP_API_KEY }}
