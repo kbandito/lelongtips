@@ -341,9 +341,16 @@ def group_properties(input_path=None, output_path=None):
         )
         sk = f"{title}|{location}|{size}|{addr}"
 
+        # Extract scheme/project name from header_short ("Project Name, State")
+        header_short = best_prop.get("header_short", "")
+        scheme_name = (
+            header_short.rsplit(",", 1)[0].strip() if "," in header_short else ""
+        )
+
         database[prop_id] = {
             **best_prop,
             "_stable_key": sk,
+            "scheme_name": scheme_name,
             "first_seen": first_seen,
             "last_updated": last_updated,
             "price_history": price_history,
