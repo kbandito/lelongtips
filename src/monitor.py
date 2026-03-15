@@ -20,7 +20,8 @@ import html  # for Telegram HTML escaping
 
 
 def categorize_property_type(title):
-    """Categorize property into Residential/Commercial/Industrial/Land from title.
+    """Categorize property from title into one of:
+    Landed, High-rise, Commercial, Industrial, Land.
 
     The source website labels everything broadly (e.g. "Commercial" for houses).
     This function derives the correct category from the actual property title,
@@ -28,43 +29,45 @@ def categorize_property_type(title):
     """
     t = re.sub(r"\[.*?\]", "", title, flags=re.DOTALL).strip().lower()
 
-    # ── Residential ─────────────────────────────────────────────
+    # ── Landed Residential ──────────────────────────────────────
     if re.search(r"(semi.?detached|detached)\s*(house|home|plot|lot)", t):
-        return "Residential"
+        return "Landed"
     if re.search(r"bungalow", t):
-        return "Residential"
+        return "Landed"
     if re.search(r"terrace\s*house", t):
-        return "Residential"
+        return "Landed"
     if re.search(r"cluster\s*(semi|house|design)", t):
-        return "Residential"
+        return "Landed"
     if re.search(r"link\s*(semi|house|bungalow)", t):
-        return "Residential"
+        return "Landed"
     if re.search(r"town\s*(house|villa)", t):
-        return "Residential"
+        return "Landed"
     if re.search(r"villa\b", t):
-        return "Residential"
+        return "Landed"
     if re.search(r"\d+\.?\d*\s*storey\s*(semi|detached|cluster|link|zero)", t):
-        return "Residential"
+        return "Landed"
+    if t.rstrip().endswith("house") or t.rstrip().endswith("houses"):
+        return "Landed"
+    if re.search(r"(detached|semi|terrace|house|bungalow)\s*(plot|lot)\b", t):
+        return "Landed"
+    if re.search(r"residential\s*(lot|plot|building|terrace)", t):
+        return "Landed"
+    if re.search(r"vacant\s*(semi|detached|residential|terrace)", t):
+        return "Landed"
+    if re.search(r"housing\s*(lot|plot|land)", t):
+        return "Landed"
+
+    # ── High-rise Residential ───────────────────────────────────
     if re.search(
         r"apartment|condominium|condo\b|flat\b|penthouse|service\s+suite", t
     ):
-        return "Residential"
+        return "High-rise"
     if re.search(r"\bsoho\b", t):
-        return "Residential"
+        return "High-rise"
     if re.search(r"residence\b", t) and "land" not in t:
-        return "Residential"
-    if t.rstrip().endswith("house") or t.rstrip().endswith("houses"):
-        return "Residential"
-    if re.search(r"(detached|semi|terrace|house|bungalow)\s*(plot|lot)\b", t):
-        return "Residential"
-    if re.search(r"residential\s*(land|lot|plot|building|terrace)", t):
-        return "Residential"
-    if re.search(r"vacant\s*(semi|detached|residential|terrace)", t):
-        return "Residential"
-    if re.search(r"housing\s*(lot|plot|land)", t):
-        return "Residential"
-    if re.search(r"resid(ential|ence)", t):
-        return "Residential"
+        return "High-rise"
+    if re.search(r"resid(ential|ence)", t) and "land" not in t:
+        return "High-rise"
 
     # ── Industrial (before Commercial — factories have "shop" in address) ─
     if re.search(r"factory|warehouse|industrial", t):
@@ -76,6 +79,8 @@ def categorize_property_type(title):
     if re.search(r"vacant\s*(plot|lot|building)", t):
         return "Land"
     if re.search(r"parcels?\s+of", t):
+        return "Land"
+    if re.search(r"residential\s*land", t):
         return "Land"
 
     # ── Commercial ──────────────────────────────────────────────
