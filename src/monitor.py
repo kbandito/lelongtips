@@ -409,11 +409,23 @@ class FixedFullScrapingPropertyMonitor:
 
         login_url = f"{self.root_url}/login"
         try:
+            print(f"🔐 Login: attempting with email={email[:3]}***{email[email.index('@'):]}")
+
             # GET login page to grab CSRF token
             resp = self.session.get(login_url, timeout=self.timeout)
+            print(f"🔐 Login page: status={resp.status_code}, url={resp.url}")
             soup = BeautifulSoup(resp.content, "html.parser")
             csrf_input = soup.find("input", {"name": "_token"})
             token = csrf_input["value"] if csrf_input else ""
+            print(f"🔐 CSRF token found: {'✅' if token else '❌ missing'}")
+
+            if not token:
+                # Dump form inputs for debugging
+                forms = soup.find_all("form")
+                print(f"🔐 Forms on page: {len(forms)}")
+                for form in forms:
+                    inputs = form.find_all("input")
+                    print(f"🔐   Form action={form.get('action')}, inputs: {[i.get('name') for i in inputs]}")
 
             # POST login credentials
             data = {
@@ -424,12 +436,35 @@ class FixedFullScrapingPropertyMonitor:
             resp = self.session.post(
                 login_url, data=data, timeout=self.timeout, allow_redirects=True
             )
+            print(f"🔐 POST response: status={resp.status_code}, url={resp.url}")
+
             # Check if login succeeded (redirected away from login page)
             self.logged_in = resp.ok and "/login" not in resp.url
+
+            if not self.logged_in:
+                # Look for error messages on the page
+                error_soup = BeautifulSoup(resp.content, "html.parser")
+                # Common Laravel error patterns
+                for sel in [".alert-danger", ".invalid-feedback", ".error", ".text-danger"]:
+                    errors = error_soup.select(sel)
+                    for err in errors:
+                        txt = err.get_text(strip=True)
+                        if txt:
+                            print(f"🔐 Page error: {txt}")
+                # Check for any visible error text near the form
+                form = error_soup.find("form")
+                if form:
+                    for span in form.find_all(["span", "div", "p"], class_=True):
+                        txt = span.get_text(strip=True)
+                        if txt and len(txt) < 200:
+                            print(f"🔐 Form message: {txt}")
+
             print(f"🔐 Login: {'✅ success' if self.logged_in else '❌ failed'}")
             return self.logged_in
         except Exception as e:
             print(f"🔐 Login failed with error: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     # ---------- HTTP ----------
