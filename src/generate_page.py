@@ -203,14 +203,20 @@ def write_data_files(properties, changes_history, daily_stats):
 
     active = get_active_properties(properties)
 
-    # active.json - trimmed active listings
+    # active.json - trimmed ALL listings (active + expired for search)
     active_data = {}
-    for pid, p in active.items():
-        active_data[pid] = trim_property(p)
+    for pid, p in properties.items():
+        trimmed = trim_property(p)
+        # Mark expired listings
+        ad = p.get("auction_date", "")
+        d = parse_auction_date(ad)
+        if d and d < datetime.now():
+            trimmed["exp"] = 1
+        active_data[pid] = trimmed
 
     with open(os.path.join(data_dir, "active.json"), "w") as f:
         json.dump(active_data, f, separators=(",", ":"))
-    print(f"  active.json: {len(active_data)} properties")
+    print(f"  active.json: {len(active_data)} properties ({len(active)} active, {len(active_data) - len(active)} expired)")
 
     # changes.json - latest scan changes
     latest_scan = changes_history[-1] if changes_history else {}
@@ -238,13 +244,13 @@ def write_data_files(properties, changes_history, daily_stats):
     # Count properties with price drops
     drop_count = sum(1 for p in active.values() if p.get("discount"))
 
-    # Collect unique types and locations for filters
+    # Collect unique types and locations for filters (from all properties)
     types_set = set()
     locs_set = set()
     for p in active_data.values():
-        if p["pt"]:
+        if p.get("pt"):
             types_set.add(p["pt"])
-        if p["l"]:
+        if p.get("l"):
             locs_set.add(p["l"])
 
     stats_data = {
@@ -620,6 +626,34 @@ header h1 span {{ color: var(--accent); }}
 }}
 .card-badge.new {{ background: var(--green-light); color: var(--green); }}
 .card-badge.changed {{ background: var(--orange-light); color: var(--orange); }}
+.card-badge.expired {{ background: #F3F4F6; color: #6B7280; }}
+.pill.expired {{ background: #F3F4F6; color: #6B7280; font-weight: 600; }}
+.card.is-expired {{ opacity: 0.7; }}
+.card.is-expired:hover {{ opacity: 1; }}
+.data-table tr.is-expired td {{ color: var(--text-muted); }}
+.data-table tr.is-expired .td-price {{ color: var(--text-muted); }}
+.filter-row {{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}}
+.filter-row label {{ font-size: 0.75rem; color: var(--text-muted); font-weight: 500; white-space: nowrap; }}
+.filter-row select, .filter-row input {{
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: var(--text-sec);
+  background: var(--card-bg);
+}}
+.filter-row input[type="number"] {{ width: 100px; }}
+@media(max-width: 600px) {{
+  .filter-row {{ gap: 6px; }}
+  .filter-row input[type="number"] {{ width: 80px; }}
+}}
 
 /* Change indicators */
 .change-item {{
@@ -808,6 +842,7 @@ footer {{
 /* Table view */
 .table-wrap {{
   overflow-x: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   margin: 0 -16px;
   padding: 0 16px;
@@ -815,14 +850,14 @@ footer {{
 .data-table {{
   width: 100%;
   min-width: 700px;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.8rem;
   background: var(--card-bg);
   border-radius: 10px;
-  overflow: hidden;
   box-shadow: var(--shadow);
 }}
-.data-table thead {{ position: sticky; top: 42px; z-index: 50; }}
+.data-table thead th {{ position: sticky; top: 42px; z-index: 50; }}
 .data-table th {{
   background: var(--accent-light);
   color: var(--text-sec);
@@ -1006,11 +1041,21 @@ footer {{
   <div id="tab-search" class="tab-content">
     <div class="search-wrap">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <input type="text" class="search-bar" id="search-all" placeholder="Search all active listings...">
+      <input type="text" class="search-bar" id="search-all" placeholder="Search all listings...">
     </div>
     <div class="filters" id="filters-type"></div>
     <div class="filters" id="filters-loc"></div>
-    <div class="sort-row">
+    <div class="filter-row">
+      <label>Status:</label>
+      <select id="filter-status">
+        <option value="all">All</option>
+        <option value="active" selected>Active Only</option>
+        <option value="expired">Expired Only</option>
+      </select>
+      <label>Price:</label>
+      <input type="number" id="filter-price-min" placeholder="Min" min="0" step="10000">
+      <span style="color:var(--text-muted);font-size:0.75rem">-</span>
+      <input type="number" id="filter-price-max" placeholder="Max" min="0" step="10000">
       <label>Sort:</label>
       <select class="sort-select" id="sort-all">
         <option value="price_asc">Price: Low to High</option>
@@ -1028,6 +1073,14 @@ footer {{
     <div class="search-wrap">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <input type="text" class="search-bar" id="search-table" placeholder="Filter table...">
+    </div>
+    <div class="filter-row">
+      <label>Status:</label>
+      <select id="filter-table-status">
+        <option value="all">All</option>
+        <option value="active" selected>Active Only</option>
+        <option value="expired">Expired Only</option>
+      </select>
     </div>
     <div class="count-label" id="count-table">Loading...</div>
     <div class="table-wrap">
@@ -1170,9 +1223,12 @@ footer {{
     const discountHtml = p.d ? '<span class="pill discount">'+esc(p.d)+'</span>' : '';
     const spark = sparkline(p.ph);
 
+    const isExpired = !!p.exp;
+    const daysLabel = isExpired ? 'Expired' : daysText;
     let badgeHtml = '';
     if (opts.isNew) badgeHtml = '<span class="card-badge new">NEW</span>';
-    if (opts.isChanged) badgeHtml = '<span class="card-badge changed">CHANGED</span>';
+    else if (opts.isChanged) badgeHtml = '<span class="card-badge changed">CHANGED</span>';
+    else if (isExpired) badgeHtml = '<span class="card-badge expired">EXPIRED</span>';
 
     let changesHtml = '';
     if (opts.changes && opts.changes.length) {{
@@ -1189,7 +1245,8 @@ footer {{
     const scheme = schemeName(p.a, p.t);
     const displayTitle = scheme || p.a || p.t;
 
-    return '<div class="card" data-id="'+esc(id)+'" onclick="window._openDetail(this.dataset.id)">'
+    const expClass = isExpired ? ' is-expired' : '';
+    return '<div class="card'+expClass+'" data-id="'+esc(id)+'" onclick="window._openDetail(this.dataset.id)">'
       + '<div class="card-top">'
       + '<div class="card-img">'+imgHtml+'</div>'
       + '<div class="card-body">'
@@ -1198,7 +1255,7 @@ footer {{
       + (p.pt ? '<span class="pill type">'+esc(p.pt)+'</span>' : '')
       + '<span class="pill loc">'+esc(p.l)+'</span>'
       + (p.s && p.s !== 'Size not specified' ? '<span class="pill size">'+esc(p.s)+'</span>' : '')
-      + '<span class="pill date'+urgentClass+'">'+esc(p.ad)+' ('+daysText+')</span>'
+      + '<span class="pill '+(isExpired ? 'expired' : 'date'+urgentClass)+'">'+esc(p.ad)+' ('+daysLabel+')</span>'
       + discountHtml
       + '</div>'
       + (p.a && p.a !== p.t ? '<div class="card-address">'+esc(p.a)+'</div>' : '')
@@ -1254,13 +1311,29 @@ footer {{
       }});
     }}
 
-    // Type/location filters (search tab only)
+    // Type/location/status/price filters (search tab only)
     if (viewName === 'all') {{
       if (activeFilters.types.size > 0) {{
         items = items.filter(item => activeFilters.types.has(item.prop.pt));
       }}
       if (activeFilters.locs.size > 0) {{
         items = items.filter(item => activeFilters.locs.has(item.prop.l));
+      }}
+      // Status filter
+      const statusVal = document.getElementById('filter-status').value;
+      if (statusVal === 'active') {{
+        items = items.filter(item => !item.prop.exp);
+      }} else if (statusVal === 'expired') {{
+        items = items.filter(item => !!item.prop.exp);
+      }}
+      // Price range filter
+      const minPrice = parseInt(document.getElementById('filter-price-min').value) || 0;
+      const maxPrice = parseInt(document.getElementById('filter-price-max').value) || 0;
+      if (minPrice > 0) {{
+        items = items.filter(item => (item.prop.pv || 0) >= minPrice);
+      }}
+      if (maxPrice > 0) {{
+        items = items.filter(item => (item.prop.pv || 0) <= maxPrice);
       }}
     }}
 
@@ -1328,8 +1401,9 @@ footer {{
       const item = items[i];
       const p = item.prop;
       const days = daysUntil(p.ad);
-      const daysText = days <= 0 ? 'Today' : days === 1 ? '1d' : days + 'd';
-      const urgClass = days <= 7 ? ' urgent' : '';
+      const isExp = !!p.exp;
+      const daysText = isExp ? 'Expired' : days <= 0 ? 'Today' : days === 1 ? '1d' : days + 'd';
+      const rowClass = isExp ? ' is-expired' : (days <= 7 ? ' urgent' : '');
       const hist = p.hist || [];
       const hasHist = hist.length > 1;
       const rowId = 'tr-' + i;
@@ -1340,8 +1414,9 @@ footer {{
       const nameHtml = scheme
         ? esc(scheme) + '<span class="td-scheme">'+esc(p.t)+'</span>'
         : esc(p.a || p.t);
-      html += '<tr class="'+urgClass+'" id="'+rowId+'">'
-        + '<td class="td-title" onclick="window._openDetail(\\\''+esc(item.id)+'\\\')">'+ expandBtn + nameHtml+'</td>'
+      const expBadge = isExp ? ' <span class="pill expired" style="font-size:0.6rem;padding:1px 5px">EXPIRED</span>' : '';
+      html += '<tr class="'+rowClass+'" id="'+rowId+'">'
+        + '<td class="td-title" onclick="window._openDetail(\\\''+esc(item.id)+'\\\')">'+ expandBtn + nameHtml + expBadge+'</td>'
         + '<td class="td-price">'+esc(p.p)+'</td>'
         + '<td>'+esc(p.pt)+'</td>'
         + '<td>'+esc(p.l)+'</td>'
@@ -1388,6 +1463,12 @@ footer {{
         return tokens.every(t => s.includes(t));
       }});
     }}
+    const statusVal = document.getElementById('filter-table-status').value;
+    if (statusVal === 'active') {{
+      items = items.filter(item => !item.prop.exp);
+    }} else if (statusVal === 'expired') {{
+      items = items.filter(item => !!item.prop.exp);
+    }}
     sortTable(items, tableSortCol, tableSortDir);
     tableItems = items;
     tableDisplayed = renderTableRows(items, 0, TABLE_PAGE);
@@ -1418,6 +1499,9 @@ footer {{
   }});
 
   document.getElementById('search-table').addEventListener('input', function() {{
+    filterTable();
+  }});
+  document.getElementById('filter-table-status').addEventListener('change', function() {{
     filterTable();
   }});
 
@@ -1682,6 +1766,11 @@ footer {{
       const sortAll = document.getElementById('sort-all');
       if (sortNew) sortNew.addEventListener('change', () => filterAndRender('new'));
       if (sortAll) sortAll.addEventListener('change', () => filterAndRender('all'));
+
+      // --- Wire up status & price filters ---
+      document.getElementById('filter-status').addEventListener('change', () => filterAndRender('all'));
+      document.getElementById('filter-price-min').addEventListener('input', debounce(() => filterAndRender('all'), 500));
+      document.getElementById('filter-price-max').addEventListener('input', debounce(() => filterAndRender('all'), 500));
 
       // --- Wire up load more ---
       document.getElementById('more-new').addEventListener('click', () => loadMore('new'));
