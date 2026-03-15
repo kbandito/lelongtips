@@ -400,109 +400,98 @@ class FixedFullScrapingPropertyMonitor:
 
     # ---------- LOGIN ----------
     def login(self):
-        """Login to lelongtips.com.my to access full property details (unit numbers)"""
+        """Login to lelongtips.com.my using Playwright browser, then transfer cookies to requests session."""
         email = os.getenv("LELONGTIPS_EMAIL", "")
         password = os.getenv("LELONGTIPS_PASSWORD", "")
         if not email or not password:
             print("⚠️ No LELONGTIPS_EMAIL/PASSWORD set, scraping as guest")
             return False
 
+        print(f"🔐 Login: attempting with Playwright (email={email[:3]}***{email[email.index('@'):]}) ...")
+
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError:
+            print("🔐 Playwright not installed, falling back to requests login")
+            return self._login_requests(email, password)
+
+        login_url = f"{self.root_url}/login"
+
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(
+                    user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                               "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                )
+                page = context.new_page()
+
+                # Navigate to login page
+                page.goto(login_url, wait_until="networkidle", timeout=30000)
+                print(f"🔐 Login page loaded: {page.url}")
+
+                # Fill in the login form
+                page.fill('input[name="email"], input[type="email"]', email)
+                page.fill('input[name="password"], input[type="password"]', password)
+
+                # Click submit and wait for navigation
+                with page.expect_navigation(wait_until="networkidle", timeout=30000):
+                    page.click('button[type="submit"], input[type="submit"]')
+
+                final_url = page.url
+                print(f"🔐 After login: {final_url}")
+
+                self.logged_in = "/login" not in final_url
+
+                if self.logged_in:
+                    # Transfer browser cookies to requests session
+                    cookies = context.cookies()
+                    for cookie in cookies:
+                        self.session.cookies.set(
+                            cookie["name"],
+                            cookie["value"],
+                            domain=cookie.get("domain", ""),
+                            path=cookie.get("path", "/"),
+                        )
+                    print(f"🔐 Login: ✅ success — transferred {len(cookies)} cookies to session")
+                else:
+                    # Try to capture error message from the page
+                    for sel in [".alert-danger", ".invalid-feedback", ".error"]:
+                        els = page.query_selector_all(sel)
+                        for el in els:
+                            txt = el.inner_text().strip()
+                            if txt:
+                                print(f"🔐 Page error: {txt}")
+                    print("🔐 Login: ❌ failed")
+
+                browser.close()
+
+            return self.logged_in
+
+        except Exception as e:
+            print(f"🔐 Playwright login failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def _login_requests(self, email, password):
+        """Fallback login using plain requests (no JS support)."""
         login_url = f"{self.root_url}/login"
         try:
-            print(f"🔐 Login: attempting with email={email[:3]}***{email[email.index('@'):]}")
-
-            # GET login page to grab CSRF token
             resp = self.session.get(login_url, timeout=self.timeout)
-            print(f"🔐 Login page: status={resp.status_code}, url={resp.url}")
             soup = BeautifulSoup(resp.content, "html.parser")
             csrf_input = soup.find("input", {"name": "_token"})
             token = csrf_input["value"] if csrf_input else ""
-            print(f"🔐 CSRF token found: {'✅' if token else '❌ missing'}")
 
-            # Dump ALL forms and their details to find the login form
-            forms = soup.find_all("form")
-            print(f"🔐 Forms on page: {len(forms)}")
-            login_form = None
-            for i, form in enumerate(forms):
-                action = form.get("action", "")
-                method = form.get("method", "")
-                inputs = form.find_all("input")
-                input_names = [inp.get("name") for inp in inputs]
-                print(f"🔐   Form[{i}]: action={action}, method={method}, inputs={input_names}")
-                # Identify the login form by looking for password field
-                if any(inp.get("type") == "password" for inp in inputs):
-                    login_form = form
-                    print(f"🔐   ^ This is the login form")
-
-            # Determine POST URL from the login form's action attribute
-            post_url = login_url
-            if login_form:
-                form_action = login_form.get("action", "")
-                if form_action:
-                    if form_action.startswith("http"):
-                        post_url = form_action
-                    elif form_action.startswith("/"):
-                        post_url = f"{self.root_url}{form_action}"
-                    else:
-                        post_url = f"{self.root_url}/{form_action}"
-                # Collect ALL hidden inputs from the login form
-                hidden_inputs = login_form.find_all("input", {"type": "hidden"})
-                for hi in hidden_inputs:
-                    print(f"🔐   Hidden input: name={hi.get('name')}, value={hi.get('value', '')[:20]}...")
-                # Also get the CSRF token specifically from THIS form
-                form_csrf = login_form.find("input", {"name": "_token"})
-                if form_csrf:
-                    token = form_csrf["value"]
-
-            print(f"🔐 Will POST to: {post_url}")
-
-            # POST login credentials - include all hidden fields from login form
-            data = {
-                "_token": token,
-                "email": email,
-                "password": password,
-            }
-            # Add any extra hidden fields from the login form
-            if login_form:
-                for hi in login_form.find_all("input", {"type": "hidden"}):
-                    name = hi.get("name")
-                    if name and name not in data:
-                        data[name] = hi.get("value", "")
-
-            print(f"🔐 POST data keys: {list(data.keys())}")
+            data = {"_token": token, "email": email, "password": password}
             resp = self.session.post(
-                post_url, data=data, timeout=self.timeout, allow_redirects=True
+                login_url, data=data, timeout=self.timeout, allow_redirects=True
             )
-            print(f"🔐 POST response: status={resp.status_code}, url={resp.url}")
-            print(f"🔐 Response cookies: {dict(self.session.cookies)}")
-
-            # Check if login succeeded (redirected away from login page)
             self.logged_in = resp.ok and "/login" not in resp.url
-
-            if not self.logged_in:
-                # Look for error messages on the page
-                error_soup = BeautifulSoup(resp.content, "html.parser")
-                # Common Laravel error patterns
-                for sel in [".alert-danger", ".invalid-feedback", ".error", ".text-danger"]:
-                    errors = error_soup.select(sel)
-                    for err in errors:
-                        txt = err.get_text(strip=True)
-                        if txt:
-                            print(f"🔐 Page error: {txt}")
-                # Check for any visible error text near the form
-                form = error_soup.find("form")
-                if form:
-                    for span in form.find_all(["span", "div", "p"], class_=True):
-                        txt = span.get_text(strip=True)
-                        if txt and len(txt) < 200:
-                            print(f"🔐 Form message: {txt}")
-
-            print(f"🔐 Login: {'✅ success' if self.logged_in else '❌ failed'}")
+            print(f"🔐 Requests login: {'✅ success' if self.logged_in else '❌ failed'}")
             return self.logged_in
         except Exception as e:
-            print(f"🔐 Login failed with error: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"🔐 Requests login failed: {e}")
             return False
 
     # ---------- HTTP ----------
