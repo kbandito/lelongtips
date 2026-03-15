@@ -390,6 +390,83 @@ header h1 span {{ color: var(--accent); }}
 .stat .value.orange {{ color: var(--orange); }}
 .stat .value.purple {{ color: var(--purple); }}
 
+/* Dashboard cards */
+.dash-grid {{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}}
+.dash-card {{
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+}}
+.dash-card-title {{
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}}
+.legend-item {{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 0.78rem;
+}}
+.legend-dot {{
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}}
+.legend-label {{ color: var(--text-sec); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+.legend-count {{ font-weight: 600; color: var(--text); font-size: 0.75rem; }}
+.legend-pct {{ color: var(--text-muted); font-size: 0.7rem; width: 36px; text-align: right; }}
+
+.week-bar-row {{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}}
+.week-label {{
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  width: 90px;
+  flex-shrink: 0;
+  text-align: right;
+}}
+.week-bar-bg {{
+  flex: 1;
+  height: 20px;
+  background: #F3F4F6;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}}
+.week-bar-fill {{
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+  transition: width 0.3s;
+}}
+.week-bar-count {{
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text);
+  width: 32px;
+  text-align: right;
+}}
+@media(min-width: 600px) {{
+  .dash-grid {{ grid-template-columns: 1fr 1fr; }}
+}}
+
 /* Tabs */
 .tabs {{
   display: flex;
@@ -958,21 +1035,23 @@ footer {{
   </header>
 
   <div class="stats">
-    <div class="stat s-blue">
+    <div class="stat s-blue" style="grid-column: 1 / -1">
       <div class="label">Active Listings</div>
       <div class="value blue" id="stat-active">{stats['active_count']:,}</div>
     </div>
-    <div class="stat s-green">
-      <div class="label">New (Latest)</div>
-      <div class="value green" id="stat-new">{stats['new_count']}</div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="dash-card-title">Listings by Type</div>
+      <div id="type-chart" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <canvas id="pie-chart" width="120" height="120" style="flex-shrink:0"></canvas>
+        <div id="type-legend" style="flex:1;min-width:0"></div>
+      </div>
     </div>
-    <div class="stat s-orange">
-      <div class="label">Price Drops</div>
-      <div class="value orange" id="stat-drops">{stats['drop_count']}</div>
-    </div>
-    <div class="stat s-purple">
-      <div class="label">Avg Price</div>
-      <div class="value purple" id="stat-avg">RM{stats['avg_price']:,}</div>
+    <div class="dash-card">
+      <div class="dash-card-title">Auctions by Week</div>
+      <div id="week-chart"></div>
     </div>
   </div>
 
@@ -1147,6 +1226,8 @@ footer {{
     if (m) return new Date(+m[3], months[m[2]]||0, +m[1]);
     return null;
   }}
+
+  const parseAuctionDate = parseDate;
 
   function daysUntil(dateStr) {{
     const d = parseDate(dateStr);
@@ -1657,8 +1738,104 @@ footer {{
         p._search = buildSearchString(p);
       }}
 
+      // --- Dashboard: Type breakdown pie chart ---
+      const activeEntries = allEntries.filter(([_, p]) => !p.exp);
+      const typeCounts = {{}};
+      for (const [_, p] of activeEntries) {{
+        const t = p.pt || 'Other';
+        typeCounts[t] = (typeCounts[t] || 0) + 1;
+      }}
+      const typeEntries = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
+      const totalActive = activeEntries.length;
+      const pieColors = ['#2563EB', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#EC4899', '#6366F1'];
+
+      // Draw pie chart on canvas
+      const canvas = document.getElementById('pie-chart');
+      if (canvas && canvas.getContext) {{
+        const ctx = canvas.getContext('2d');
+        const cx = 60, cy = 60, r = 55;
+        let startAngle = -Math.PI / 2;
+        typeEntries.forEach(([type, count], i) => {{
+          const sliceAngle = (count / totalActive) * 2 * Math.PI;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, r, startAngle, startAngle + sliceAngle);
+          ctx.closePath();
+          ctx.fillStyle = pieColors[i % pieColors.length];
+          ctx.fill();
+          startAngle += sliceAngle;
+        }});
+        // White center for donut effect
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.55, 0, 2 * Math.PI);
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim() || '#fff';
+        ctx.fill();
+        // Center text
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111';
+        ctx.font = 'bold 16px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(totalActive.toLocaleString(), cx, cy - 6);
+        ctx.font = '9px Inter, sans-serif';
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#888';
+        ctx.fillText('active', cx, cy + 10);
+      }}
+
+      // Legend
+      const legendEl = document.getElementById('type-legend');
+      if (legendEl) {{
+        legendEl.innerHTML = typeEntries.map(([type, count], i) => {{
+          const pct = totalActive > 0 ? ((count / totalActive) * 100).toFixed(1) : '0';
+          return '<div class="legend-item">'
+            + '<div class="legend-dot" style="background:'+pieColors[i % pieColors.length]+'"></div>'
+            + '<span class="legend-label">'+esc(type)+'</span>'
+            + '<span class="legend-count">'+count+'</span>'
+            + '<span class="legend-pct">'+pct+'%</span>'
+            + '</div>';
+        }}).join('');
+      }}
+
+      // --- Dashboard: Auctions by week chart ---
+      const weekData = {{}};
+      const now = new Date();
+      const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay() + 1); // Monday
+      weekStart.setHours(0,0,0,0);
+      // Build 8 weeks
+      for (let w = 0; w < 8; w++) {{
+        const wStart = new Date(weekStart); wStart.setDate(weekStart.getDate() + w * 7);
+        const wEnd = new Date(wStart); wEnd.setDate(wStart.getDate() + 6);
+        const label = wStart.toLocaleDateString('en-GB', {{ day: 'numeric', month: 'short' }})
+          + ' - ' + wEnd.toLocaleDateString('en-GB', {{ day: 'numeric', month: 'short' }});
+        weekData[label] = {{ start: wStart, end: wEnd, count: 0 }};
+      }}
+      for (const [_, p] of activeEntries) {{
+        const ad = parseAuctionDate(p.ad);
+        if (!ad) continue;
+        for (const [label, w] of Object.entries(weekData)) {{
+          if (ad >= w.start && ad <= w.end) {{
+            w.count++;
+            break;
+          }}
+        }}
+      }}
+      const weekEntries = Object.entries(weekData);
+      const maxWeek = Math.max(...weekEntries.map(([_, w]) => w.count), 1);
+      const weekEl = document.getElementById('week-chart');
+      if (weekEl) {{
+        weekEl.innerHTML = weekEntries.map(([label, w]) => {{
+          const pct = (w.count / maxWeek * 100).toFixed(0);
+          const isThisWeek = w.start <= now && now <= w.end;
+          const barColor = isThisWeek ? 'var(--accent)' : '#93C5FD';
+          return '<div class="week-bar-row">'
+            + '<span class="week-label"'+(isThisWeek ? ' style="font-weight:600;color:var(--accent)"' : '')+'>'+esc(label)+'</span>'
+            + '<div class="week-bar-bg"><div class="week-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'
+            + '<span class="week-bar-count">'+w.count+'</span>'
+            + '</div>';
+        }}).join('');
+      }}
+
       // --- Dashboard: Hot deals ---
-      const hotDeals = allEntries
+      const hotDeals = activeEntries
         .filter(([_, p]) => p.d)
         .sort((a, b) => parseDiscount(b[1].d) - parseDiscount(a[1].d))
         .slice(0, 5);
@@ -1669,9 +1846,18 @@ footer {{
         hotContainer.innerHTML = '<div class="empty"><p>No price drop data available yet</p></div>';
       }}
 
-      // --- Dashboard: Upcoming auctions (next 7 days) ---
-      const upcoming = allEntries
-        .filter(([_, p]) => {{ const d = daysUntil(p.ad); return d >= 0 && d <= 7; }})
+      // --- Dashboard: Upcoming auctions (next 7 days, deduplicated) ---
+      const seenAuctions = new Set();
+      const upcoming = activeEntries
+        .filter(([id, p]) => {{
+          const d = daysUntil(p.ad);
+          if (d < 0 || d > 7 || p.exp) return false;
+          // Deduplicate by title+price+auction_date
+          const key = (p.t || '') + '|' + (p.p || '') + '|' + (p.ad || '');
+          if (seenAuctions.has(key)) return false;
+          seenAuctions.add(key);
+          return true;
+        }})
         .sort((a, b) => daysUntil(a[1].ad) - daysUntil(b[1].ad))
         .slice(0, 10);
       const upContainer = document.getElementById('upcoming');
