@@ -166,6 +166,11 @@ class FixedFullScrapingPropertyMonitor:
             "Pragma": "no-cache",
         }
 
+        # Session for authenticated scraping (persists cookies)
+        self.session = requests.Session()
+        self.session.headers.update(self.headers)
+        self.logged_in = False
+
         # Rate limiting settings
         self.request_delay = 2  # seconds between requests
         self.max_retries = 3
@@ -393,13 +398,47 @@ class FixedFullScrapingPropertyMonitor:
         except Exception:
             return False
 
+    # ---------- LOGIN ----------
+    def login(self):
+        """Login to lelongtips.com.my to access full property details (unit numbers)"""
+        email = os.getenv("LELONGTIPS_EMAIL", "")
+        password = os.getenv("LELONGTIPS_PASSWORD", "")
+        if not email or not password:
+            print("⚠️ No LELONGTIPS_EMAIL/PASSWORD set, scraping as guest")
+            return False
+
+        login_url = f"{self.root_url}/login"
+        try:
+            # GET login page to grab CSRF token
+            resp = self.session.get(login_url, timeout=self.timeout)
+            soup = BeautifulSoup(resp.content, "html.parser")
+            csrf_input = soup.find("input", {"name": "_token"})
+            token = csrf_input["value"] if csrf_input else ""
+
+            # POST login credentials
+            data = {
+                "_token": token,
+                "email": email,
+                "password": password,
+            }
+            resp = self.session.post(
+                login_url, data=data, timeout=self.timeout, allow_redirects=True
+            )
+            # Check if login succeeded (redirected away from login page)
+            self.logged_in = resp.ok and "/login" not in resp.url
+            print(f"🔐 Login: {'✅ success' if self.logged_in else '❌ failed'}")
+            return self.logged_in
+        except Exception as e:
+            print(f"🔐 Login failed with error: {e}")
+            return False
+
     # ---------- HTTP ----------
     def make_request(self, url, params=None, retry_count=0):
         """Make HTTP request with retry logic and rate limiting"""
         try:
             time.sleep(self.request_delay)
-            response = requests.get(
-                url, params=params, headers=self.headers, timeout=self.timeout
+            response = self.session.get(
+                url, params=params, timeout=self.timeout
             )
             response.raise_for_status()
             return response
@@ -1446,6 +1485,9 @@ class FixedFullScrapingPropertyMonitor:
         print(
             f"Starting scrape at {datetime.now()}"
         )
+
+        # Attempt login for full details (unit numbers in addresses)
+        self.login()
 
         try:
             total_results, total_pages = self.get_total_pages_and_results()
