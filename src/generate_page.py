@@ -1909,8 +1909,14 @@ footer {{
       views.changes.sourceItems = changedItems;
       filterAndRender('changes');
 
-      // --- Search/browse tab ---
-      const allItems = allEntries.map(([id, p]) => ({{ id, prop: p, _search: p._search }}));
+      // --- Search/browse tab (deduplicated) ---
+      const seenAll = new Set();
+      const allItems = allEntries.filter(([id, p]) => {{
+        const key = (p.t || '') + '|' + (p.pv || '') + '|' + (p.ad || '') + '|' + (p.l || '');
+        if (seenAll.has(key)) return false;
+        seenAll.add(key);
+        return true;
+      }}).map(([id, p]) => ({{ id, prop: p, _search: p._search }}));
       views.all.sourceItems = allItems;
 
       // --- Table tab ---
