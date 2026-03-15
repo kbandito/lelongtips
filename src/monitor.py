@@ -430,13 +430,18 @@ class FixedFullScrapingPropertyMonitor:
                 page.goto(login_url, wait_until="networkidle", timeout=30000)
                 print(f"🔐 Login page loaded: {page.url}")
 
-                # Fill in the login form
-                page.fill('input[name="email"], input[type="email"]', email)
-                page.fill('input[name="password"], input[type="password"]', password)
+                # Find the login form — it contains a password input
+                password_input = page.locator('input[type="password"]')
+                login_form = password_input.locator('xpath=ancestor::form')
 
-                # Click submit and wait for navigation
+                # Fill in the login form fields scoped to the correct form
+                login_form.locator('input[name="email"], input[type="email"]').fill(email)
+                password_input.fill(password)
+
+                # Click the submit button within the login form
+                submit_btn = login_form.locator('button[type="submit"], input[type="submit"]')
                 with page.expect_navigation(wait_until="networkidle", timeout=30000):
-                    page.click('button[type="submit"], input[type="submit"]')
+                    submit_btn.click()
 
                 final_url = page.url
                 print(f"🔐 After login: {final_url}")
