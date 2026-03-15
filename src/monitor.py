@@ -19,6 +19,86 @@ import hashlib
 import html  # for Telegram HTML escaping
 
 
+def categorize_property_type(title):
+    """Categorize property into Residential/Commercial/Industrial/Land from title.
+
+    The source website labels everything broadly (e.g. "Commercial" for houses).
+    This function derives the correct category from the actual property title,
+    which describes the physical property type (e.g. "2 Storey Semi Detached House").
+    """
+    t = re.sub(r"\[.*?\]", "", title, flags=re.DOTALL).strip().lower()
+
+    # ── Residential ─────────────────────────────────────────────
+    if re.search(r"(semi.?detached|detached)\s*(house|home|plot|lot)", t):
+        return "Residential"
+    if re.search(r"bungalow", t):
+        return "Residential"
+    if re.search(r"terrace\s*house", t):
+        return "Residential"
+    if re.search(r"cluster\s*(semi|house|design)", t):
+        return "Residential"
+    if re.search(r"link\s*(semi|house|bungalow)", t):
+        return "Residential"
+    if re.search(r"town\s*(house|villa)", t):
+        return "Residential"
+    if re.search(r"villa\b", t):
+        return "Residential"
+    if re.search(r"\d+\.?\d*\s*storey\s*(semi|detached|cluster|link|zero)", t):
+        return "Residential"
+    if re.search(
+        r"apartment|condominium|condo\b|flat\b|penthouse|service\s+suite", t
+    ):
+        return "Residential"
+    if re.search(r"\bsoho\b", t):
+        return "Residential"
+    if re.search(r"residence\b", t) and "land" not in t:
+        return "Residential"
+    if t.rstrip().endswith("house") or t.rstrip().endswith("houses"):
+        return "Residential"
+    if re.search(r"(detached|semi|terrace|house|bungalow)\s*(plot|lot)\b", t):
+        return "Residential"
+    if re.search(r"residential\s*(land|lot|plot|building|terrace)", t):
+        return "Residential"
+    if re.search(r"vacant\s*(semi|detached|residential|terrace)", t):
+        return "Residential"
+    if re.search(r"housing\s*(lot|plot|land)", t):
+        return "Residential"
+    if re.search(r"resid(ential|ence)", t):
+        return "Residential"
+
+    # ── Industrial (before Commercial — factories have "shop" in address) ─
+    if re.search(r"factory|warehouse|industrial", t):
+        return "Industrial"
+
+    # ── Land ────────────────────────────────────────────────────
+    if re.search(r"\bland\b", t):
+        return "Land"
+    if re.search(r"vacant\s*(plot|lot|building)", t):
+        return "Land"
+    if re.search(r"parcels?\s+of", t):
+        return "Land"
+
+    # ── Commercial ──────────────────────────────────────────────
+    if re.search(r"shop", t):
+        return "Commercial"
+    if re.search(r"office|sofo|sovo|business\s*(suite|centre|center)", t):
+        return "Commercial"
+    if re.search(r"retail", t):
+        return "Commercial"
+    if re.search(r"hotel", t):
+        return "Commercial"
+    if re.search(r"commercial", t):
+        return "Commercial"
+    if re.search(r"(mall|plaza|complex|square|kiosk)\b", t):
+        return "Commercial"
+    if re.search(r"strata|stratified", t):
+        return "Commercial"
+    if re.search(r"convention\s*hall", t):
+        return "Commercial"
+
+    return "Commercial"  # default fallback
+
+
 class FixedFullScrapingPropertyMonitor:
     def __init__(self):
         # Set to False to skip expired auction dates; True to collect all listings
@@ -765,26 +845,7 @@ class FixedFullScrapingPropertyMonitor:
             property_data["location"] = location
 
             # ---------- PROPERTY TYPE ----------
-            property_type = "Commercial"
-            type_keywords = {
-                "office": "Office",
-                "shop": "Shop",
-                "retail": "Retail",
-                "factory": "Factory",
-                "warehouse": "Warehouse",
-                "land": "Land",
-                "hotel": "Hotel",
-                "apartment": "Apartment",
-                "condominium": "Condominium",
-                "condo": "Condominium",
-                "residence": "Residence",
-            }
-            container_text_lower = container_text.lower()
-            for keyword, prop_type in type_keywords.items():
-                if keyword in container_text_lower:
-                    property_type = prop_type
-                    break
-            property_data["property_type"] = property_type
+            property_data["property_type"] = categorize_property_type(title)
 
             # ---------- DISCOUNT ----------
             discount_match = re.search(r"(-\d+%)", container_text)
