@@ -419,24 +419,62 @@ class FixedFullScrapingPropertyMonitor:
             token = csrf_input["value"] if csrf_input else ""
             print(f"🔐 CSRF token found: {'✅' if token else '❌ missing'}")
 
-            if not token:
-                # Dump form inputs for debugging
-                forms = soup.find_all("form")
-                print(f"🔐 Forms on page: {len(forms)}")
-                for form in forms:
-                    inputs = form.find_all("input")
-                    print(f"🔐   Form action={form.get('action')}, inputs: {[i.get('name') for i in inputs]}")
+            # Dump ALL forms and their details to find the login form
+            forms = soup.find_all("form")
+            print(f"🔐 Forms on page: {len(forms)}")
+            login_form = None
+            for i, form in enumerate(forms):
+                action = form.get("action", "")
+                method = form.get("method", "")
+                inputs = form.find_all("input")
+                input_names = [inp.get("name") for inp in inputs]
+                print(f"🔐   Form[{i}]: action={action}, method={method}, inputs={input_names}")
+                # Identify the login form by looking for password field
+                if any(inp.get("type") == "password" for inp in inputs):
+                    login_form = form
+                    print(f"🔐   ^ This is the login form")
 
-            # POST login credentials
+            # Determine POST URL from the login form's action attribute
+            post_url = login_url
+            if login_form:
+                form_action = login_form.get("action", "")
+                if form_action:
+                    if form_action.startswith("http"):
+                        post_url = form_action
+                    elif form_action.startswith("/"):
+                        post_url = f"{self.root_url}{form_action}"
+                    else:
+                        post_url = f"{self.root_url}/{form_action}"
+                # Collect ALL hidden inputs from the login form
+                hidden_inputs = login_form.find_all("input", {"type": "hidden"})
+                for hi in hidden_inputs:
+                    print(f"🔐   Hidden input: name={hi.get('name')}, value={hi.get('value', '')[:20]}...")
+                # Also get the CSRF token specifically from THIS form
+                form_csrf = login_form.find("input", {"name": "_token"})
+                if form_csrf:
+                    token = form_csrf["value"]
+
+            print(f"🔐 Will POST to: {post_url}")
+
+            # POST login credentials - include all hidden fields from login form
             data = {
                 "_token": token,
                 "email": email,
                 "password": password,
             }
+            # Add any extra hidden fields from the login form
+            if login_form:
+                for hi in login_form.find_all("input", {"type": "hidden"}):
+                    name = hi.get("name")
+                    if name and name not in data:
+                        data[name] = hi.get("value", "")
+
+            print(f"🔐 POST data keys: {list(data.keys())}")
             resp = self.session.post(
-                login_url, data=data, timeout=self.timeout, allow_redirects=True
+                post_url, data=data, timeout=self.timeout, allow_redirects=True
             )
             print(f"🔐 POST response: status={resp.status_code}, url={resp.url}")
+            print(f"🔐 Response cookies: {dict(self.session.cookies)}")
 
             # Check if login succeeded (redirected away from login page)
             self.logged_in = resp.ok and "/login" not in resp.url
