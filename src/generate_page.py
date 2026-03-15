@@ -201,11 +201,18 @@ def trim_property(prop, geocode_cache=None, scheme_cache=None):
         if geo and geo.get("q") != "default":
             result["lat"] = round(geo["lat"], 5)
             result["lng"] = round(geo["lng"], 5)
-    # Add AI-extracted scheme name if available
+    # Add scheme/project name: prefer AI-extracted, fallback to header_short
+    scheme = ""
     if scheme_cache:
         scheme = scheme_cache.get(addr, "")
-        if scheme:
-            result["sn"] = scheme
+    if not scheme:
+        scheme = prop.get("scheme_name", "")
+    if not scheme:
+        hs = prop.get("header_short", "")
+        if "," in hs:
+            scheme = hs.rsplit(",", 1)[0].strip()
+    if scheme:
+        result["sn"] = scheme
     return result
 
 

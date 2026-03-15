@@ -179,7 +179,11 @@ class PropertyBot:
         auction = self.esc(prop.get("auction_date", "N/A"))
         url = prop.get("url") or prop.get("listing_url", "")
 
+        scheme = self.esc(prop.get("scheme_name", ""))
+
         msg = f"{prefix}<b>{title}</b>\n"
+        if scheme:
+            msg += f"   Scheme: {scheme}\n"
         msg += f"   Type: {ptype}\n"
         msg += f"   Price: {price}\n"
         msg += f"   Location: {location}\n"
@@ -327,6 +331,7 @@ class PropertyBot:
                 prop.get("location", ""),
                 prop.get("property_type", ""),
                 prop.get("size", ""),
+                prop.get("scheme_name", ""),
             ]).lower()
             if all(term in searchable for term in terms):
                 results.append(prop)
