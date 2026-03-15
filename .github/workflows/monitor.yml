@@ -50,6 +50,16 @@ jobs:
         cd src
         python monitor.py
 
+    - name: Geocode new addresses
+      run: python src/geocode.py
+      continue-on-error: true
+
+    - name: Extract scheme names (Gemini AI)
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      run: python src/extract_schemes.py
+      continue-on-error: true
+
     - name: Generate dashboard
       run: python src/generate_page.py
 
