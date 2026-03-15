@@ -1739,7 +1739,15 @@ footer {{
       }}
 
       // --- Dashboard: Type breakdown pie chart ---
-      const activeEntries = allEntries.filter(([_, p]) => !p.exp);
+      // Deduplicate active entries (prefer ones with size info)
+      const _actSorted = allEntries.filter(([_, p]) => !p.exp).sort((a, b) => (a[1].sz ? 0 : 1) - (b[1].sz ? 0 : 1));
+      const _actSeen = new Set();
+      const activeEntries = _actSorted.filter(([_, p]) => {{
+        const key = (p.t || '') + '|' + (p.pv || '') + '|' + (p.ad || '') + '|' + (p.a || '');
+        if (_actSeen.has(key)) return false;
+        _actSeen.add(key);
+        return true;
+      }});
       const typeCounts = {{}};
       for (const [_, p] of activeEntries) {{
         const t = p.pt || 'Other';
@@ -1910,9 +1918,15 @@ footer {{
       filterAndRender('changes');
 
       // --- Search/browse tab (deduplicated) ---
+      // Prefer entries with size info; dedup by title+price+auction_date+address
+      const allSorted = allEntries.slice().sort((a, b) => {{
+        const aHas = a[1].sz ? 0 : 1;
+        const bHas = b[1].sz ? 0 : 1;
+        return aHas - bHas;
+      }});
       const seenAll = new Set();
-      const allItems = allEntries.filter(([id, p]) => {{
-        const key = (p.t || '') + '|' + (p.pv || '') + '|' + (p.ad || '') + '|' + (p.l || '');
+      const allItems = allSorted.filter(([id, p]) => {{
+        const key = (p.t || '') + '|' + (p.pv || '') + '|' + (p.ad || '') + '|' + (p.a || '');
         if (seenAll.has(key)) return false;
         seenAll.add(key);
         return true;
