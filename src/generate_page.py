@@ -710,12 +710,29 @@ header h1 span {{ color: var(--accent); }}
 .pill.date {{ background: var(--orange-light); color: var(--orange); }}
 .pill.date.urgent {{ background: var(--red-light); color: var(--red); font-weight: 600; }}
 .pill.discount {{ background: var(--green-light); color: var(--green); font-weight: 600; }}
+.card-subtitle {{
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 2px;
+}}
 .card-address {{
   color: var(--text-muted);
   font-size: 0.75rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}}
+.card-view-link {{
+  display: inline-block;
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 6px;
+}}
+.card-view-link:hover {{
+  text-decoration: underline;
 }}
 .card-link {{
   display: inline-block;
@@ -1518,6 +1535,8 @@ footer {{
 
     const scheme = schemeName(p.a, p.t, p.sn);
     const displayTitle = scheme || p.a || p.t;
+    const showSubtitle = p.t && displayTitle !== p.t;
+    const linkHtml = p.u ? '<a class="card-view-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">View Listing &rarr;</a>' : '';
 
     const expClass = isExpired ? ' is-expired' : '';
     return '<div class="card'+expClass+'" data-id="'+esc(id)+'" onclick="window._openDetail(this.dataset.id)">'
@@ -1525,6 +1544,7 @@ footer {{
       + '<div class="card-img">'+imgHtml+'</div>'
       + '<div class="card-body">'
       + '<div class="card-header"><div class="card-title">'+esc(displayTitle)+badgeHtml+'</div><div class="card-price">'+esc(p.p)+spark+'</div></div>'
+      + (showSubtitle ? '<div class="card-subtitle">'+esc(p.t)+'</div>' : '')
       + '<div class="card-meta">'
       + (p.pt ? '<span class="pill type">'+esc(p.pt)+'</span>' : '')
       + '<span class="pill loc">'+esc(p.l)+'</span>'
@@ -1533,6 +1553,7 @@ footer {{
       + discountHtml
       + '</div>'
       + (p.a && p.a !== p.t ? '<div class="card-address">'+esc(p.a)+'</div>' : '')
+      + linkHtml
       + '</div></div>'
       + changesHtml
       + '</div>';
