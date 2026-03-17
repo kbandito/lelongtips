@@ -1505,7 +1505,19 @@ class FixedFullScrapingPropertyMonitor:
                 title = esc(prop.get("title", "Untitled"))
                 url = prop.get("listing_url") or prop.get("url", "")
 
-                msg += f"\n{i}. <b>{title}</b>\n"
+                loc = esc(prop.get("location", ""))
+                size = esc(prop.get("size", ""))
+                ptype = esc(prop.get("property_type", ""))
+
+                msg += f"\n{i}. <b>{title}</b>"
+                if loc:
+                    msg += f" — {loc}"
+                msg += "\n"
+
+                meta = [x for x in [ptype, size] if x and x != "-" and x != "Size not specified"]
+                if meta:
+                    msg += f"   {' · '.join(meta)}\n"
+
                 for change in changes:
                     old = esc(change["old_value"])
                     new = esc(change["new_value"])
