@@ -499,6 +499,28 @@ class FixedFullScrapingPropertyMonitor:
             print(f"🔐 Requests login failed: {e}")
             return False
 
+    # ---------- Detail page ----------
+    def fetch_size_from_detail(self, listing_url):
+        """Fetch property detail page and extract size/BuA when missing from listing card."""
+        try:
+            time.sleep(1)  # lighter rate limit for detail pages
+            resp = self.session.get(listing_url, timeout=self.timeout)
+            if not resp.ok:
+                return None
+            text = resp.text
+            # Try multiple size patterns found on detail pages
+            # "Built Up : 1,234 sq.ft" / "Land Area : 5,678 sq.ft" / "Size : 999 sq.ft"
+            for pattern in [
+                r"(?:Built[\s\-]*[Uu]p|BuA|Size|Land\s*Area)\s*[:\s]+\s*([\d,]+)\s*sq\.?\s*ft",
+                r"([\d,]+)\s*sq\.?\s*ft",
+            ]:
+                m = re.search(pattern, text, re.IGNORECASE)
+                if m:
+                    return f"{m.group(1)} sq.ft"
+            return None
+        except Exception:
+            return None
+
     # ---------- HTTP ----------
     def make_request(self, url, params=None, retry_count=0):
         """Make HTTP request with retry logic and rate limiting"""
@@ -1060,6 +1082,21 @@ class FixedFullScrapingPropertyMonitor:
                 page_properties = self.extract_properties_from_page(
                     response.text, page_num
                 )
+
+                # Fetch size from detail page for properties missing it
+                # Budget: skip if we've already spent too long on detail fetches
+                elapsed_total = (
+                    datetime.now()
+                    - datetime.fromisoformat(scraping_stats["start_time"])
+                ).total_seconds()
+                if elapsed_total < 900:  # only if under 15 min total
+                    for prop_data in page_properties:
+                        if prop_data.get("size") == "Size not specified":
+                            detail_url = prop_data.get("listing_url")
+                            if detail_url and "/property/" in detail_url:
+                                size = self.fetch_size_from_detail(detail_url)
+                                if size:
+                                    prop_data["size"] = size
 
                 for prop_data in page_properties:
                     property_id = self.create_property_id(
