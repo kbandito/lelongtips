@@ -2073,16 +2073,33 @@ footer {
       }
     }
 
-    var query = 'Find current property listings for "' + scheme + '" in ' + location + ', Malaysia on PropertyGuru (propertyguru.com.my).';
+    var slug = scheme.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    var saleUrl = 'https://www.propertyguru.com.my/property-for-sale?freetext=' + encodeURIComponent(scheme) + '&search=true';
+    var rentUrl = 'https://www.propertyguru.com.my/property-for-rent?freetext=' + encodeURIComponent(scheme) + '&search=true';
+    var projectSaleUrl = 'https://www.propertyguru.com.my/property-for-sale/at-' + slug;
+    var projectRentUrl = 'https://www.propertyguru.com.my/property-for-rent/at-' + slug;
+
+    var query = 'Go to these PropertyGuru pages and extract the ACTUAL listings shown:\n\n';
+    query += 'FOR SALE listings - check these URLs:\n';
+    query += '1. ' + projectSaleUrl + ' (project page)\n';
+    query += '2. ' + saleUrl + ' (search results)\n\n';
+    query += 'FOR RENT listings - check these URLs:\n';
+    query += '1. ' + projectRentUrl + ' (project page)\n';
+    query += '2. ' + rentUrl + ' (search results)\n\n';
+    query += 'Property: "' + scheme + '" in ' + location + ', Malaysia.';
     if (propType) query += ' Property type: ' + propType + '.';
     if (size) query += ' Size approximately ' + size + '.';
-    query += '\n\nSearch ONLY PropertyGuru Malaysia (www.propertyguru.com.my) for BOTH sale and rental listings of this exact property/development.';
-    query += '\n\nIMPORTANT: Only return REAL listings that actually exist on PropertyGuru. Each listing MUST have:';
-    query += '\n- A real PropertyGuru listing URL (e.g. https://www.propertyguru.com.my/property-for-sale/...)';
-    query += '\n- The PropertyGuru listing thumbnail image URL (e.g. https://media.propertyguru.com/... or https://img.propertyguru.com.my/...)';
+    query += '\n\nExtract the EXACT listings from these PropertyGuru pages. For each listing get:';
+    query += '\n- title: the listing title as shown on PropertyGuru';
+    query += '\n- price: the listed price (e.g. RM 180,000)';
+    query += '\n- psf: price per sq ft if shown';
+    query += '\n- size: floor size in sq ft';
+    query += '\n- beds: number of bedrooms';
+    query += '\n- image: the listing thumbnail image URL from PropertyGuru (starts with https://img.propertyguru.com.my/ or https://media.propertyguru.com/)';
+    query += '\n- url: the full PropertyGuru listing URL (e.g. https://www.propertyguru.com.my/listing/...)';
     query += '\n\nReturn ONLY valid JSON (no markdown, no code fences) in this exact format:\n';
-    query += '{"sale_listings":[{"title":"unit/listing description","price":"RM XXX,XXX","psf":"RM XXX psf","size":"XXX sq ft","beds":"X","image":"PropertyGuru thumbnail URL","url":"PropertyGuru listing URL"}],"rental_listings":[{"title":"unit/listing description","price":"RM X,XXX/mo","psf":"RM X.XX psf","size":"XXX sq ft","beds":"X","image":"PropertyGuru thumbnail URL","url":"PropertyGuru listing URL"}],"summary":"Brief 2-3 sentence market overview with price range and trends"}';
-    query += '\n\nInclude up to 8 listings per category. Use actual data from PropertyGuru search results. Every listing MUST have a title, price, image thumbnail URL, and PropertyGuru URL.';
+    query += '{"sale_listings":[{"title":"...","price":"RM XXX,XXX","psf":"RM XXX psf","size":"XXX sq ft","beds":"X","image":"https://img.propertyguru.com.my/...","url":"https://www.propertyguru.com.my/listing/..."}],"rental_listings":[{"title":"...","price":"RM X,XXX/mo","psf":"RM X.XX psf","size":"XXX sq ft","beds":"X","image":"https://img.propertyguru.com.my/...","url":"https://www.propertyguru.com.my/listing/..."}],"summary":"Brief 2-3 sentence market overview"}';
+    query += '\n\nInclude up to 8 listings per category. Only include listings that ACTUALLY appear on these PropertyGuru pages.';
 
     try {
       var resp = await fetch('https://api.perplexity.ai/chat/completions', {
@@ -2094,9 +2111,10 @@ footer {
         body: JSON.stringify({
           model: 'sonar',
           messages: [
-            { role: 'system', content: 'You are a Malaysian property market data API. You search ONLY PropertyGuru Malaysia (propertyguru.com.my) for real property listings. Return exact listings with real PropertyGuru URLs and their thumbnail image URLs. You MUST respond with ONLY valid JSON, no markdown formatting, no code fences, no explanation text. Just the raw JSON object.' },
+            { role: 'system', content: 'You are a PropertyGuru Malaysia listing extractor. You visit the provided PropertyGuru URLs and extract the exact listings shown on those pages. Return real listing data with actual PropertyGuru image URLs and listing URLs. You MUST respond with ONLY valid JSON, no markdown, no code fences.' },
             { role: 'user', content: query }
           ],
+          search_domain_filter: ['propertyguru.com.my'],
           temperature: 0.1
         })
       });
