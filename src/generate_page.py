@@ -1027,6 +1027,39 @@ header h1 span {{ color: var(--accent); }}
 /* Sparkline */
 .sparkline {{ display: inline-block; vertical-align: middle; margin-left: 4px; }}
 
+/* Notable listing sub-tabs */
+.notable-tabs {{
+  display: flex;
+  gap: 0;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+}}
+.notable-tab {{
+  flex: 1;
+  padding: 7px 4px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}}
+.notable-tab + .notable-tab {{
+  border-left: 1px solid var(--border);
+}}
+.notable-tab.active {{
+  color: var(--text);
+  background: #F3F4F6;
+  font-weight: 600;
+}}
+.notable-panel {{ display: none; }}
+.notable-panel.active {{ display: block; }}
+
 /* Hot deals & upcoming sections */
 .section-title {{
   font-size: 0.85rem;
@@ -1375,9 +1408,20 @@ footer {{
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 2H3C2.4 2 2 2.4 2 3V13C2 13.6 2.4 14 3 14H13C13.6 14 14 13.6 14 13V3C14 2.4 13.6 2 13 2ZM5 12H4V7H5V12ZM8.5 12H7.5V4H8.5V12ZM12 12H11V9H12V12Z" fill="currentColor"/></svg>
       Notable Listings
     </div>
-    <div id="notable" style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px">Multi-round auctions with declining prices</div>
-    <div id="notable-cards">
+    <div class="notable-tabs" id="notable-tabs">
+      <button class="notable-tab active" data-ntab="drops">Price Drops</button>
+      <button class="notable-tab" data-ntab="soon">Auction Soon</button>
+      <button class="notable-tab" data-ntab="affordable">Below RM300K</button>
+      <button class="notable-tab" data-ntab="landed">Landed</button>
+    </div>
+    <div id="notable-drops" class="notable-panel active">
       <div class="skeleton-card"><div class="skeleton skeleton-line w60"></div><div class="skeleton skeleton-line w40"></div></div>
+    </div>
+    <div id="notable-soon" class="notable-panel">
+    </div>
+    <div id="notable-affordable" class="notable-panel">
+    </div>
+    <div id="notable-landed" class="notable-panel">
     </div>
 
     <div class="section-title">
@@ -2461,61 +2505,86 @@ footer {{
         hotContainer.innerHTML = '<div class="empty"><p>No price drop data available yet</p></div>';
       }}
 
-      // --- Dashboard: Notable listings (multi-round auctions with price drops) ---
-      function notableScore(p) {{
-        let score = 0;
-        const hist = p.hist || [];
-        const ph = p.ph || [];
-        // More auction rounds = more notable
-        if (hist.length > 1) score += hist.length * 10;
-        // Price drop from first to last
-        if (ph.length >= 2) {{
-          const parseP = s => {{ const m = String(s).match(/[\d,]+/); return m ? parseInt(m[0].replace(/,/g,'')) : 0; }};
-          const first = parseP(ph[0].p);
-          const last = parseP(ph[ph.length-1].p);
-          if (first > 0 && last > 0 && last < first) {{
-            const dropPct = (first - last) / first * 100;
-            score += dropPct * 2;
-          }}
-        }}
-        // Has discount info
-        if (p.d) score += 15;
-        return score;
-      }}
-      const seenNotable = new Set();
-      const notable = activeEntries
-        .filter(([id, p]) => {{
-          if (p.exp) return false;
-          const s = notableScore(p);
-          if (s <= 0) return false;
+      // --- Dashboard: Notable listings (tabbed categories) ---
+      const parseP = s => {{ const m = String(s).match(/[\d,]+/); return m ? parseInt(m[0].replace(/,/g,'')) : 0; }};
+
+      function dedup(arr) {{
+        const seen = new Set();
+        return arr.filter(([id, p]) => {{
           const key = (p.t || '') + '|' + (p.pv || '') + '|' + (p.ad || '');
-          if (seenNotable.has(key)) return false;
-          seenNotable.add(key);
+          if (seen.has(key)) return false;
+          seen.add(key);
           return true;
-        }})
-        .sort((a, b) => notableScore(b[1]) - notableScore(a[1]))
-        .slice(0, 8);
-      const notableContainer = document.getElementById('notable-cards');
-      if (notable.length) {{
-        notableContainer.innerHTML = notable.map(([id, p]) => {{
-          const hist = p.hist || [];
-          const ph = p.ph || [];
-          let badge = '';
-          if (hist.length > 1) badge = hist.length + ' rounds';
-          if (ph.length >= 2) {{
-            const parseP = s => {{ const m = String(s).match(/[\d,]+/); return m ? parseInt(m[0].replace(/,/g,'')) : 0; }};
-            const first = parseP(ph[0].p);
-            const last = parseP(ph[ph.length-1].p);
-            if (first > 0 && last > 0 && last < first) {{
-              const dropPct = ((first - last) / first * 100).toFixed(0);
-              badge += (badge ? ', ' : '') + dropPct + '% lower';
-            }}
-          }}
-          return renderCard(id, p, {{ isChanged: false, isNew: false, changes: [], notableBadge: badge }});
-        }}).join('');
-      }} else {{
-        notableContainer.innerHTML = '<div class="empty"><p>No notable listings found</p></div>';
+        }});
       }}
+
+      function priceDrop(p) {{
+        const ph = p.ph || [];
+        if (ph.length < 2) return 0;
+        const first = parseP(ph[0].p), last = parseP(ph[ph.length-1].p);
+        return (first > 0 && last > 0 && last < first) ? (first - last) / first * 100 : 0;
+      }}
+
+      function dropBadge(p) {{
+        const hist = p.hist || [];
+        let badge = '';
+        if (hist.length > 1) badge = hist.length + ' rounds';
+        const drop = priceDrop(p);
+        if (drop > 0) badge += (badge ? ', ' : '') + drop.toFixed(0) + '% lower';
+        return badge;
+      }}
+
+      // Tab: Price Drops
+      const drops = dedup(activeEntries
+        .filter(([_, p]) => !p.exp && priceDrop(p) > 0)
+        .sort((a, b) => priceDrop(b[1]) - priceDrop(a[1])))
+        .slice(0, 8);
+      const dropsEl = document.getElementById('notable-drops');
+      dropsEl.innerHTML = drops.length
+        ? drops.map(([id, p]) => renderCard(id, p, {{ notableBadge: dropBadge(p) }})).join('')
+        : '<div class="empty"><p>No price drop listings found</p></div>';
+
+      // Tab: Auction Soon (next 7 days)
+      const soon = dedup(activeEntries
+        .filter(([_, p]) => {{ const d = daysUntil(p.ad); return !p.exp && d >= 0 && d <= 7; }})
+        .sort((a, b) => daysUntil(a[1].ad) - daysUntil(b[1].ad)))
+        .slice(0, 8);
+      const soonEl = document.getElementById('notable-soon');
+      soonEl.innerHTML = soon.length
+        ? soon.map(([id, p]) => {{ const d = daysUntil(p.ad); return renderCard(id, p, {{ notableBadge: d <= 0 ? 'Today' : d === 1 ? 'Tomorrow' : d + ' days' }}); }}).join('')
+        : '<div class="empty"><p>No auctions in the next 7 days</p></div>';
+
+      // Tab: Below RM300K
+      const affordable = dedup(activeEntries
+        .filter(([_, p]) => !p.exp && p.pv > 0 && p.pv < 300000)
+        .sort((a, b) => a[1].pv - b[1].pv))
+        .slice(0, 8);
+      const affordEl = document.getElementById('notable-affordable');
+      affordEl.innerHTML = affordable.length
+        ? affordable.map(([id, p]) => renderCard(id, p)).join('')
+        : '<div class="empty"><p>No listings below RM300K</p></div>';
+
+      // Tab: Landed
+      const landed = dedup(activeEntries
+        .filter(([_, p]) => !p.exp && p.pt === 'Landed')
+        .sort((a, b) => a[1].pv - b[1].pv))
+        .slice(0, 8);
+      const landedEl = document.getElementById('notable-landed');
+      landedEl.innerHTML = landed.length
+        ? landed.map(([id, p]) => renderCard(id, p)).join('')
+        : '<div class="empty"><p>No landed listings found</p></div>';
+
+      // Notable tab switching
+      document.getElementById('notable-tabs').addEventListener('click', function(e) {{
+        const btn = e.target.closest('.notable-tab');
+        if (!btn) return;
+        const ntab = btn.dataset.ntab;
+        document.querySelectorAll('.notable-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.notable-panel').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        var panel = document.getElementById('notable-' + ntab);
+        if (panel) panel.classList.add('active');
+      }});
 
       // --- Dashboard: Scan history ---
       const historyContainer = document.getElementById('scan-history');
