@@ -2012,16 +2012,26 @@ footer {
     return h;
   }
 
-  function renderMarketResult(data, citations) {
+  function renderMarketResult(data, citations, saleUrl, rentUrl, projectSaleUrl, projectRentUrl, scheme) {
     var sale = data.sale_listings || [];
     var rental = data.rental_listings || [];
     var summary = data.summary || '';
 
-    var h = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:0.7rem;color:var(--text-muted)">'
-      + '<span>Listings from</span>'
-      + '<a href="https://www.propertyguru.com.my" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:700;color:var(--text);text-decoration:none">PropertyGuru</a>'
+    // Direct links banner
+    var h = '<div style="background:var(--card-bg);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;margin-bottom:10px">'
+      + '<div style="font-size:0.75rem;font-weight:700;margin-bottom:6px;color:var(--accent)">View actual listings on PropertyGuru:</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + '<a href="'+esc(saleUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:var(--accent);color:#fff;border-radius:6px;text-decoration:none;font-size:0.72rem;font-weight:600">'
+      + 'For Sale on PropertyGuru</a>'
+      + '<a href="'+esc(rentUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-size:0.72rem;font-weight:600">'
+      + 'For Rent on PropertyGuru</a>'
       + '</div>'
-      + '<div class="mr-tab-bar">'
+      + '</div>';
+
+    h += '<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:8px;font-style:italic">'
+      + 'Note: Listings below are AI-summarized and may not be 100% accurate. Click the links above to see actual listings.</div>';
+
+    h += '<div class="mr-tab-bar">'
       + '<button class="mr-tab active" onclick="event.stopPropagation();window._mrTab(this,\'sale\')">For Sale (' + sale.length + ')</button>'
       + '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'rental\')">For Rent (' + rental.length + ')</button>'
       + (summary ? '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'summary\')">Summary</button>' : '')
@@ -2145,7 +2155,7 @@ footer {
         }
       }
 
-      resultDiv.innerHTML = renderMarketResult(parsed, citations);
+      resultDiv.innerHTML = renderMarketResult(parsed, citations, saleUrl, rentUrl, projectSaleUrl, projectRentUrl, scheme);
       resultDiv.style.display = '';
     } catch (e) {
       // Fallback: show raw text if JSON fails
