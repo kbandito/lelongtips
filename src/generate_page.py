@@ -910,22 +910,96 @@ header h1 span {{ color: var(--accent); }}
 .market-compare-btn:disabled {{ opacity: 0.6; cursor: wait; }}
 .market-result {{
   margin-top: 8px;
-  padding: 10px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}}
+.market-result .mr-error {{ color: #e53e3e; padding: 8px; }}
+.mr-tab-bar {{
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 8px;
+}}
+.mr-tab {{
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+}}
+.mr-tab.active {{ color: var(--accent); border-bottom-color: var(--accent); }}
+.mr-tab:hover {{ color: var(--text); }}
+.mr-tab-content {{ display: none; }}
+.mr-tab-content.active {{ display: block; }}
+.mr-listings-table {{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.73rem;
+}}
+.mr-listings-table th {{
+  text-align: left;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}}
+.mr-listings-table td {{
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}}
+.mr-listings-table tr:last-child td {{ border-bottom: none; }}
+.mr-listings-table tr:hover {{ background: rgba(37,99,235,0.04); }}
+.mr-listing-img {{
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f0f0f0;
+}}
+.mr-listing-title {{
+  font-weight: 600;
+  font-size: 0.73rem;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}}
+.mr-listing-price {{ font-weight: 700; white-space: nowrap; color: var(--text); }}
+.mr-listing-psf {{ font-size: 0.65rem; color: var(--text-muted); }}
+.mr-listing-size {{ white-space: nowrap; }}
+.mr-listing-link {{
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.7rem;
+}}
+.mr-listing-link:hover {{ text-decoration: underline; }}
+.mr-sources {{
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}}
+.mr-sources a {{ color: var(--accent); text-decoration: underline; font-size: 0.68rem; }}
+.mr-summary {{
+  padding: 8px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 400px;
-  overflow-y: auto;
 }}
-.market-result h4 {{ margin: 0 0 4px; font-size: 0.8rem; color: var(--text); }}
-.market-result .mr-section {{ margin-bottom: 8px; }}
-.market-result .mr-label {{ font-weight: 600; color: var(--accent); font-size: 0.75rem; }}
-.market-result .mr-error {{ color: #e53e3e; }}
-.market-result a {{ color: var(--accent); text-decoration: underline; }}
 
 /* Table inline detail */
 .table-detail-row td {{
@@ -2242,10 +2316,69 @@ footer {{
     return '';
   }}
 
+  function renderListingsTable(listings, type) {{
+    if (!listings || listings.length === 0) return '<div style="padding:12px;color:var(--text-muted);text-align:center">No ' + type + ' listings found</div>';
+    var h = '<table class="mr-listings-table"><thead><tr>'
+      + '<th></th><th>Property</th><th>' + (type === 'rental' ? 'Rent/mo' : 'Price') + '</th><th>PSF</th><th>Size</th><th>Beds</th><th></th>'
+      + '</tr></thead><tbody>';
+    listings.forEach(function(l) {{
+      var imgTag = l.image ? '<img class="mr-listing-img" src="'+esc(l.image)+'" onerror="this.style.display=\'none\'" alt="">' : '<div class="mr-listing-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.6rem">No img</div>';
+      h += '<tr>'
+        + '<td>' + imgTag + '</td>'
+        + '<td><div class="mr-listing-title" title="'+esc(l.title||'')+'">'+esc(l.title||'-')+'</div></td>'
+        + '<td><div class="mr-listing-price">'+esc(l.price||'-')+'</div></td>'
+        + '<td><div class="mr-listing-psf">'+esc(l.psf||'-')+'</div></td>'
+        + '<td class="mr-listing-size">'+esc(l.size||'-')+'</td>'
+        + '<td>'+esc(l.beds||'-')+'</td>'
+        + '<td>' + (l.url ? '<a class="mr-listing-link" href="'+esc(l.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">View</a>' : '') + '</td>'
+        + '</tr>';
+    }});
+    h += '</tbody></table>';
+    return h;
+  }}
+
+  function renderMarketResult(data, citations) {{
+    var sale = data.sale_listings || [];
+    var rental = data.rental_listings || [];
+    var summary = data.summary || '';
+
+    var h = '<div class="mr-tab-bar">'
+      + '<button class="mr-tab active" onclick="event.stopPropagation();window._mrTab(this,\'sale\')">For Sale (' + sale.length + ')</button>'
+      + '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'rental\')">For Rent (' + rental.length + ')</button>'
+      + (summary ? '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'summary\')">Summary</button>' : '')
+      + '</div>'
+      + '<div class="mr-tab-content active" data-mr-tab="sale">' + renderListingsTable(sale, 'sale') + '</div>'
+      + '<div class="mr-tab-content" data-mr-tab="rental">' + renderListingsTable(rental, 'rental') + '</div>';
+
+    if (summary) {{
+      var summaryHtml = summary
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+      h += '<div class="mr-tab-content" data-mr-tab="summary"><div class="mr-summary">' + summaryHtml + '</div></div>';
+    }}
+
+    if (citations && citations.length > 0) {{
+      h += '<div class="mr-sources"><strong>Sources:</strong> ';
+      citations.forEach(function(c, i) {{
+        h += '<a href="'+esc(c)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">[' + (i+1) + ']</a> ';
+      }});
+      h += '</div>';
+    }}
+    return h;
+  }}
+
+  window._mrTab = function(btn, tab) {{
+    var section = btn.closest('.market-result');
+    section.querySelectorAll('.mr-tab').forEach(function(t) {{ t.classList.remove('active'); }});
+    section.querySelectorAll('.mr-tab-content').forEach(function(t) {{ t.classList.remove('active'); }});
+    btn.classList.add('active');
+    section.querySelector('[data-mr-tab="'+tab+'"]').classList.add('active');
+  }};
+
   window._compareMarket = async function(btn) {{
     btn.disabled = true;
-    btn.textContent = 'Searching market...';
-    var schemeName = btn.dataset.scheme;
+    btn.textContent = 'Searching market listings...';
+    var scheme = btn.dataset.scheme;
     var location = btn.dataset.location;
     var propType = btn.dataset.proptype;
     var size = btn.dataset.size;
@@ -2261,10 +2394,13 @@ footer {{
       }}
     }}
 
-    var query = 'Current property market data for "' + schemeName + '" in ' + location + ', Malaysia.';
+    var query = 'Find current property listings for "' + scheme + '" in ' + location + ', Malaysia.';
     if (propType) query += ' Property type: ' + propType + '.';
     if (size) query += ' Size approximately ' + size + '.';
-    query += ' Please provide: 1) Current asking SALE prices on PropertyGuru, iProperty, or EdgeProp (price range, price per sqft). 2) Current asking RENTAL prices (monthly rent range, rent per sqft). 3) Recent transaction prices if available. Show specific numbers and ranges.';
+    query += '\n\nSearch PropertyGuru, iProperty, and EdgeProp for BOTH sale and rental listings of this property/development.';
+    query += '\n\nReturn ONLY valid JSON (no markdown, no code fences) in this exact format:\n';
+    query += '{{"sale_listings":[{{"title":"unit/listing description","price":"RM XXX,XXX","psf":"RM XXX psf","size":"XXX sq ft","beds":"X","image":"direct image URL if available or empty string","url":"listing URL"}}],"rental_listings":[{{"title":"unit/listing description","price":"RM X,XXX/mo","psf":"RM X.XX psf","size":"XXX sq ft","beds":"X","image":"direct image URL if available or empty string","url":"listing URL"}}],"summary":"Brief 2-3 sentence market overview with price range and trends"}}';
+    query += '\n\nInclude up to 8 listings per category. Use actual data from the search results. Every listing MUST have a title and price at minimum.';
 
     try {{
       var resp = await fetch('https://api.perplexity.ai/chat/completions', {{
@@ -2276,7 +2412,7 @@ footer {{
         body: JSON.stringify({{
           model: 'sonar',
           messages: [
-            {{ role: 'system', content: 'You are a Malaysian property market analyst. Provide concise, factual data about property prices and rentals. Use RM currency. Format with clear sections for Sale Price, Rental, and Transactions. Keep it brief and data-focused.' }},
+            {{ role: 'system', content: 'You are a Malaysian property market data API. You search PropertyGuru, iProperty, and EdgeProp for real property listings. You MUST respond with ONLY valid JSON, no markdown formatting, no code fences, no explanation text. Just the raw JSON object.' }},
             {{ role: 'user', content: query }}
           ],
           temperature: 0.1
@@ -2290,29 +2426,37 @@ footer {{
         }}
         throw new Error('API error ' + resp.status + ': ' + errBody.substring(0, 200));
       }}
-      var data = await resp.json();
-      var answer = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || 'No results found.';
-      var citations = data.citations || [];
+      var respData = await resp.json();
+      var answer = respData.choices && respData.choices[0] && respData.choices[0].message && respData.choices[0].message.content || '';
+      var citations = respData.citations || [];
 
-      // Simple markdown-to-html: bold, headers, lists
-      var html = answer
-        .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
-        .replace(/^### (.+)$/gm, '<h4>$1</h4>')
-        .replace(/^## (.+)$/gm, '<h4>$1</h4>')
-        .replace(/^# (.+)$/gm, '<h4>$1</h4>')
-        .replace(/\\n/g, '<br>');
-
-      if (citations.length > 0) {{
-        html += '<br><br><span class="mr-label">Sources:</span><br>';
-        citations.forEach(function(c, i) {{
-          html += '<a href="' + esc(c) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">[' + (i+1) + '] ' + esc(c.replace(/https?:\\/\\/(www\\.)?/, '').substring(0, 60)) + '</a><br>';
-        }});
+      // Try to parse JSON from response (handle code fences)
+      var jsonStr = answer.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      var parsed;
+      try {{
+        parsed = JSON.parse(jsonStr);
+      }} catch (e2) {{
+        // Try to extract JSON object from mixed text
+        var match = jsonStr.match(/\{{[\s\S]*\}}/);
+        if (match) {{
+          parsed = JSON.parse(match[0]);
+        }} else {{
+          throw new Error('Could not parse listing data');
+        }}
       }}
 
-      resultDiv.innerHTML = html;
+      resultDiv.innerHTML = renderMarketResult(parsed, citations);
       resultDiv.style.display = '';
     }} catch (e) {{
-      resultDiv.innerHTML = '<span class="mr-error">' + esc(e.message) + '</span>';
+      // Fallback: show raw text if JSON fails
+      if (typeof answer !== 'undefined' && answer) {{
+        var fallback = answer
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br>');
+        resultDiv.innerHTML = '<div class="mr-summary">' + fallback + '</div>';
+      }} else {{
+        resultDiv.innerHTML = '<span class="mr-error">' + esc(e.message) + '</span>';
+      }}
       resultDiv.style.display = '';
     }}
     btn.disabled = false;
