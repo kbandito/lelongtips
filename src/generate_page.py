@@ -1670,14 +1670,46 @@ footer {{
   </div>
 
   <div id="tab-map" class="tab-content">
-    <div class="filter-row" style="margin-bottom:10px">
-      <label>Type:</label>
-      <select id="map-filter-type"><option value="">All Types</option></select>
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="text" class="search-bar" id="search-map" placeholder="Search map listings...">
+    </div>
+    <div class="filters" id="filters-map-type"></div>
+    <div class="filters" id="filters-map-loc"></div>
+    <div class="filter-row">
       <label>Status:</label>
       <select id="map-filter-status">
         <option value="active" selected>Active Only</option>
         <option value="all">All</option>
         <option value="expired">Expired Only</option>
+      </select>
+      <label>Price:</label>
+      <input type="number" id="map-filter-price-min" placeholder="Min" min="0" step="10000">
+      <span style="color:var(--text-muted);font-size:0.75rem">-</span>
+      <input type="number" id="map-filter-price-max" placeholder="Max" min="0" step="10000">
+    </div>
+    <div class="filter-row">
+      <label>Size (sq.ft):</label>
+      <input type="number" id="map-filter-size-min" placeholder="Min" min="0" step="100">
+      <span style="color:var(--text-muted);font-size:0.75rem">-</span>
+      <input type="number" id="map-filter-size-max" placeholder="Max" min="0" step="100">
+      <label>Auction in:</label>
+      <select id="map-filter-date-range">
+        <option value="">Any time</option>
+        <option value="7">Next 7 days</option>
+        <option value="14">Next 14 days</option>
+        <option value="30">Next 30 days</option>
+        <option value="60">Next 60 days</option>
+        <option value="90">Next 90 days</option>
+      </select>
+      <label>Discount:</label>
+      <select id="map-filter-discount">
+        <option value="">Any</option>
+        <option value="10">10%+</option>
+        <option value="20">20%+</option>
+        <option value="30">30%+</option>
+        <option value="40">40%+</option>
+        <option value="50">50%+</option>
       </select>
       <span id="map-count" style="font-size:0.75rem;color:var(--text-muted);margin-left:auto"></span>
     </div>
@@ -3010,17 +3042,22 @@ footer {{
       let leafletMap = null;
       let markerCluster = null;
 
-      // Populate map type filter
-      const mapTypeSelect = document.getElementById('map-filter-type');
-      if (mapTypeSelect) {{
-        const types = [...new Set(allEntries.map(([_,p]) => p.pt).filter(Boolean))].sort();
-        types.forEach(t => {{
-          const opt = document.createElement('option');
-          opt.value = t;
-          opt.textContent = t;
-          mapTypeSelect.appendChild(opt);
-        }});
-      }}
+      // Map filter state
+      const mapFilters = {{ types: new Set(), locs: new Set() }};
+
+      // Build map chip filters
+      buildFilterChips('filters-map-type', stats.types || [], mapFilters.types, () => {{ if (mapInited) refreshMapMarkers(); }});
+      buildFilterChips('filters-map-loc', stats.locations || [], mapFilters.locs, () => {{ if (mapInited) refreshMapMarkers(); }});
+
+      // Wire up map dropdown filters
+      document.getElementById('map-filter-status').addEventListener('change', () => {{ if (mapInited) refreshMapMarkers(); }});
+      document.getElementById('map-filter-price-min').addEventListener('input', debounce(() => {{ if (mapInited) refreshMapMarkers(); }}, 500));
+      document.getElementById('map-filter-price-max').addEventListener('input', debounce(() => {{ if (mapInited) refreshMapMarkers(); }}, 500));
+      document.getElementById('map-filter-size-min').addEventListener('input', debounce(() => {{ if (mapInited) refreshMapMarkers(); }}, 500));
+      document.getElementById('map-filter-size-max').addEventListener('input', debounce(() => {{ if (mapInited) refreshMapMarkers(); }}, 500));
+      document.getElementById('map-filter-date-range').addEventListener('change', () => {{ if (mapInited) refreshMapMarkers(); }});
+      document.getElementById('map-filter-discount').addEventListener('change', () => {{ if (mapInited) refreshMapMarkers(); }});
+      document.getElementById('search-map').addEventListener('input', debounce(() => {{ if (mapInited) refreshMapMarkers(); }}, 300));
 
       function initMap() {{
         if (mapInited) return;
@@ -3034,9 +3071,6 @@ footer {{
         leafletMap.addLayer(markerCluster);
         refreshMapMarkers();
         leafletMap.on('moveend', debounce(updateMapListings, 300));
-
-        document.getElementById('map-filter-type').addEventListener('change', refreshMapMarkers);
-        document.getElementById('map-filter-status').addEventListener('change', refreshMapMarkers);
       }}
 
       // All map-eligible items (refreshed on filter change)
@@ -3047,16 +3081,49 @@ footer {{
       function refreshMapMarkers() {{
         if (!markerCluster) return;
         markerCluster.clearLayers();
-        const typeFilter = document.getElementById('map-filter-type').value;
         const statusFilter = document.getElementById('map-filter-status').value;
+        const minPrice = parseInt(document.getElementById('map-filter-price-min').value) || 0;
+        const maxPrice = parseInt(document.getElementById('map-filter-price-max').value) || 0;
+        const minSize = parseInt(document.getElementById('map-filter-size-min').value) || 0;
+        const maxSize = parseInt(document.getElementById('map-filter-size-max').value) || 0;
+        const dateRange = parseInt(document.getElementById('map-filter-date-range').value) || 0;
+        const minDiscount = parseInt(document.getElementById('map-filter-discount').value) || 0;
+        const searchQuery = (document.getElementById('search-map').value || '').toLowerCase().trim();
+        const searchTokens = searchQuery ? searchQuery.split(/\s+/) : [];
         let count = 0;
         const markers = [];
         mapItems = [];
         for (const [id, p] of allEntries) {{
           if (!p.lat || !p.lng) continue;
-          if (typeFilter && p.pt !== typeFilter) continue;
+          // Chip filters
+          if (mapFilters.types.size > 0 && !mapFilters.types.has(p.pt)) continue;
+          if (mapFilters.locs.size > 0 && !mapFilters.locs.has(p.l)) continue;
+          // Status
           if (statusFilter === 'active' && p.exp) continue;
           if (statusFilter === 'expired' && !p.exp) continue;
+          // Price
+          if (minPrice > 0 && (p.pv || 0) < minPrice) continue;
+          if (maxPrice > 0 && (p.pv || 0) > maxPrice) continue;
+          // Size
+          if (minSize > 0 || maxSize > 0) {{
+            const sm = (p.s || '').replace(/,/g, '').match(/([\d.]+)/);
+            if (!sm) continue;
+            const sz = parseFloat(sm[1]);
+            if (minSize > 0 && sz < minSize) continue;
+            if (maxSize > 0 && sz > maxSize) continue;
+          }}
+          // Date range
+          if (dateRange > 0) {{
+            const d = daysUntil(p.ad);
+            if (d < 0 || d > dateRange) continue;
+          }}
+          // Discount
+          if (minDiscount > 0 && parseDiscount(p.d) < minDiscount) continue;
+          // Search text
+          if (searchTokens.length > 0) {{
+            const s = p._search || buildSearchString(p);
+            if (!searchTokens.every(t => s.includes(t))) continue;
+          }}
           const scheme = schemeName(p.a, p.t, p.sn);
           const title = scheme || p.a || p.t;
           const marker = L.marker([p.lat, p.lng]);
