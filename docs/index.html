@@ -2026,7 +2026,7 @@ footer {
     return h;
   }
 
-  function renderMarketResult(data, citations, saleUrl, rentUrl, projectSaleUrl, projectRentUrl, scheme) {
+  function renderMarketResult(data, citations, saleUrl, rentUrl, projectSaleUrl, projectRentUrl, scheme, rawText) {
     var sale = data.sale_listings || [];
     var rental = data.rental_listings || [];
     var summary = data.summary || '';
@@ -2049,6 +2049,7 @@ footer {
       + '<button class="mr-tab active" onclick="event.stopPropagation();window._mrTab(this,\'sale\')">For Sale (' + sale.length + ')</button>'
       + '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'rental\')">For Rent (' + rental.length + ')</button>'
       + (summary ? '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'summary\')">Summary</button>' : '')
+      + (rawText ? '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'rawdata\')">Raw Data</button>' : '')
       + '</div>'
       + '<div class="mr-tab-content active" data-mr-tab="sale">' + renderListingsTable(sale, 'sale') + '</div>'
       + '<div class="mr-tab-content" data-mr-tab="rental">' + renderListingsTable(rental, 'rental') + '</div>';
@@ -2058,6 +2059,17 @@ footer {
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\n/g, '<br>');
       h += '<div class="mr-tab-content" data-mr-tab="summary"><div class="mr-summary">' + summaryHtml + '</div></div>';
+    }
+
+    if (rawText) {
+      var rawHtml = rawText
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+      h += '<div class="mr-tab-content" data-mr-tab="rawdata">'
+        + '<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:6px;font-weight:600">Raw text fetched by Perplexity (before Gemini parsing):</div>'
+        + '<div class="mr-summary" style="max-height:400px;overflow-y:auto;font-size:0.68rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px">' + rawHtml + '</div>'
+        + '</div>';
     }
 
     if (citations && citations.length > 0) {
@@ -2234,7 +2246,7 @@ footer {
         }
       }
 
-      resultDiv.innerHTML = renderMarketResult(parsed, citations, saleUrl, rentUrl, projectSaleUrl, projectRentUrl, scheme);
+      resultDiv.innerHTML = renderMarketResult(parsed, citations, saleUrl, rentUrl, projectSaleUrl, projectRentUrl, scheme, answer);
       resultDiv.style.display = '';
     } catch (e) {
       // Fallback: show raw Perplexity text if Gemini fails
