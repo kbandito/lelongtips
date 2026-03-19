@@ -756,6 +756,7 @@ header h1 span {{ color: var(--accent); }}
 }}
 .card-badge.new {{ background: var(--green-light); color: var(--green); }}
 .card-badge.changed {{ background: var(--orange-light); color: var(--orange); }}
+.card-badge.notable {{ background: #F3F4F6; color: var(--text-sec); }}
 .card-badge.expired {{ background: #F3F4F6; color: #6B7280; }}
 .pill.expired {{ background: #F3F4F6; color: #6B7280; font-weight: 600; }}
 .card.is-expired {{ opacity: 0.7; }}
@@ -836,6 +837,7 @@ header h1 span {{ color: var(--accent); }}
 .same-scheme-item:last-child {{ border-bottom: none; }}
 .same-scheme-item:hover {{ background: rgba(37,99,235,0.05); }}
 .ss-title {{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+.ss-size {{ font-size: 0.65rem; color: var(--text-muted); margin-left: 4px; }}
 .ss-price {{ font-weight: 600; white-space: nowrap; }}
 .ss-date {{ color: var(--text-muted); white-space: nowrap; font-size: 0.7rem; }}
 
@@ -1371,9 +1373,10 @@ footer {{
 
     <div class="section-title">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 2H3C2.4 2 2 2.4 2 3V13C2 13.6 2.4 14 3 14H13C13.6 14 14 13.6 14 13V3C14 2.4 13.6 2 13 2ZM5 12H4V7H5V12ZM8.5 12H7.5V4H8.5V12ZM12 12H11V9H12V12Z" fill="currentColor"/></svg>
-      Upcoming Auctions — Next 7 Days
+      Notable Listings
     </div>
-    <div id="upcoming">
+    <div id="notable" style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px">Multi-round auctions with declining prices</div>
+    <div id="notable-cards">
       <div class="skeleton-card"><div class="skeleton skeleton-line w60"></div><div class="skeleton skeleton-line w40"></div></div>
     </div>
 
@@ -1649,6 +1652,7 @@ footer {{
     let badgeHtml = '';
     if (opts.isNew) badgeHtml = '<span class="card-badge new">NEW</span>';
     else if (opts.isChanged) badgeHtml = '<span class="card-badge changed">CHANGED</span>';
+    else if (opts.notableBadge) badgeHtml = '<span class="card-badge notable">'+esc(opts.notableBadge)+'</span>';
     else if (isExpired) badgeHtml = '<span class="card-badge expired">EXPIRED</span>';
 
     let changesHtml = '';
@@ -2068,8 +2072,9 @@ footer {{
           const od = daysUntil(o.p.ad);
           const odText = od <= 0 ? 'Today' : od + 'd';
           const ssId = 'ss-' + esc(o.id);
+          const ssSize = o.p.s && o.p.s !== 'Size not specified' ? o.p.s : '';
           sameSchemeHtml += '<div class="same-scheme-item" data-ssid="'+ssId+'" onclick="event.stopPropagation();window._toggleSchemeDetail(this)">'
-            + '<span class="ss-title">'+esc(o.p.t)+'</span>'
+            + '<span class="ss-title">'+esc(o.p.t)+(ssSize ? ' <span class="ss-size">'+esc(ssSize)+'</span>' : '')+'</span>'
             + '<span class="ss-price">'+esc(o.p.p)+(o.p.d ? ' <span style="font-size:0.65rem;color:var(--green)">'+esc(o.p.d)+'</span>' : '')+'</span>'
             + '<span class="ss-date">'+esc(o.p.ad)+' ('+odText+')</span>'
             + '</div>'
@@ -2456,25 +2461,60 @@ footer {{
         hotContainer.innerHTML = '<div class="empty"><p>No price drop data available yet</p></div>';
       }}
 
-      // --- Dashboard: Upcoming auctions (next 7 days, deduplicated) ---
-      const seenAuctions = new Set();
-      const upcoming = activeEntries
+      // --- Dashboard: Notable listings (multi-round auctions with price drops) ---
+      function notableScore(p) {{
+        let score = 0;
+        const hist = p.hist || [];
+        const ph = p.ph || [];
+        // More auction rounds = more notable
+        if (hist.length > 1) score += hist.length * 10;
+        // Price drop from first to last
+        if (ph.length >= 2) {{
+          const parseP = s => {{ const m = String(s).match(/[\d,]+/); return m ? parseInt(m[0].replace(/,/g,'')) : 0; }};
+          const first = parseP(ph[0].p);
+          const last = parseP(ph[ph.length-1].p);
+          if (first > 0 && last > 0 && last < first) {{
+            const dropPct = (first - last) / first * 100;
+            score += dropPct * 2;
+          }}
+        }}
+        // Has discount info
+        if (p.d) score += 15;
+        return score;
+      }}
+      const seenNotable = new Set();
+      const notable = activeEntries
         .filter(([id, p]) => {{
-          const d = daysUntil(p.ad);
-          if (d < 0 || d > 7 || p.exp) return false;
-          // Deduplicate by title+price+auction_date
-          const key = (p.t || '') + '|' + (p.p || '') + '|' + (p.ad || '');
-          if (seenAuctions.has(key)) return false;
-          seenAuctions.add(key);
+          if (p.exp) return false;
+          const s = notableScore(p);
+          if (s <= 0) return false;
+          const key = (p.t || '') + '|' + (p.pv || '') + '|' + (p.ad || '');
+          if (seenNotable.has(key)) return false;
+          seenNotable.add(key);
           return true;
         }})
-        .sort((a, b) => daysUntil(a[1].ad) - daysUntil(b[1].ad))
-        .slice(0, 10);
-      const upContainer = document.getElementById('upcoming');
-      if (upcoming.length) {{
-        upContainer.innerHTML = upcoming.map(([id, p]) => renderCard(id, p)).join('');
+        .sort((a, b) => notableScore(b[1]) - notableScore(a[1]))
+        .slice(0, 8);
+      const notableContainer = document.getElementById('notable-cards');
+      if (notable.length) {{
+        notableContainer.innerHTML = notable.map(([id, p]) => {{
+          const hist = p.hist || [];
+          const ph = p.ph || [];
+          let badge = '';
+          if (hist.length > 1) badge = hist.length + ' rounds';
+          if (ph.length >= 2) {{
+            const parseP = s => {{ const m = String(s).match(/[\d,]+/); return m ? parseInt(m[0].replace(/,/g,'')) : 0; }};
+            const first = parseP(ph[0].p);
+            const last = parseP(ph[ph.length-1].p);
+            if (first > 0 && last > 0 && last < first) {{
+              const dropPct = ((first - last) / first * 100).toFixed(0);
+              badge += (badge ? ', ' : '') + dropPct + '% lower';
+            }}
+          }}
+          return renderCard(id, p, {{ isChanged: false, isNew: false, changes: [], notableBadge: badge }});
+        }}).join('');
       }} else {{
-        upContainer.innerHTML = '<div class="empty"><p>No auctions in the next 7 days</p></div>';
+        notableContainer.innerHTML = '<div class="empty"><p>No notable listings found</p></div>';
       }}
 
       // --- Dashboard: Scan history ---
