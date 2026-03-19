@@ -336,7 +336,7 @@ header h1 span { color: var(--accent); }
 }
 .card-price {
   font-weight: 700;
-  color: var(--accent);
+  color: var(--text);
   white-space: nowrap;
   font-size: 0.9rem;
 }
@@ -355,10 +355,10 @@ header h1 span { color: var(--accent); }
   font-size: 0.7rem;
   font-weight: 500;
 }
-.pill.type { background: var(--accent-light); color: var(--accent); }
+.pill.type { background: #F3F4F6; color: var(--text-sec); }
 .pill.loc { background: #F3F4F6; color: var(--text-sec); }
-.pill.size { background: var(--green-light); color: var(--green); }
-.pill.date { background: var(--orange-light); color: var(--orange); }
+.pill.size { background: #F3F4F6; color: var(--text-sec); }
+.pill.date { background: #F3F4F6; color: var(--text-sec); }
 .pill.date.urgent { background: var(--red-light); color: var(--red); font-weight: 600; }
 .pill.discount { background: var(--green-light); color: var(--green); font-weight: 600; }
 .card-subtitle {
@@ -377,7 +377,7 @@ header h1 span { color: var(--accent); }
 .card-view-link {
   display: inline-block;
   font-size: 0.75rem;
-  color: var(--accent);
+  color: var(--text-sec);
   text-decoration: none;
   font-weight: 600;
   margin-top: 6px;
@@ -387,7 +387,7 @@ header h1 span { color: var(--accent); }
 }
 .card-link {
   display: inline-block;
-  color: var(--accent);
+  color: var(--text-sec);
   font-size: 0.75rem;
   text-decoration: none;
   font-weight: 500;
@@ -441,8 +441,8 @@ header h1 span { color: var(--accent); }
   padding: 3px 0;
   font-size: 0.8rem;
 }
-.card-expand .detail-label { color: var(--text-muted); font-size: 0.75rem; }
-.card-expand .detail-value { font-weight: 500; text-align: right; font-size: 0.8rem; }
+.card-expand .detail-label { color: var(--text-sec); font-size: 0.75rem; }
+.card-expand .detail-value { font-weight: 500; text-align: right; font-size: 0.8rem; color: var(--text); }
 .card-expand .detail-addr {
   font-size: 0.72rem;
   color: var(--text-muted);
@@ -467,14 +467,14 @@ header h1 span { color: var(--accent); }
   background: var(--bg);
   border-radius: 8px;
 }
-.card-expand .price-chart h3 { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+.card-expand .price-chart h3 { font-size: 0.72rem; color: var(--text-sec); margin-bottom: 4px; font-weight: 600; }
 .card-expand .detail-same-scheme {
   margin: 6px 0;
   padding: 6px;
   background: var(--bg);
   border-radius: 8px;
 }
-.card-expand .detail-same-scheme h3 { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+.card-expand .detail-same-scheme h3 { font-size: 0.72rem; color: var(--text-sec); margin-bottom: 4px; font-weight: 600; }
 .same-scheme-item {
   display: flex;
   gap: 8px;
@@ -487,8 +487,53 @@ header h1 span { color: var(--accent); }
 .same-scheme-item:last-child { border-bottom: none; }
 .same-scheme-item:hover { background: rgba(37,99,235,0.05); }
 .ss-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ss-price { color: #2563EB; font-weight: 600; white-space: nowrap; }
+.ss-price { font-weight: 600; white-space: nowrap; }
 .ss-date { color: var(--text-muted); white-space: nowrap; font-size: 0.7rem; }
+
+/* Photo lightbox */
+.card-img img { cursor: zoom-in; }
+.photo-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.85);
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+.photo-lightbox.open { display: flex; }
+.photo-lightbox img {
+  max-width: 92vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* Same-scheme expand detail */
+.ss-expand {
+  padding: 8px 0 4px;
+  border-top: 1px solid var(--border);
+  animation: expandIn 0.15s ease-out;
+}
+.ss-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 0.75rem;
+}
+.ss-detail-label { color: var(--text-muted); font-size: 0.72rem; }
+.ss-detail-value { font-weight: 500; text-align: right; font-size: 0.75rem; }
+.ss-view-link {
+  display: inline-block;
+  font-size: 0.72rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.ss-view-link:hover { text-decoration: underline; }
 
 /* Table inline detail */
 .table-detail-row td {
@@ -914,6 +959,7 @@ footer {
   <div style="font-size:0.85rem;color:var(--text-sec);font-weight:500">Loading properties...</div>
 </div>
 <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+<div class="photo-lightbox" id="photo-lightbox" onclick="this.classList.remove('open')"><img id="photo-lightbox-img" src="" alt=""></div>
 <div class="container">
   <header>
     <h1>Lelong<span>Tips</span></h1>
@@ -1244,7 +1290,7 @@ footer {
     const urgentClass = days <= 7 ? ' urgent' : '';
     const daysText = days <= 0 ? 'Today' : days === 1 ? 'Tomorrow' : 'in ' + days + 'd';
     const imgHtml = p.img
-      ? '<img src="'+esc(p.img)+'" alt="" loading="lazy">'
+      ? '<img src="'+esc(p.img)+'" alt="" loading="lazy" onclick="event.stopPropagation();window._showPhoto(this.src)">'
       : getTypeIcon(p.pt);
     const discountHtml = p.d ? '<span class="pill discount">'+esc(p.d)+'</span>' : '';
     const spark = sparkline(p.ph);
@@ -1632,15 +1678,13 @@ footer {
         }).join('');
         priceChartHtml = '<div class="price-chart"><h3>Price History</h3>'
           + '<svg width="100%" viewBox="0 0 '+w+' '+(h+14)+'" preserveAspectRatio="xMidYMid meet">'
-          + '<polyline points="'+pts+'" fill="none" stroke="#2563EB" stroke-width="2"/>'
+          + '<polyline points="'+pts+'" fill="none" stroke="#4B5563" stroke-width="2"/>'
           + labels + '</svg></div>';
       }
     }
 
-    // Compact image + details side by side
-    const imgHtml = p.img
-      ? '<img src="'+esc(p.img)+'" class="detail-thumb" alt="">'
-      : '';
+    // No image in detail (user clicks thumbnail for fullscreen instead)
+    const imgHtml = '';
 
     // Map (OpenStreetMap embed if coords available)
     let mapHtml = '';
@@ -1667,17 +1711,25 @@ footer {
         if (oid === currentId || op.exp) continue;
         const os = schemeName(op.a, op.t, op.sn);
         if (os && os === scheme) others.push({ id: oid, p: op });
-        if (others.length >= 5) break;
+        if (others.length >= 10) break;
       }
       if (others.length > 0) {
         sameSchemeHtml = '<div class="detail-same-scheme"><h3>'+esc(scheme)+' — Other Auctions ('+others.length+')</h3>';
         for (const o of others) {
           const od = daysUntil(o.p.ad);
           const odText = od <= 0 ? 'Today' : od + 'd';
-          sameSchemeHtml += '<div class="same-scheme-item" data-id="'+esc(o.id)+'" onclick="event.stopPropagation();window._openDetail(this.dataset.id)">'
+          const ssId = 'ss-' + esc(o.id);
+          sameSchemeHtml += '<div class="same-scheme-item" data-ssid="'+ssId+'" onclick="event.stopPropagation();window._toggleSchemeDetail(this)">'
             + '<span class="ss-title">'+esc(o.p.t)+'</span>'
-            + '<span class="ss-price">'+esc(o.p.p)+'</span>'
+            + '<span class="ss-price">'+esc(o.p.p)+(o.p.d ? ' <span style="font-size:0.65rem;color:var(--green)">'+esc(o.p.d)+'</span>' : '')+'</span>'
             + '<span class="ss-date">'+esc(o.p.ad)+' ('+odText+')</span>'
+            + '</div>'
+            + '<div class="ss-expand" id="'+ssId+'" style="display:none">'
+            + '<div class="ss-detail-row"><span class="ss-detail-label">Type</span><span class="ss-detail-value">'+esc(o.p.pt)+'</span></div>'
+            + '<div class="ss-detail-row"><span class="ss-detail-label">Location</span><span class="ss-detail-value">'+esc(o.p.l)+'</span></div>'
+            + (o.p.s && o.p.s !== 'Size not specified' ? '<div class="ss-detail-row"><span class="ss-detail-label">Size</span><span class="ss-detail-value">'+esc(o.p.s)+'</span></div>' : '')
+            + (o.p.a ? '<div class="ss-detail-row"><span class="ss-detail-label">Address</span><span class="ss-detail-value" style="text-align:right;max-width:65%;font-size:0.7rem">'+esc(o.p.a)+'</span></div>' : '')
+            + (o.p.u ? '<a class="ss-view-link" href="'+esc(o.p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">View Listing &rarr;</a>' : '')
             + '</div>';
         }
         sameSchemeHtml += '</div>';
@@ -1687,8 +1739,8 @@ footer {
     return '<div class="detail-top">'
       + imgHtml
       + '<div class="detail-info">'
-      + '<div class="detail-row"><span class="detail-label">Price</span><span class="detail-value" style="color:#2563EB;font-weight:700">'+esc(p.p)+(p.d ? ' <span style="color:#059669;font-size:0.75rem">('+esc(p.d)+')</span>' : '')+'</span></div>'
-      + '<div class="detail-row"><span class="detail-label">Auction</span><span class="detail-value">'+esc(p.ad)+' <span style="color:#D97706;font-size:0.75rem">('+daysText+')</span></span></div>'
+      + '<div class="detail-row"><span class="detail-label">Price</span><span class="detail-value" style="font-weight:700">'+esc(p.p)+(p.d ? ' <span style="font-size:0.75rem;color:var(--green)">('+esc(p.d)+')</span>' : '')+'</span></div>'
+      + '<div class="detail-row"><span class="detail-label">Auction</span><span class="detail-value">'+esc(p.ad)+' <span style="font-size:0.75rem">('+daysText+')</span></span></div>'
       + '<div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">'+esc(p.pt)+'</span></div>'
       + (p.s && p.s !== 'Size not specified' ? '<div class="detail-row"><span class="detail-label">Size</span><span class="detail-value">'+esc(p.s)+'</span></div>' : '')
       + '</div></div>'
@@ -1696,8 +1748,22 @@ footer {
       + mapHtml
       + priceChartHtml
       + sameSchemeHtml
-      + (p.u ? '<a class="card-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:8px;margin-top:8px;background:#EFF6FF;border-radius:8px;font-weight:600;font-size:0.85rem">View Original Listing &rarr;</a>' : '');
+      + (p.u ? '<a class="card-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:8px;margin-top:8px;background:#F3F4F6;border-radius:8px;font-weight:600;font-size:0.85rem;color:var(--text)">View Original Listing &rarr;</a>' : '');
   }
+
+  window._toggleSchemeDetail = function(el) {
+    var ssid = el.dataset.ssid;
+    if (!ssid) return;
+    var detail = document.getElementById(ssid);
+    if (!detail) return;
+    detail.style.display = detail.style.display === 'none' ? '' : 'none';
+  };
+
+  window._showPhoto = function(src) {
+    var lb = document.getElementById('photo-lightbox');
+    document.getElementById('photo-lightbox-img').src = src;
+    lb.classList.add('open');
+  };
 
   window._mapFallback = function(img, lat, lng) {
     var wrap = img.parentElement.parentElement;
@@ -2241,13 +2307,13 @@ footer {
           marker.bindPopup(
             '<div style="min-width:180px">'
             + '<strong style="font-size:0.85rem">'+esc(title)+'</strong>'
-            + '<div style="color:#2563EB;font-weight:700;margin:4px 0">'+esc(p.p)+'</div>'
-            + '<div style="font-size:0.75rem;color:#6B7280">'
-            + (p.pt ? '<span style="background:#EFF6FF;padding:2px 6px;border-radius:4px;margin-right:4px">'+esc(p.pt)+'</span>' : '')
+            + '<div style="font-weight:700;margin:4px 0">'+esc(p.p)+'</div>'
+            + '<div style="font-size:0.75rem;color:#4B5563">'
+            + (p.pt ? '<span style="background:#F3F4F6;padding:2px 6px;border-radius:4px;margin-right:4px">'+esc(p.pt)+'</span>' : '')
             + (p.s && p.s !== 'Size not specified' ? esc(p.s) : '')
             + '</div>'
-            + '<div style="font-size:0.72rem;color:#9CA3AF;margin-top:4px">'+esc(p.ad)+'</div>'
-            + (p.u ? '<a href="'+esc(p.u)+'" target="_blank" rel="noopener" style="font-size:0.75rem;color:#2563EB;text-decoration:none;display:block;margin-top:6px">View Listing &rarr;</a>' : '')
+            + '<div style="font-size:0.72rem;color:#4B5563;margin-top:4px">'+esc(p.ad)+'</div>'
+            + (p.u ? '<a href="'+esc(p.u)+'" target="_blank" rel="noopener" style="font-size:0.75rem;color:#111827;text-decoration:underline;display:block;margin-top:6px">View Listing &rarr;</a>' : '')
             + '</div>'
           );
           markers.push(marker);
