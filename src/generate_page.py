@@ -1258,6 +1258,11 @@ footer {{
 </style>
 </head>
 <body>
+<div id="loading-overlay" style="display:flex;position:fixed;inset:0;z-index:9999;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div style="font-size:0.85rem;color:var(--text-sec);font-weight:500">Loading properties...</div>
+</div>
+<style>@keyframes spin{{from{{transform:rotate(0deg)}}to{{transform:rotate(360deg)}}}}</style>
 <div class="container">
   <header>
     <h1>Lelong<span>Tips</span></h1>
@@ -1483,7 +1488,7 @@ footer {{
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <script id="__stats__" type="application/json">{inline_stats}</script>
-<script id="__active__" type="application/json">{inline_active}</script>
+<script id="__active__" type="application/json">null</script>
 <script id="__changes__" type="application/json">{inline_changes}</script>
 
 <script>
@@ -2180,13 +2185,27 @@ footer {{
   }}
 
   // --- Load data (inlined at build time) ---
-  function init() {{
+  async function init() {{
     var stats = JSON.parse(document.getElementById('__stats__').textContent);
-    var active = JSON.parse(document.getElementById('__active__').textContent);
     var changes = JSON.parse(document.getElementById('__changes__').textContent);
     statsData = stats;
-    allProps = active;
     changesData = changes;
+
+    // Show loading overlay while fetching property data
+    var loadingEl = document.getElementById('loading-overlay');
+    if (loadingEl) loadingEl.style.display = 'flex';
+
+    // Load property data asynchronously (avoid 4MB inline JSON blocking page load)
+    var active;
+    try {{
+      var resp = await fetch('data/active.json');
+      active = await resp.json();
+    }} catch(e) {{
+      // Fallback to inline data if fetch fails
+      active = JSON.parse(document.getElementById('__active__').textContent);
+    }}
+    allProps = active;
+    if (loadingEl) loadingEl.style.display = 'none';
 
       // Pre-compute search strings
       const allEntries = Object.entries(active);
