@@ -1566,7 +1566,15 @@ footer {{
       </select>
       <span id="map-count" style="font-size:0.75rem;color:var(--text-muted);margin-left:auto"></span>
     </div>
-    <div id="property-map" style="height:70vh;border-radius:12px;border:1px solid var(--border)"></div>
+    <div id="property-map" style="height:50vh;border-radius:12px;border:1px solid var(--border)"></div>
+    <div id="map-listings">
+      <div id="map-listings-header" style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px">
+        <span id="map-listings-count" style="font-size:0.8rem;font-weight:600"></span>
+        <span style="font-size:0.7rem;color:var(--text-muted)">Pan/zoom map to filter</span>
+      </div>
+      <div id="map-listings-cards"></div>
+      <button id="map-load-more" class="load-more" style="display:none">Show more</button>
+    </div>
   </div>
 
   <footer>
@@ -2742,10 +2750,16 @@ footer {{
         markerCluster = L.markerClusterGroup({{ chunkedLoading: true, maxClusterRadius: 50 }});
         leafletMap.addLayer(markerCluster);
         refreshMapMarkers();
+        leafletMap.on('moveend', debounce(updateMapListings, 300));
 
         document.getElementById('map-filter-type').addEventListener('change', refreshMapMarkers);
         document.getElementById('map-filter-status').addEventListener('change', refreshMapMarkers);
       }}
+
+      // All map-eligible items (refreshed on filter change)
+      let mapItems = [];
+      const MAP_LIST_PAGE = 12;
+      let mapListDisplayed = 0;
 
       function refreshMapMarkers() {{
         if (!markerCluster) return;
@@ -2754,6 +2768,7 @@ footer {{
         const statusFilter = document.getElementById('map-filter-status').value;
         let count = 0;
         const markers = [];
+        mapItems = [];
         for (const [id, p] of allEntries) {{
           if (!p.lat || !p.lng) continue;
           if (typeFilter && p.pt !== typeFilter) continue;
@@ -2774,12 +2789,61 @@ footer {{
             + (p.u ? '<a href="'+esc(p.u)+'" target="_blank" rel="noopener" style="font-size:0.75rem;color:#111827;text-decoration:underline;display:block;margin-top:6px">View Listing &rarr;</a>' : '')
             + '</div>'
           );
+          marker._propId = id;
           markers.push(marker);
+          mapItems.push([id, p]);
           count++;
         }}
         markerCluster.addLayers(markers);
         document.getElementById('map-count').textContent = count + ' properties on map';
+        updateMapListings();
       }}
+
+      function getVisibleMapItems() {{
+        if (!leafletMap) return [];
+        const bounds = leafletMap.getBounds();
+        return mapItems.filter(([id, p]) =>
+          bounds.contains(L.latLng(p.lat, p.lng))
+        );
+      }}
+
+      function updateMapListings() {{
+        const visible = getVisibleMapItems();
+        visible.sort((a, b) => a[1].pv - b[1].pv);
+        mapListDisplayed = 0;
+        const container = document.getElementById('map-listings-cards');
+        container.innerHTML = '';
+        const countEl = document.getElementById('map-listings-count');
+        countEl.textContent = visible.length + ' listing' + (visible.length !== 1 ? 's' : '') + ' in view';
+
+        const btn = document.getElementById('map-load-more');
+        if (visible.length === 0) {{
+          container.innerHTML = '<div class="empty"><p>No listings in this area. Pan or zoom out to see more.</p></div>';
+          btn.style.display = 'none';
+          return;
+        }}
+
+        // Store for pagination
+        window._mapVisible = visible;
+        showMoreMapListings();
+      }}
+
+      function showMoreMapListings() {{
+        const visible = window._mapVisible || [];
+        const container = document.getElementById('map-listings-cards');
+        const end = Math.min(mapListDisplayed + MAP_LIST_PAGE, visible.length);
+        let html = '';
+        for (let i = mapListDisplayed; i < end; i++) {{
+          const [id, p] = visible[i];
+          html += renderCard(id, p);
+        }}
+        container.insertAdjacentHTML('beforeend', html);
+        mapListDisplayed = end;
+        const btn = document.getElementById('map-load-more');
+        btn.style.display = mapListDisplayed < visible.length ? '' : 'none';
+      }}
+
+      document.getElementById('map-load-more').addEventListener('click', showMoreMapListings);
 
       // Lazy-init map when tab clicked
       const origTabHandler = document.getElementById('tab-bar');
