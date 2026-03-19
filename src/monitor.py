@@ -499,6 +499,28 @@ class FixedFullScrapingPropertyMonitor:
             print(f"🔐 Requests login failed: {e}")
             return False
 
+    # ---------- Detail page ----------
+    def fetch_size_from_detail(self, listing_url):
+        """Fetch property detail page and extract size/BuA when missing from listing card."""
+        try:
+            time.sleep(1)  # lighter rate limit for detail pages
+            resp = self.session.get(listing_url, timeout=self.timeout)
+            if not resp.ok:
+                return None
+            text = resp.text
+            # Try multiple size patterns found on detail pages
+            # "Built Up : 1,234 sq.ft" / "Land Area : 5,678 sq.ft" / "Size : 999 sq.ft"
+            for pattern in [
+                r"(?:Built[\s\-]*[Uu]p|BuA|Size|Land\s*Area)\s*[:\s]+\s*([\d,]+)\s*sq\.?\s*ft",
+                r"([\d,]+)\s*sq\.?\s*ft",
+            ]:
+                m = re.search(pattern, text, re.IGNORECASE)
+                if m:
+                    return f"{m.group(1)} sq.ft"
+            return None
+        except Exception:
+            return None
+
     # ---------- HTTP ----------
     def make_request(self, url, params=None, retry_count=0):
         """Make HTTP request with retry logic and rate limiting"""
@@ -1061,6 +1083,21 @@ class FixedFullScrapingPropertyMonitor:
                     response.text, page_num
                 )
 
+                # Fetch size from detail page for properties missing it
+                # Budget: skip if we've already spent too long on detail fetches
+                elapsed_total = (
+                    datetime.now()
+                    - datetime.fromisoformat(scraping_stats["start_time"])
+                ).total_seconds()
+                if elapsed_total < 900:  # only if under 15 min total
+                    for prop_data in page_properties:
+                        if prop_data.get("size") == "Size not specified":
+                            detail_url = prop_data.get("listing_url")
+                            if detail_url and "/property/" in detail_url:
+                                size = self.fetch_size_from_detail(detail_url)
+                                if size:
+                                    prop_data["size"] = size
+
                 for prop_data in page_properties:
                     property_id = self.create_property_id(
                         prop_data["title"],
@@ -1441,6 +1478,59 @@ class FixedFullScrapingPropertyMonitor:
             print(f"❌ Error sending Telegram notification: {e}")
             return False
 
+    def _format_property_card(self, index, d, changes=None):
+        """Format a single property card for Telegram HTML notification.
+        Shows all available information."""
+        esc = self.tg_escape_html
+        lines = []
+
+        title = esc(d.get("title", "Untitled"))
+        loc = esc(d.get("location", ""))
+        lines.append(f"{index}. <b>{title}</b>" + (f" — {loc}" if loc else ""))
+
+        # Full address
+        address = d.get("header_full") or d.get("header") or ""
+        if address:
+            lines.append(f"   📍 {esc(address)}")
+
+        # Type · Size · Discount
+        ptype = d.get("property_type", "")
+        size = d.get("size", "")
+        discount = d.get("discount", "")
+        meta = []
+        if ptype:
+            meta.append(esc(ptype))
+        if size and size != "Size not specified":
+            meta.append(esc(size))
+        if discount:
+            meta.append(esc(discount))
+        if meta:
+            lines.append(f"   🏷 {' · '.join(meta)}")
+
+        # Price and auction date (or changes)
+        if changes:
+            for change in changes:
+                old = esc(change["old_value"])
+                new = esc(change["new_value"])
+                if change["type"] == "price_change":
+                    lines.append(f"   💰 <s>{old}</s> → <b>{new}</b>")
+                elif change["type"] == "auction_date_change":
+                    lines.append(f"   📅 <s>{old}</s> → <b>{new}</b>")
+        else:
+            price = d.get("price", "")
+            auction = d.get("auction_date", "")
+            if price:
+                lines.append(f"   💰 {esc(price)}")
+            if auction:
+                lines.append(f"   📅 {esc(auction)}")
+
+        # Link
+        url = d.get("listing_url") or d.get("url", "")
+        if url:
+            lines.append(f'   🔗 <a href="{esc(url)}">View listing</a>')
+
+        return "\n".join(lines) + "\n"
+
     def format_fixed_daily_summary(
         self,
         current_properties,
@@ -1469,53 +1559,22 @@ class FixedFullScrapingPropertyMonitor:
             f"<b>{len(changed_properties)}</b> changed\n"
         )
 
-        # New listings (top 5, compact)
+        # New listings (top 5)
         if new_listings:
             msg += f"\n🆕 <b>NEW ({len(new_listings)}):</b>\n"
             for i, (prop_id, d) in enumerate(list(new_listings.items())[:5], 1):
-                title = esc(d.get("title", "Untitled"))
-                loc = esc(d.get("location", ""))
-                ptype = esc(d.get("property_type", ""))
-                size = esc(d.get("size", ""))
-                price = esc(d.get("price", ""))
-                auction = esc(d.get("auction_date", ""))
-                url = d.get("listing_url") or d.get("url", "")
-
-                msg += f"\n{i}. <b>{title}</b>"
-                if loc:
-                    msg += f" — {loc}"
-                msg += "\n"
-
-                details = [x for x in [ptype, size, price, auction] if x and x != "-"]
-                if details:
-                    msg += f"   {' · '.join(details)}\n"
-
-                if url:
-                    msg += f'   <a href="{esc(url)}">View listing</a>\n'
+                msg += "\n" + self._format_property_card(i, d)
 
             if len(new_listings) > 5:
                 msg += f"\n   <i>+{len(new_listings) - 5} more — send /new to see all</i>\n"
 
-        # Changed properties (top 5, compact)
+        # Changed properties (top 5)
         if changed_properties:
             msg += f"\n🔄 <b>CHANGES ({len(changed_properties)}):</b>\n"
             for i, (prop_id, data) in enumerate(list(changed_properties.items())[:5], 1):
                 prop = data["property"]
                 changes = data["changes"]
-                title = esc(prop.get("title", "Untitled"))
-                url = prop.get("listing_url") or prop.get("url", "")
-
-                msg += f"\n{i}. <b>{title}</b>\n"
-                for change in changes:
-                    old = esc(change["old_value"])
-                    new = esc(change["new_value"])
-                    if change["type"] == "price_change":
-                        msg += f"   💰 <s>{old}</s> → <b>{new}</b>\n"
-                    elif change["type"] == "auction_date_change":
-                        msg += f"   📅 <s>{old}</s> → <b>{new}</b>\n"
-
-                if url:
-                    msg += f'   <a href="{esc(url)}">View listing</a>\n'
+                msg += "\n" + self._format_property_card(i, prop, changes=changes)
 
             if len(changed_properties) > 5:
                 msg += f"\n   <i>+{len(changed_properties) - 5} more — send /changes to see all</i>\n"

@@ -710,12 +710,29 @@ header h1 span {{ color: var(--accent); }}
 .pill.date {{ background: var(--orange-light); color: var(--orange); }}
 .pill.date.urgent {{ background: var(--red-light); color: var(--red); font-weight: 600; }}
 .pill.discount {{ background: var(--green-light); color: var(--green); font-weight: 600; }}
+.card-subtitle {{
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 2px;
+}}
 .card-address {{
   color: var(--text-muted);
   font-size: 0.75rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}}
+.card-view-link {{
+  display: inline-block;
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 6px;
+}}
+.card-view-link:hover {{
+  text-decoration: underline;
 }}
 .card-link {{
   display: inline-block;
@@ -745,32 +762,82 @@ header h1 span {{ color: var(--accent); }}
 .card.is-expired:hover {{ opacity: 1; }}
 .card.expanded {{ box-shadow: var(--shadow-lg); border-color: var(--accent); }}
 .card-expand {{
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
   animation: expandIn 0.2s ease-out;
 }}
 @keyframes expandIn {{
   from {{ opacity: 0; max-height: 0; }}
-  to {{ opacity: 1; max-height: 800px; }}
+  to {{ opacity: 1; max-height: 1200px; }}
 }}
+.card-expand .detail-top {{
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}}
+.card-expand .detail-thumb {{
+  width: 100px;
+  height: 75px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}}
+.card-expand .detail-info {{ flex: 1; min-width: 0; }}
 .card-expand .detail-row {{
   display: flex;
   justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.82rem;
+  padding: 3px 0;
+  font-size: 0.8rem;
 }}
-.card-expand .detail-row:last-of-type {{ border-bottom: none; }}
-.card-expand .detail-label {{ color: var(--text-muted); }}
-.card-expand .detail-value {{ font-weight: 500; text-align: right; }}
+.card-expand .detail-label {{ color: var(--text-muted); font-size: 0.75rem; }}
+.card-expand .detail-value {{ font-weight: 500; text-align: right; font-size: 0.8rem; }}
+.card-expand .detail-addr {{
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}}
+.card-expand .detail-map {{
+  margin: 6px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 120px;
+}}
+.card-expand .detail-map-frame {{
+  width: 100%;
+  height: 120px;
+  border: none;
+  border-radius: 8px;
+}}
 .card-expand .price-chart {{
-  margin: 12px 0;
-  padding: 10px;
+  margin: 6px 0;
+  padding: 6px;
   background: var(--bg);
   border-radius: 8px;
 }}
-.card-expand .price-chart h3 {{ font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }}
+.card-expand .price-chart h3 {{ font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }}
+.card-expand .detail-same-scheme {{
+  margin: 6px 0;
+  padding: 6px;
+  background: var(--bg);
+  border-radius: 8px;
+}}
+.card-expand .detail-same-scheme h3 {{ font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }}
+.same-scheme-item {{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  cursor: pointer;
+}}
+.same-scheme-item:last-child {{ border-bottom: none; }}
+.same-scheme-item:hover {{ background: rgba(37,99,235,0.05); }}
+.ss-title {{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+.ss-price {{ color: #2563EB; font-weight: 600; white-space: nowrap; }}
+.ss-date {{ color: var(--text-muted); white-space: nowrap; font-size: 0.7rem; }}
 
 /* Table inline detail */
 .table-detail-row td {{
@@ -1313,13 +1380,42 @@ footer {{
       <input type="number" id="filter-price-min" placeholder="Min" min="0" step="10000">
       <span style="color:var(--text-muted);font-size:0.75rem">-</span>
       <input type="number" id="filter-price-max" placeholder="Max" min="0" step="10000">
+    </div>
+    <div class="filter-row">
+      <label>Size (sq.ft):</label>
+      <input type="number" id="filter-size-min" placeholder="Min" min="0" step="100">
+      <span style="color:var(--text-muted);font-size:0.75rem">-</span>
+      <input type="number" id="filter-size-max" placeholder="Max" min="0" step="100">
+      <label>Auction in:</label>
+      <select id="filter-date-range">
+        <option value="">Any time</option>
+        <option value="7">Next 7 days</option>
+        <option value="14">Next 14 days</option>
+        <option value="30">Next 30 days</option>
+        <option value="60">Next 60 days</option>
+        <option value="90">Next 90 days</option>
+      </select>
+      <label>Discount:</label>
+      <select id="filter-discount">
+        <option value="">Any</option>
+        <option value="10">10%+</option>
+        <option value="20">20%+</option>
+        <option value="30">30%+</option>
+        <option value="40">40%+</option>
+        <option value="50">50%+</option>
+      </select>
+    </div>
+    <div class="filter-row">
       <label>Sort:</label>
       <select class="sort-select" id="sort-all">
         <option value="price_asc">Price: Low to High</option>
         <option value="price_desc">Price: High to Low</option>
         <option value="date_asc">Auction Date</option>
         <option value="discount">Biggest Discount</option>
+        <option value="size_desc">Size: Large to Small</option>
+        <option value="size_asc">Size: Small to Large</option>
       </select>
+      <button class="chip" id="filter-reset" style="background:#FEE2E2;color:#DC2626;font-size:0.7rem;padding:4px 10px">Reset All</button>
     </div>
     <div class="count-label" id="count-all">Loading...</div>
     <div id="cards-all"></div>
@@ -1518,6 +1614,8 @@ footer {{
 
     const scheme = schemeName(p.a, p.t, p.sn);
     const displayTitle = scheme || p.a || p.t;
+    const showSubtitle = p.t && displayTitle !== p.t;
+    const linkHtml = p.u ? '<a class="card-view-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">View Listing &rarr;</a>' : '';
 
     const expClass = isExpired ? ' is-expired' : '';
     return '<div class="card'+expClass+'" data-id="'+esc(id)+'" onclick="window._openDetail(this.dataset.id)">'
@@ -1525,6 +1623,7 @@ footer {{
       + '<div class="card-img">'+imgHtml+'</div>'
       + '<div class="card-body">'
       + '<div class="card-header"><div class="card-title">'+esc(displayTitle)+badgeHtml+'</div><div class="card-price">'+esc(p.p)+spark+'</div></div>'
+      + (showSubtitle ? '<div class="card-subtitle">'+esc(p.t)+'</div>' : '')
       + '<div class="card-meta">'
       + (p.pt ? '<span class="pill type">'+esc(p.pt)+'</span>' : '')
       + '<span class="pill loc">'+esc(p.l)+'</span>'
@@ -1533,6 +1632,7 @@ footer {{
       + discountHtml
       + '</div>'
       + (p.a && p.a !== p.t ? '<div class="card-address">'+esc(p.a)+'</div>' : '')
+      + linkHtml
       + '</div></div>'
       + changesHtml
       + '</div>';
@@ -1552,12 +1652,18 @@ footer {{
   }}
 
   // --- Sorting ---
+  function parseSize(s) {{
+    const m = (s || '').replace(/,/g, '').match(/([\d.]+)/);
+    return m ? parseFloat(m[1]) : 0;
+  }}
   function sortItems(items, sortBy) {{
     const sorters = {{
       price_asc: (a, b) => (a.prop.pv || 0) - (b.prop.pv || 0),
       price_desc: (a, b) => (b.prop.pv || 0) - (a.prop.pv || 0),
       date_asc: (a, b) => daysUntil(a.prop.ad) - daysUntil(b.prop.ad),
       discount: (a, b) => parseDiscount(b.prop.d) - parseDiscount(a.prop.d),
+      size_desc: (a, b) => parseSize(b.prop.s) - parseSize(a.prop.s),
+      size_asc: (a, b) => parseSize(a.prop.s) - parseSize(b.prop.s),
     }};
     items.sort(sorters[sortBy] || sorters.price_asc);
   }}
@@ -1608,6 +1714,32 @@ footer {{
       }}
       if (maxPrice > 0) {{
         items = items.filter(item => (item.prop.pv || 0) <= maxPrice);
+      }}
+      // Size range filter
+      const minSize = parseInt(document.getElementById('filter-size-min').value) || 0;
+      const maxSize = parseInt(document.getElementById('filter-size-max').value) || 0;
+      if (minSize > 0 || maxSize > 0) {{
+        items = items.filter(item => {{
+          const m = (item.prop.s || '').replace(/,/g, '').match(/([\d.]+)/);
+          if (!m) return false;
+          const sz = parseFloat(m[1]);
+          if (minSize > 0 && sz < minSize) return false;
+          if (maxSize > 0 && sz > maxSize) return false;
+          return true;
+        }});
+      }}
+      // Auction date range filter
+      const dateRange = parseInt(document.getElementById('filter-date-range').value) || 0;
+      if (dateRange > 0) {{
+        items = items.filter(item => {{
+          const d = daysUntil(item.prop.ad);
+          return d >= 0 && d <= dateRange;
+        }});
+      }}
+      // Discount filter
+      const minDiscount = parseInt(document.getElementById('filter-discount').value) || 0;
+      if (minDiscount > 0) {{
+        items = items.filter(item => parseDiscount(item.prop.d) >= minDiscount);
       }}
       // Week date range filter (from dashboard click)
       if (window._weekFilter) {{
@@ -1817,10 +1949,11 @@ footer {{
   }});
 
   // --- Inline Detail Expansion ---
-  function buildDetailHtml(p) {{
+  function buildDetailHtml(p, currentId) {{
     const days = daysUntil(p.ad);
-    const daysText = days <= 0 ? 'Today' : days === 1 ? 'Tomorrow' : 'in ' + days + ' days';
+    const daysText = days <= 0 ? 'Today' : days === 1 ? 'Tomorrow' : 'in ' + days + 'd';
 
+    // Compact price history sparkline (inline, no large chart)
     let priceChartHtml = '';
     if (p.ph && p.ph.length > 1) {{
       const vals = p.ph.map(h => {{
@@ -1831,38 +1964,83 @@ footer {{
         const min = Math.min(...vals.map(v=>v.v));
         const max = Math.max(...vals.map(v=>v.v));
         const range = max - min || 1;
-        const w = 280, h = 80;
+        const w = 280, h = 50;
         const pts = vals.map((v, i) => {{
           const x = 10 + (i / (vals.length - 1)) * (w - 20);
-          const y = h - 10 - ((v.v - min) / range) * (h - 20);
+          const y = h - 8 - ((v.v - min) / range) * (h - 16);
           return x.toFixed(1) + ',' + y.toFixed(1);
         }}).join(' ');
         const labels = vals.map((v, i) => {{
           const x = 10 + (i / (vals.length - 1)) * (w - 20);
-          return '<text x="'+x.toFixed(1)+'" y="'+(h+12)+'" text-anchor="middle" fill="#9CA3AF" font-size="9">'+esc(v.d)+'</text>'
-            + '<text x="'+x.toFixed(1)+'" y="'+(h - 10 - ((v.v - min) / range) * (h - 20) - 6).toFixed(1)+'" text-anchor="middle" fill="#4B5563" font-size="9">'+esc(v.p)+'</text>';
+          return '<text x="'+x.toFixed(1)+'" y="'+(h+10)+'" text-anchor="middle" fill="#9CA3AF" font-size="8">'+esc(v.d)+'</text>';
         }}).join('');
         priceChartHtml = '<div class="price-chart"><h3>Price History</h3>'
-          + '<svg width="100%" viewBox="0 0 '+w+' '+(h+20)+'" preserveAspectRatio="xMidYMid meet">'
+          + '<svg width="100%" viewBox="0 0 '+w+' '+(h+14)+'" preserveAspectRatio="xMidYMid meet">'
           + '<polyline points="'+pts+'" fill="none" stroke="#2563EB" stroke-width="2"/>'
           + labels + '</svg></div>';
       }}
     }}
 
+    // Compact image + details side by side
     const imgHtml = p.img
-      ? '<img src="'+esc(p.img)+'" style="width:100%;border-radius:10px;margin-bottom:12px" alt="">'
+      ? '<img src="'+esc(p.img)+'" class="detail-thumb" alt="">'
       : '';
 
-    return imgHtml
-      + '<div class="detail-row"><span class="detail-label">Price</span><span class="detail-value" style="color:#2563EB;font-size:1.1rem">'+esc(p.p)+'</span></div>'
-      + (p.d ? '<div class="detail-row"><span class="detail-label">Discount</span><span class="detail-value" style="color:#059669">'+esc(p.d)+'</span></div>' : '')
-      + '<div class="detail-row"><span class="detail-label">Auction Date</span><span class="detail-value">'+esc(p.ad)+' <span style="color:#D97706">('+daysText+')</span></span></div>'
+    // Map (OpenStreetMap embed if coords available)
+    let mapHtml = '';
+    if (p.lat && p.lng) {{
+      mapHtml = '<div class="detail-map">'
+        + '<a href="https://www.google.com/maps?q='+p.lat+','+p.lng+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
+        + '<img src="https://staticmap.thisplace.org/map?center='+p.lat+','+p.lng+'&zoom=15&size=300x120&markers='+p.lat+','+p.lng+'" '
+        + 'onerror="this.parentElement.parentElement.innerHTML=\'<iframe class=detail-map-frame src=https://www.openstreetmap.org/export/embed.html?bbox='+(p.lng-0.01)+','+(p.lat-0.01)+','+(p.lng+0.01)+','+(p.lat+0.01)+'&marker='+p.lat+','+p.lng+'&layer=mapnik></iframe>\'" '
+        + 'alt="Map" style="width:100%;height:120px;object-fit:cover;border-radius:8px">'
+        + '</a></div>';
+    }} else if (p.a) {{
+      const mapQ = encodeURIComponent(p.a);
+      mapHtml = '<div class="detail-map">'
+        + '<iframe class="detail-map-frame" src="https://www.openstreetmap.org/export/embed.html?query='+mapQ+'" loading="lazy"></iframe>'
+        + '</div>';
+    }}
+
+    // Same scheme properties
+    let sameSchemeHtml = '';
+    const scheme = schemeName(p.a, p.t, p.sn);
+    if (scheme) {{
+      const others = [];
+      for (const [oid, op] of Object.entries(allProps)) {{
+        if (oid === currentId || op.exp) continue;
+        const os = schemeName(op.a, op.t, op.sn);
+        if (os && os === scheme) others.push({{ id: oid, p: op }});
+        if (others.length >= 5) break;
+      }}
+      if (others.length > 0) {{
+        sameSchemeHtml = '<div class="detail-same-scheme"><h3>'+esc(scheme)+' — Other Auctions ('+others.length+')</h3>';
+        for (const o of others) {{
+          const od = daysUntil(o.p.ad);
+          const odText = od <= 0 ? 'Today' : od + 'd';
+          sameSchemeHtml += '<div class="same-scheme-item" onclick="event.stopPropagation();window._openDetail(\''+esc(o.id)+'\')">'
+            + '<span class="ss-title">'+esc(o.p.t)+'</span>'
+            + '<span class="ss-price">'+esc(o.p.p)+'</span>'
+            + '<span class="ss-date">'+esc(o.p.ad)+' ('+odText+')</span>'
+            + '</div>';
+        }}
+        sameSchemeHtml += '</div>';
+      }}
+    }}
+
+    return '<div class="detail-top">'
+      + imgHtml
+      + '<div class="detail-info">'
+      + '<div class="detail-row"><span class="detail-label">Price</span><span class="detail-value" style="color:#2563EB;font-weight:700">'+esc(p.p)+(p.d ? ' <span style="color:#059669;font-size:0.75rem">('+esc(p.d)+')</span>' : '')+'</span></div>'
+      + '<div class="detail-row"><span class="detail-label">Auction</span><span class="detail-value">'+esc(p.ad)+' <span style="color:#D97706;font-size:0.75rem">('+daysText+')</span></span></div>'
       + '<div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">'+esc(p.pt)+'</span></div>'
-      + '<div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">'+esc(p.l)+'</span></div>'
       + (p.s && p.s !== 'Size not specified' ? '<div class="detail-row"><span class="detail-label">Size</span><span class="detail-value">'+esc(p.s)+'</span></div>' : '')
-      + (p.a ? '<div class="detail-row"><span class="detail-label">Address</span><span class="detail-value" style="max-width:60%;text-align:right">'+esc(p.a)+'</span></div>' : '')
+      + '</div></div>'
+      + (p.a ? '<div class="detail-addr">'+esc(p.a)+'</div>' : '')
+      + mapHtml
       + priceChartHtml
-      + (p.u ? '<a class="card-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:10px;margin-top:12px;background:#EFF6FF;border-radius:8px;font-weight:600">View Original Listing &rarr;</a>' : '');
+      + sameSchemeHtml
+      + (p.u ? '<a class="card-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:8px;margin-top:8px;background:#EFF6FF;border-radius:8px;font-weight:600;font-size:0.85rem">View Original Listing &rarr;</a>' : '');
   }}
 
   window._openDetail = function(id) {{
@@ -1888,10 +2066,12 @@ footer {{
     // Create expansion panel
     const expandDiv = document.createElement('div');
     expandDiv.className = 'card-expand';
-    expandDiv.innerHTML = buildDetailHtml(p);
+    expandDiv.innerHTML = buildDetailHtml(p, id);
     expandDiv.addEventListener('click', function(e) {{ e.stopPropagation(); }});
     card.appendChild(expandDiv);
     card.classList.add('expanded');
+    // Scroll the expanded card into view
+    setTimeout(function() {{ card.scrollIntoView({{ behavior: 'smooth', block: 'start' }}); }}, 50);
   }};
 
   // Table inline detail expansion
@@ -2283,10 +2463,30 @@ footer {{
       if (sortNew) sortNew.addEventListener('change', () => filterAndRender('new'));
       if (sortAll) sortAll.addEventListener('change', () => filterAndRender('all'));
 
-      // --- Wire up status & price filters ---
+      // --- Wire up filters ---
       document.getElementById('filter-status').addEventListener('change', () => filterAndRender('all'));
       document.getElementById('filter-price-min').addEventListener('input', debounce(() => filterAndRender('all'), 500));
       document.getElementById('filter-price-max').addEventListener('input', debounce(() => filterAndRender('all'), 500));
+      document.getElementById('filter-size-min').addEventListener('input', debounce(() => filterAndRender('all'), 500));
+      document.getElementById('filter-size-max').addEventListener('input', debounce(() => filterAndRender('all'), 500));
+      document.getElementById('filter-date-range').addEventListener('change', () => filterAndRender('all'));
+      document.getElementById('filter-discount').addEventListener('change', () => filterAndRender('all'));
+      document.getElementById('filter-reset').addEventListener('click', function() {{
+        activeFilters.types.clear();
+        activeFilters.locs.clear();
+        document.querySelectorAll('#filters-type .chip, #filters-loc .chip').forEach(c => c.classList.remove('active'));
+        document.getElementById('filter-status').value = 'active';
+        document.getElementById('filter-price-min').value = '';
+        document.getElementById('filter-price-max').value = '';
+        document.getElementById('filter-size-min').value = '';
+        document.getElementById('filter-size-max').value = '';
+        document.getElementById('filter-date-range').value = '';
+        document.getElementById('filter-discount').value = '';
+        document.getElementById('search-all').value = '';
+        document.getElementById('sort-all').value = 'price_asc';
+        window._weekFilter = null;
+        filterAndRender('all');
+      }});
 
       // --- Wire up load more ---
       document.getElementById('more-new').addEventListener('click', () => loadMore('new'));
@@ -2431,13 +2631,25 @@ footer {{
           if (overMatch) filter.minPrice = parseNum(overMatch[1], overMatch[2]);
         }}
 
-        // Location detection
+        // Location detection (states + common cities/areas)
         const locations = ['kuala lumpur', 'kl', 'selangor', 'johor', 'penang', 'perak',
           'kedah', 'kelantan', 'terengganu', 'pahang', 'negeri sembilan', 'melaka',
-          'sabah', 'sarawak', 'putrajaya', 'labuan', 'kl/selangor'];
+          'sabah', 'sarawak', 'putrajaya', 'labuan', 'kl/selangor',
+          'petaling jaya', 'shah alam', 'subang jaya', 'puchong', 'ampang',
+          'cheras', 'kepong', 'setapak', 'wangsa maju', 'bangsar',
+          'mont kiara', 'damansara', 'cyberjaya', 'kajang', 'semenyih',
+          'rawang', 'klang', 'johor bahru', 'ipoh', 'george town',
+          'kota kinabalu', 'kuching', 'seremban', 'melaka', 'alor setar'];
+        // Sort by length descending so longer names match first (e.g., "petaling jaya" before "jaya")
+        locations.sort((a, b) => b.length - a.length);
         for (const loc of locations) {{
           if (q.includes(loc)) {{
             filter.location = loc === 'kl' ? 'Kuala Lumpur' : loc.split(' ').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+            // For city-level locations, use as search text since they appear in address, not location field
+            if (!['kuala lumpur', 'kl', 'selangor', 'johor', 'penang', 'perak', 'kedah', 'kelantan',
+              'terengganu', 'pahang', 'negeri sembilan', 'melaka', 'sabah', 'sarawak', 'putrajaya', 'labuan', 'kl/selangor'].includes(loc)) {{
+              filter.citySearch = loc;
+            }}
             break;
           }}
         }}
@@ -2446,7 +2658,7 @@ footer {{
         let remainder = q;
         // Strip recognized tokens
         for (const key of Object.keys(typeMap)) remainder = remainder.replace(new RegExp('\\\\b' + key + 's?\\\\b', 'gi'), '');
-        remainder = remainder.replace(/(?:under|below|above|over|less|more|than|max|min|from|budget|rm|in)\s*/gi, '');
+        remainder = remainder.replace(/\b(?:under|below|above|over|less|more|than|max|min|from|budget|rm|in)\b\s*/gi, '');
         remainder = remainder.replace(/\d[\d,.]*\s*[km]?\s*(?:to|-)\s*\d[\d,.]*\s*[km]?/gi, '');
         remainder = remainder.replace(/\d[\d,.]*\s*[km]?/gi, '');
         for (const loc of locations) remainder = remainder.replace(new RegExp(loc, 'gi'), '');
@@ -2470,9 +2682,14 @@ footer {{
         if (filter.type) items = items.filter(i => i.prop.pt === filter.type);
         if (filter.minPrice) items = items.filter(i => (i.prop.pv || 0) >= filter.minPrice);
         if (filter.maxPrice) items = items.filter(i => (i.prop.pv || 0) <= filter.maxPrice);
-        if (filter.location) {{
+        if (filter.location && !filter.citySearch) {{
           const loc = filter.location.toLowerCase();
           items = items.filter(i => (i.prop.l || '').toLowerCase().includes(loc));
+        }}
+        // City-level search matches against address/search string
+        if (filter.citySearch) {{
+          const city = filter.citySearch.toLowerCase();
+          items = items.filter(i => (i._search || '').includes(city));
         }}
         if (filter.search) {{
           const tokens = filter.search.toLowerCase().split(/\s+/);
@@ -2500,8 +2717,17 @@ footer {{
         document.getElementById('filter-price-min').value = filter.minPrice || '';
         document.getElementById('filter-price-max').value = filter.maxPrice || '';
 
-        // Apply search text
-        document.getElementById('search-all').value = filter.search || '';
+        // Apply search text (include city name if city-level search)
+        const searchParts = [];
+        if (filter.citySearch) searchParts.push(filter.citySearch);
+        if (filter.search) searchParts.push(filter.search);
+        document.getElementById('search-all').value = searchParts.join(' ');
+
+        // Reset new filters
+        document.getElementById('filter-size-min').value = '';
+        document.getElementById('filter-size-max').value = '';
+        document.getElementById('filter-date-range').value = '';
+        document.getElementById('filter-discount').value = '';
 
         // Set status to active
         document.getElementById('filter-status').value = 'active';
