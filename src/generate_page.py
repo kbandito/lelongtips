@@ -2295,7 +2295,7 @@ footer {{
       + sameSchemeHtml
       + (scheme ? '<div class="market-compare-section">'
         + '<button class="market-compare-btn" onclick="event.stopPropagation();window._compareMarket(this)" '
-        + 'data-scheme="'+esc(scheme)+'" data-location="'+esc(p.l||'')+'" data-proptype="'+esc(p.pt||'')+'" data-size="'+esc(p.s||'')+'">Compare Market Price &amp; Rental</button>'
+        + 'data-scheme="'+esc(scheme)+'" data-location="'+esc(p.l||'')+'" data-proptype="'+esc(p.pt||'')+'" data-size="'+esc(p.s||'')+'">Compare on PropertyGuru</button>'
         + '<div class="market-result" style="display:none"></div>'
         + '</div>' : '')
       + (p.u ? '<a class="card-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:8px;margin-top:8px;background:#F3F4F6;border-radius:8px;font-weight:600;font-size:0.85rem;color:var(--text)">View Original Listing &rarr;</a>' : '');
@@ -2366,7 +2366,11 @@ footer {{
     var rental = data.rental_listings || [];
     var summary = data.summary || '';
 
-    var h = '<div class="mr-tab-bar">'
+    var h = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:0.7rem;color:var(--text-muted)">'
+      + '<span>Listings from</span>'
+      + '<a href="https://www.propertyguru.com.my" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:700;color:var(--text);text-decoration:none">PropertyGuru</a>'
+      + '</div>'
+      + '<div class="mr-tab-bar">'
       + '<button class="mr-tab active" onclick="event.stopPropagation();window._mrTab(this,\'sale\')">For Sale (' + sale.length + ')</button>'
       + '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'rental\')">For Rent (' + rental.length + ')</button>'
       + (summary ? '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'summary\')">Summary</button>' : '')
@@ -2401,7 +2405,7 @@ footer {{
 
   window._compareMarket = async function(btn) {{
     btn.disabled = true;
-    btn.textContent = 'Searching market listings...';
+    btn.textContent = 'Searching PropertyGuru...';
     var scheme = btn.dataset.scheme;
     var location = btn.dataset.location;
     var propType = btn.dataset.proptype;
@@ -2413,18 +2417,21 @@ footer {{
       apiKey = promptPerplexityKey();
       if (!apiKey) {{
         btn.disabled = false;
-        btn.textContent = 'Compare Market Price & Rental';
+        btn.textContent = 'Compare on PropertyGuru';
         return;
       }}
     }}
 
-    var query = 'Find current property listings for "' + scheme + '" in ' + location + ', Malaysia.';
+    var query = 'Find current property listings for "' + scheme + '" in ' + location + ', Malaysia on PropertyGuru (propertyguru.com.my).';
     if (propType) query += ' Property type: ' + propType + '.';
     if (size) query += ' Size approximately ' + size + '.';
-    query += '\n\nSearch PropertyGuru, iProperty, and EdgeProp for BOTH sale and rental listings of this property/development.';
+    query += '\n\nSearch ONLY PropertyGuru Malaysia (www.propertyguru.com.my) for BOTH sale and rental listings of this exact property/development.';
+    query += '\n\nIMPORTANT: Only return REAL listings that actually exist on PropertyGuru. Each listing MUST have:';
+    query += '\n- A real PropertyGuru listing URL (e.g. https://www.propertyguru.com.my/property-for-sale/...)';
+    query += '\n- The PropertyGuru listing thumbnail image URL (e.g. https://media.propertyguru.com/... or https://img.propertyguru.com.my/...)';
     query += '\n\nReturn ONLY valid JSON (no markdown, no code fences) in this exact format:\n';
-    query += '{{"sale_listings":[{{"title":"unit/listing description","price":"RM XXX,XXX","psf":"RM XXX psf","size":"XXX sq ft","beds":"X","image":"direct image URL if available or empty string","url":"listing URL"}}],"rental_listings":[{{"title":"unit/listing description","price":"RM X,XXX/mo","psf":"RM X.XX psf","size":"XXX sq ft","beds":"X","image":"direct image URL if available or empty string","url":"listing URL"}}],"summary":"Brief 2-3 sentence market overview with price range and trends"}}';
-    query += '\n\nInclude up to 8 listings per category. Use actual data from the search results. Every listing MUST have a title and price at minimum.';
+    query += '{{"sale_listings":[{{"title":"unit/listing description","price":"RM XXX,XXX","psf":"RM XXX psf","size":"XXX sq ft","beds":"X","image":"PropertyGuru thumbnail URL","url":"PropertyGuru listing URL"}}],"rental_listings":[{{"title":"unit/listing description","price":"RM X,XXX/mo","psf":"RM X.XX psf","size":"XXX sq ft","beds":"X","image":"PropertyGuru thumbnail URL","url":"PropertyGuru listing URL"}}],"summary":"Brief 2-3 sentence market overview with price range and trends"}}';
+    query += '\n\nInclude up to 8 listings per category. Use actual data from PropertyGuru search results. Every listing MUST have a title, price, image thumbnail URL, and PropertyGuru URL.';
 
     try {{
       var resp = await fetch('https://api.perplexity.ai/chat/completions', {{
@@ -2436,7 +2443,7 @@ footer {{
         body: JSON.stringify({{
           model: 'sonar',
           messages: [
-            {{ role: 'system', content: 'You are a Malaysian property market data API. You search PropertyGuru, iProperty, and EdgeProp for real property listings. You MUST respond with ONLY valid JSON, no markdown formatting, no code fences, no explanation text. Just the raw JSON object.' }},
+            {{ role: 'system', content: 'You are a Malaysian property market data API. You search ONLY PropertyGuru Malaysia (propertyguru.com.my) for real property listings. Return exact listings with real PropertyGuru URLs and their thumbnail image URLs. You MUST respond with ONLY valid JSON, no markdown formatting, no code fences, no explanation text. Just the raw JSON object.' }},
             {{ role: 'user', content: query }}
           ],
           temperature: 0.1
@@ -2484,7 +2491,7 @@ footer {{
       resultDiv.style.display = '';
     }}
     btn.disabled = false;
-    btn.textContent = 'Compare Market Price & Rental';
+    btn.textContent = 'Compare on PropertyGuru';
   }};
 
   window._openDetail = function(id) {{
