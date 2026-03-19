@@ -886,6 +886,47 @@ header h1 span {{ color: var(--accent); }}
 }}
 .ss-view-link:hover {{ text-decoration: underline; }}
 
+/* Compare Market (Perplexity) */
+.market-compare-section {{
+  margin: 8px 0;
+  padding: 8px;
+  background: var(--bg);
+  border-radius: 8px;
+}}
+.market-compare-btn {{
+  display: block;
+  width: 100%;
+  padding: 8px;
+  background: linear-gradient(135deg, #1a73e8, #6C5CE7);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}}
+.market-compare-btn:hover {{ opacity: 0.9; }}
+.market-compare-btn:disabled {{ opacity: 0.6; cursor: wait; }}
+.market-result {{
+  margin-top: 8px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+}}
+.market-result h4 {{ margin: 0 0 4px; font-size: 0.8rem; color: var(--text); }}
+.market-result .mr-section {{ margin-bottom: 8px; }}
+.market-result .mr-label {{ font-weight: 600; color: var(--accent); font-size: 0.75rem; }}
+.market-result .mr-error {{ color: #e53e3e; }}
+.market-result a {{ color: var(--accent); text-decoration: underline; }}
+
 /* Table inline detail */
 .table-detail-row td {{
   padding: 0 !important;
@@ -2154,6 +2195,11 @@ footer {{
       + mapHtml
       + priceChartHtml
       + sameSchemeHtml
+      + (scheme ? '<div class="market-compare-section">'
+        + '<button class="market-compare-btn" onclick="event.stopPropagation();window._compareMarket(this)" '
+        + 'data-scheme="'+esc(scheme)+'" data-location="'+esc(p.l||'')+'" data-proptype="'+esc(p.pt||'')+'" data-size="'+esc(p.s||'')+'">Compare Market Price &amp; Rental</button>'
+        + '<div class="market-result" style="display:none"></div>'
+        + '</div>' : '')
       + (p.u ? '<a class="card-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:8px;margin-top:8px;background:#F3F4F6;border-radius:8px;font-weight:600;font-size:0.85rem;color:var(--text)">View Original Listing &rarr;</a>' : '');
   }}
 
@@ -2178,6 +2224,99 @@ footer {{
     f.src = 'https://www.openstreetmap.org/export/embed.html?bbox=' + (lng-0.01) + ',' + (lat-0.01) + ',' + (lng+0.01) + ',' + (lat+0.01) + '&marker=' + lat + ',' + lng + '&layer=mapnik';
     wrap.innerHTML = '';
     wrap.appendChild(f);
+  }};
+
+  // --- Perplexity Market Compare ---
+  var PPLX_KEY_LS = 'perplexity_api_key';
+
+  function getPerplexityKey() {{
+    return localStorage.getItem(PPLX_KEY_LS) || '';
+  }}
+
+  function promptPerplexityKey() {{
+    var key = prompt('Enter your Perplexity API key (pplx-...).\nGet one at https://www.perplexity.ai/settings/api\n\nIt will be saved in your browser localStorage.');
+    if (key && key.trim()) {{
+      localStorage.setItem(PPLX_KEY_LS, key.trim());
+      return key.trim();
+    }}
+    return '';
+  }}
+
+  window._compareMarket = async function(btn) {{
+    btn.disabled = true;
+    btn.textContent = 'Searching market...';
+    var schemeName = btn.dataset.scheme;
+    var location = btn.dataset.location;
+    var propType = btn.dataset.proptype;
+    var size = btn.dataset.size;
+    var resultDiv = btn.parentElement.querySelector('.market-result');
+
+    var apiKey = getPerplexityKey();
+    if (!apiKey) {{
+      apiKey = promptPerplexityKey();
+      if (!apiKey) {{
+        btn.disabled = false;
+        btn.textContent = 'Compare Market Price & Rental';
+        return;
+      }}
+    }}
+
+    var query = 'Current property market data for "' + schemeName + '" in ' + location + ', Malaysia.';
+    if (propType) query += ' Property type: ' + propType + '.';
+    if (size) query += ' Size approximately ' + size + '.';
+    query += ' Please provide: 1) Current asking SALE prices on PropertyGuru, iProperty, or EdgeProp (price range, price per sqft). 2) Current asking RENTAL prices (monthly rent range, rent per sqft). 3) Recent transaction prices if available. Show specific numbers and ranges.';
+
+    try {{
+      var resp = await fetch('https://api.perplexity.ai/chat/completions', {{
+        method: 'POST',
+        headers: {{
+          'Authorization': 'Bearer ' + apiKey,
+          'Content-Type': 'application/json'
+        }},
+        body: JSON.stringify({{
+          model: 'sonar',
+          messages: [
+            {{ role: 'system', content: 'You are a Malaysian property market analyst. Provide concise, factual data about property prices and rentals. Use RM currency. Format with clear sections for Sale Price, Rental, and Transactions. Keep it brief and data-focused.' }},
+            {{ role: 'user', content: query }}
+          ],
+          temperature: 0.1
+        }})
+      }});
+      if (!resp.ok) {{
+        var errBody = await resp.text();
+        if (resp.status === 401) {{
+          localStorage.removeItem(PPLX_KEY_LS);
+          throw new Error('Invalid API key. Click again to re-enter.');
+        }}
+        throw new Error('API error ' + resp.status + ': ' + errBody.substring(0, 200));
+      }}
+      var data = await resp.json();
+      var answer = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || 'No results found.';
+      var citations = data.citations || [];
+
+      // Simple markdown-to-html: bold, headers, lists
+      var html = answer
+        .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
+        .replace(/^### (.+)$/gm, '<h4>$1</h4>')
+        .replace(/^## (.+)$/gm, '<h4>$1</h4>')
+        .replace(/^# (.+)$/gm, '<h4>$1</h4>')
+        .replace(/\\n/g, '<br>');
+
+      if (citations.length > 0) {{
+        html += '<br><br><span class="mr-label">Sources:</span><br>';
+        citations.forEach(function(c, i) {{
+          html += '<a href="' + esc(c) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">[' + (i+1) + '] ' + esc(c.replace(/https?:\\/\\/(www\\.)?/, '').substring(0, 60)) + '</a><br>';
+        }});
+      }}
+
+      resultDiv.innerHTML = html;
+      resultDiv.style.display = '';
+    }} catch (e) {{
+      resultDiv.innerHTML = '<span class="mr-error">' + esc(e.message) + '</span>';
+      resultDiv.style.display = '';
+    }}
+    btn.disabled = false;
+    btn.textContent = 'Compare Market Price & Rental';
   }};
 
   window._openDetail = function(id) {{
