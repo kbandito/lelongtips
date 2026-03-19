@@ -2092,24 +2092,29 @@ footer {
 
   // Step 1: Use Perplexity to fetch raw listing text from PropertyGuru
   async function fetchPropertyGuruRawText(apiKey, scheme, saleUrl, rentUrl, projectSaleUrl, projectRentUrl) {
-    var query = 'Go to these PropertyGuru Malaysia pages and copy ALL the listing information you can see:\n\n';
-    query += 'FOR SALE - visit these pages:\n';
-    query += '1. ' + projectSaleUrl + '\n';
-    query += '2. ' + saleUrl + '\n\n';
-    query += 'FOR RENT - visit these pages:\n';
-    query += '1. ' + projectRentUrl + '\n';
-    query += '2. ' + rentUrl + '\n\n';
-    query += 'For EVERY listing on these pages, copy the COMPLETE details exactly as shown:\n';
-    query += '- Full listing title\n';
-    query += '- Price (exact RM amount)\n';
-    query += '- Price per sq ft (PSF) if shown\n';
-    query += '- Floor size in sq ft\n';
-    query += '- Number of bedrooms and bathrooms\n';
-    query += '- The listing URL (the href link to the individual listing)\n';
-    query += '- The listing image URL (the src of the thumbnail image)\n';
-    query += '- Agent name if shown\n\n';
-    query += 'IMPORTANT: Copy ALL text and numbers EXACTLY as they appear on the page. Do NOT summarize, paraphrase, or round any numbers. ';
-    query += 'List every single listing you can find. Clearly separate SALE listings from RENTAL listings.';
+    var query = 'Visit each of the following 4 PropertyGuru Malaysia URLs one by one. For EACH URL, start with a header line showing the exact URL, then list ALL listings found on that page.\n\n';
+    query += 'URL 1: ' + projectSaleUrl + '\n';
+    query += 'URL 2: ' + saleUrl + '\n';
+    query += 'URL 3: ' + projectRentUrl + '\n';
+    query += 'URL 4: ' + rentUrl + '\n\n';
+    query += 'FORMAT YOUR RESPONSE EXACTLY LIKE THIS:\n\n';
+    query += '=== URL 1: ' + projectSaleUrl + ' ===\n';
+    query += 'Listing 1: [title], [price], [size], [beds] bed, [PSF], [listing URL], [image URL]\n';
+    query += 'Listing 2: ...\n';
+    query += '(or "No listings found" if the page has no results)\n\n';
+    query += '=== URL 2: ' + saleUrl + ' ===\n';
+    query += 'Listing 1: ...\n\n';
+    query += '=== URL 3: ' + projectRentUrl + ' ===\n';
+    query += 'Listing 1: ...\n\n';
+    query += '=== URL 4: ' + rentUrl + ' ===\n';
+    query += 'Listing 1: ...\n\n';
+    query += 'RULES:\n';
+    query += '- You MUST include the === URL: ... === header before each section so I know which page the data came from\n';
+    query += '- Copy ALL text and numbers EXACTLY as they appear on each page\n';
+    query += '- Do NOT summarize, paraphrase, or round any numbers\n';
+    query += '- Include the full PropertyGuru listing URL for each listing (e.g. https://www.propertyguru.com.my/listing/...)\n';
+    query += '- Include the listing thumbnail image URL if visible\n';
+    query += '- List every single listing visible on the page';
 
     var resp = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -2120,7 +2125,7 @@ footer {
       body: JSON.stringify({
         model: 'sonar',
         messages: [
-          { role: 'system', content: 'You are a web page content copier. Your job is to visit the provided URLs and copy ALL the text content from those pages exactly as shown. Do NOT summarize or paraphrase. Copy every listing detail verbatim including all prices, sizes, URLs, and image URLs. Be thorough - include every listing visible on the page.' },
+          { role: 'system', content: 'You are a web page content copier. Visit each URL provided and copy ALL listing content from each page. You MUST label each section with the exact URL it came from using the format === URL: [url] ===. Copy every listing detail verbatim. Do NOT summarize or paraphrase. Do NOT combine results from different URLs.' },
           { role: 'user', content: query }
         ],
         search_domain_filter: ['propertyguru.com.my'],
