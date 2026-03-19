@@ -1977,6 +1977,7 @@ footer {
 
   // --- Perplexity Market Compare ---
   var PPLX_KEY_LS = 'perplexity_api_key';
+  var GEMINI_KEY_LS = 'gemini_api_key';
 
   function getPerplexityKey() {
     return localStorage.getItem(PPLX_KEY_LS) || '';
@@ -1986,6 +1987,19 @@ footer {
     var key = prompt('Enter your Perplexity API key (pplx-...).\nGet one at https://www.perplexity.ai/settings/api\n\nIt will be saved in your browser localStorage.');
     if (key && key.trim()) {
       localStorage.setItem(PPLX_KEY_LS, key.trim());
+      return key.trim();
+    }
+    return '';
+  }
+
+  function getGeminiKey() {
+    return localStorage.getItem(GEMINI_KEY_LS) || '';
+  }
+
+  function promptGeminiKey() {
+    var key = prompt('Enter your Google Gemini API key.\nGet one free at https://aistudio.google.com/apikey\n\nIt will be saved in your browser localStorage.');
+    if (key && key.trim()) {
+      localStorage.setItem(GEMINI_KEY_LS, key.trim());
       return key.trim();
     }
     return '';
@@ -2064,23 +2078,124 @@ footer {
     section.querySelector('[data-mr-tab="'+tab+'"]').classList.add('active');
   };
 
+  // Step 1: Use Perplexity to fetch raw listing text from PropertyGuru
+  async function fetchPropertyGuruRawText(apiKey, scheme, saleUrl, rentUrl, projectSaleUrl, projectRentUrl) {
+    var query = 'Go to these PropertyGuru Malaysia pages and copy ALL the listing information you can see:\n\n';
+    query += 'FOR SALE - visit these pages:\n';
+    query += '1. ' + projectSaleUrl + '\n';
+    query += '2. ' + saleUrl + '\n\n';
+    query += 'FOR RENT - visit these pages:\n';
+    query += '1. ' + projectRentUrl + '\n';
+    query += '2. ' + rentUrl + '\n\n';
+    query += 'For EVERY listing on these pages, copy the COMPLETE details exactly as shown:\n';
+    query += '- Full listing title\n';
+    query += '- Price (exact RM amount)\n';
+    query += '- Price per sq ft (PSF) if shown\n';
+    query += '- Floor size in sq ft\n';
+    query += '- Number of bedrooms and bathrooms\n';
+    query += '- The listing URL (the href link to the individual listing)\n';
+    query += '- The listing image URL (the src of the thumbnail image)\n';
+    query += '- Agent name if shown\n\n';
+    query += 'IMPORTANT: Copy ALL text and numbers EXACTLY as they appear on the page. Do NOT summarize, paraphrase, or round any numbers. ';
+    query += 'List every single listing you can find. Clearly separate SALE listings from RENTAL listings.';
+
+    var resp = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'sonar',
+        messages: [
+          { role: 'system', content: 'You are a web page content copier. Your job is to visit the provided URLs and copy ALL the text content from those pages exactly as shown. Do NOT summarize or paraphrase. Copy every listing detail verbatim including all prices, sizes, URLs, and image URLs. Be thorough - include every listing visible on the page.' },
+          { role: 'user', content: query }
+        ],
+        search_domain_filter: ['propertyguru.com.my'],
+        temperature: 0.0
+      })
+    });
+
+    if (!resp.ok) {
+      var errBody = await resp.text();
+      if (resp.status === 401) {
+        localStorage.removeItem(PPLX_KEY_LS);
+        throw new Error('Invalid Perplexity API key. Click again to re-enter.');
+      }
+      throw new Error('Perplexity API error ' + resp.status + ': ' + errBody.substring(0, 200));
+    }
+
+    var respData = await resp.json();
+    var rawText = respData.choices && respData.choices[0] && respData.choices[0].message && respData.choices[0].message.content || '';
+    var citations = respData.citations || [];
+    return { rawText: rawText, citations: citations };
+  }
+
+  // Step 2: Use Gemini to parse raw text into structured JSON
+  async function parseListingsWithGemini(geminiKey, rawText, scheme, location, propType, size) {
+    var prompt = 'Below is raw text scraped from PropertyGuru Malaysia listing pages for "' + scheme + '" in ' + location + '.\n\n';
+    prompt += 'RAW SCRAPED DATA:\n---\n' + rawText + '\n---\n\n';
+    prompt += 'Parse this data and extract ALL property listings into structured JSON.\n';
+    prompt += 'For each listing, extract:\n';
+    prompt += '- title: listing title/description\n';
+    prompt += '- price: the listed price exactly as shown (e.g. "RM 180,000" or "RM 800/mo")\n';
+    prompt += '- psf: price per sq ft if available\n';
+    prompt += '- size: floor size (e.g. "700 sq ft")\n';
+    prompt += '- beds: number of bedrooms\n';
+    prompt += '- image: the thumbnail image URL if found in the data\n';
+    prompt += '- url: the PropertyGuru listing URL if found in the data\n\n';
+    prompt += 'Return ONLY valid JSON (no markdown, no code fences) in this exact format:\n';
+    prompt += '{"sale_listings":[{"title":"...","price":"...","psf":"...","size":"...","beds":"...","image":"...","url":"..."}],"rental_listings":[{"title":"...","price":"...","psf":"...","size":"...","beds":"...","image":"...","url":"..."}],"summary":"Brief 2-3 sentence market overview with price ranges observed"}\n\n';
+    prompt += 'Rules:\n';
+    prompt += '- Separate listings into sale_listings and rental_listings based on the data\n';
+    prompt += '- Use EXACT prices and sizes from the data, do NOT make up or estimate values\n';
+    prompt += '- If a field is not available, use an empty string ""\n';
+    prompt += '- Include ALL listings found in the data\n';
+    prompt += '- The summary should describe the price range and number of listings found';
+
+    var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=' + geminiKey, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1 }
+      })
+    });
+
+    if (!resp.ok) {
+      var errBody = await resp.text();
+      if (resp.status === 400 || resp.status === 403) {
+        localStorage.removeItem(GEMINI_KEY_LS);
+        throw new Error('Invalid Gemini API key. Click again to re-enter.');
+      }
+      throw new Error('Gemini API error ' + resp.status + ': ' + errBody.substring(0, 200));
+    }
+
+    var respData = await resp.json();
+    var text = respData.candidates && respData.candidates[0] && respData.candidates[0].content && respData.candidates[0].content.parts && respData.candidates[0].content.parts[0] && respData.candidates[0].content.parts[0].text || '';
+    return text;
+  }
+
   window._compareMarket = async function(btn) {
     btn.disabled = true;
-    btn.textContent = 'Searching PropertyGuru...';
     var scheme = btn.dataset.scheme;
     var location = btn.dataset.location;
     var propType = btn.dataset.proptype;
     var size = btn.dataset.size;
     var resultDiv = btn.parentElement.querySelector('.market-result');
 
-    var apiKey = getPerplexityKey();
-    if (!apiKey) {
-      apiKey = promptPerplexityKey();
-      if (!apiKey) {
-        btn.disabled = false;
-        btn.textContent = 'Compare on PropertyGuru';
-        return;
-      }
+    // Get Perplexity key
+    var pplxKey = getPerplexityKey();
+    if (!pplxKey) {
+      pplxKey = promptPerplexityKey();
+      if (!pplxKey) { btn.disabled = false; btn.textContent = 'Compare on PropertyGuru'; return; }
+    }
+
+    // Get Gemini key
+    var geminiKey = getGeminiKey();
+    if (!geminiKey) {
+      geminiKey = promptGeminiKey();
+      if (!geminiKey) { btn.disabled = false; btn.textContent = 'Compare on PropertyGuru'; return; }
     }
 
     var slug = scheme.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -2089,89 +2204,66 @@ footer {
     var projectSaleUrl = 'https://www.propertyguru.com.my/property-for-sale/at-' + slug;
     var projectRentUrl = 'https://www.propertyguru.com.my/property-for-rent/at-' + slug;
 
-    var query = 'Go to these PropertyGuru pages and extract the ACTUAL listings shown:\n\n';
-    query += 'FOR SALE listings - check these URLs:\n';
-    query += '1. ' + projectSaleUrl + ' (project page)\n';
-    query += '2. ' + saleUrl + ' (search results)\n\n';
-    query += 'FOR RENT listings - check these URLs:\n';
-    query += '1. ' + projectRentUrl + ' (project page)\n';
-    query += '2. ' + rentUrl + ' (search results)\n\n';
-    query += 'Property: "' + scheme + '" in ' + location + ', Malaysia.';
-    if (propType) query += ' Property type: ' + propType + '.';
-    if (size) query += ' Size approximately ' + size + '.';
-    query += '\n\nExtract the EXACT listings from these PropertyGuru pages. For each listing get:';
-    query += '\n- title: the listing title as shown on PropertyGuru';
-    query += '\n- price: the listed price (e.g. RM 180,000)';
-    query += '\n- psf: price per sq ft if shown';
-    query += '\n- size: floor size in sq ft';
-    query += '\n- beds: number of bedrooms';
-    query += '\n- image: the listing thumbnail image URL from PropertyGuru (starts with https://img.propertyguru.com.my/ or https://media.propertyguru.com/)';
-    query += '\n- url: the full PropertyGuru listing URL (e.g. https://www.propertyguru.com.my/listing/...)';
-    query += '\n\nReturn ONLY valid JSON (no markdown, no code fences) in this exact format:\n';
-    query += '{"sale_listings":[{"title":"...","price":"RM XXX,XXX","psf":"RM XXX psf","size":"XXX sq ft","beds":"X","image":"https://img.propertyguru.com.my/...","url":"https://www.propertyguru.com.my/listing/..."}],"rental_listings":[{"title":"...","price":"RM X,XXX/mo","psf":"RM X.XX psf","size":"XXX sq ft","beds":"X","image":"https://img.propertyguru.com.my/...","url":"https://www.propertyguru.com.my/listing/..."}],"summary":"Brief 2-3 sentence market overview"}';
-    query += '\n\nInclude up to 8 listings per category. Only include listings that ACTUALLY appear on these PropertyGuru pages.';
-
+    var answer = '';
     try {
-      var resp = await fetch('https://api.perplexity.ai/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + apiKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'sonar',
-          messages: [
-            { role: 'system', content: 'You are a PropertyGuru Malaysia listing extractor. You visit the provided PropertyGuru URLs and extract the exact listings shown on those pages. Return real listing data with actual PropertyGuru image URLs and listing URLs. You MUST respond with ONLY valid JSON, no markdown, no code fences.' },
-            { role: 'user', content: query }
-          ],
-          search_domain_filter: ['propertyguru.com.my'],
-          temperature: 0.1
-        })
-      });
-      if (!resp.ok) {
-        var errBody = await resp.text();
-        if (resp.status === 401) {
-          localStorage.removeItem(PPLX_KEY_LS);
-          throw new Error('Invalid API key. Click again to re-enter.');
-        }
-        throw new Error('API error ' + resp.status + ': ' + errBody.substring(0, 200));
-      }
-      var respData = await resp.json();
-      var answer = respData.choices && respData.choices[0] && respData.choices[0].message && respData.choices[0].message.content || '';
-      var citations = respData.citations || [];
+      // Step 1: Perplexity fetches raw page content
+      btn.textContent = 'Step 1/2: Fetching PropertyGuru...';
+      var pplxResult = await fetchPropertyGuruRawText(pplxKey, scheme, saleUrl, rentUrl, projectSaleUrl, projectRentUrl);
+      answer = pplxResult.rawText;
+      var citations = pplxResult.citations;
 
-      // Try to parse JSON from response (handle code fences)
-      var jsonStr = answer.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      if (!answer || answer.length < 50) {
+        throw new Error('Perplexity returned insufficient data. Try the direct links below.');
+      }
+
+      // Step 2: Gemini parses raw text into structured JSON
+      btn.textContent = 'Step 2/2: Parsing listings...';
+      var geminiText = await parseListingsWithGemini(geminiKey, answer, scheme, location, propType, size);
+
+      // Parse JSON from Gemini response
+      var jsonStr = geminiText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
       var parsed;
       try {
         parsed = JSON.parse(jsonStr);
       } catch (e2) {
-        // Try to extract JSON object from mixed text
         var match = jsonStr.match(/\{[\s\S]*\}/);
         if (match) {
           parsed = JSON.parse(match[0]);
         } else {
-          throw new Error('Could not parse listing data');
+          throw new Error('Could not parse Gemini response');
         }
       }
 
       resultDiv.innerHTML = renderMarketResult(parsed, citations, saleUrl, rentUrl, projectSaleUrl, projectRentUrl, scheme);
       resultDiv.style.display = '';
     } catch (e) {
-      // Fallback: show raw text if JSON fails
-      if (typeof answer !== 'undefined' && answer) {
+      // Fallback: show raw Perplexity text if Gemini fails
+      var fallbackHtml = renderDirectLinks(saleUrl, rentUrl);
+      if (answer && answer.length > 50) {
         var fallback = answer
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\n/g, '<br>');
-        resultDiv.innerHTML = '<div class="mr-summary">' + fallback + '</div>';
+        fallbackHtml += '<div class="mr-summary" style="margin-top:8px">' + fallback + '</div>';
       } else {
-        resultDiv.innerHTML = '<span class="mr-error">' + esc(e.message) + '</span>';
+        fallbackHtml += '<span class="mr-error" style="display:block;margin-top:8px">' + esc(e.message) + '</span>';
       }
+      resultDiv.innerHTML = fallbackHtml;
       resultDiv.style.display = '';
     }
     btn.disabled = false;
     btn.textContent = 'Compare on PropertyGuru';
   };
+
+  function renderDirectLinks(saleUrl, rentUrl) {
+    return '<div style="background:var(--card-bg);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;margin-bottom:10px">'
+      + '<div style="font-size:0.75rem;font-weight:700;margin-bottom:6px;color:var(--accent)">View actual listings on PropertyGuru:</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + '<a href="'+esc(saleUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:var(--accent);color:#fff;border-radius:6px;text-decoration:none;font-size:0.72rem;font-weight:600">'
+      + 'For Sale on PropertyGuru</a>'
+      + '<a href="'+esc(rentUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-size:0.72rem;font-weight:600">'
+      + 'For Rent on PropertyGuru</a>'
+      + '</div></div>';
+  }
 
   window._openDetail = function(id) {
     const p = allProps[id];
