@@ -2391,8 +2391,8 @@ footer {{
       + '</div>'
       + '</div>';
 
-    h += '<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:8px;font-style:italic">'
-      + 'Note: Listings below are AI-summarized and may not be 100% accurate. Click the links above to see actual listings.</div>';
+    h += '<div style="font-size:0.65rem;color:#e57c23;margin-bottom:8px;font-style:italic">'
+      + 'Warning: Listings below are AI-generated and may include hallucinated entries. Perplexity may return more listings than actually exist. Always verify on the actual PropertyGuru pages above.</div>';
 
     h += '<div class="mr-tab-bar">'
       + '<button class="mr-tab active" onclick="event.stopPropagation();window._mrTab(this,\'sale\')">For Sale (' + sale.length + ')</button>'
@@ -2416,7 +2416,8 @@ footer {{
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\n/g, '<br>');
       h += '<div class="mr-tab-content" data-mr-tab="rawdata">'
-        + '<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:6px;font-weight:600">Raw text fetched by Perplexity (before Gemini parsing):</div>'
+        + '<div style="font-size:0.65rem;color:#e57c23;margin-bottom:6px;font-weight:600">Warning: Perplexity is an AI, not a real scraper. It may hallucinate listings that don\'t exist on the page. Always verify against the actual PropertyGuru links above.</div>'
+        + '<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:6px">Raw text from Perplexity (before Gemini parsing):</div>'
         + '<div class="mr-summary" style="max-height:400px;overflow-y:auto;font-size:0.68rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px">' + rawHtml + '</div>'
         + '</div>';
     }}
@@ -2441,29 +2442,36 @@ footer {{
 
   // Step 1: Use Perplexity to fetch raw listing text from PropertyGuru
   async function fetchPropertyGuruRawText(apiKey, scheme, saleUrl, rentUrl, projectSaleUrl, projectRentUrl) {{
-    var query = 'Visit each of the following 4 PropertyGuru Malaysia URLs one by one. For EACH URL, start with a header line showing the exact URL, then list ALL listings found on that page.\n\n';
+    var query = 'Visit each of the following 4 PropertyGuru Malaysia URLs one by one. For EACH URL, first state how many listing cards are visible on that page, then list ONLY those listings.\n\n';
     query += 'URL 1: ' + projectSaleUrl + '\n';
     query += 'URL 2: ' + saleUrl + '\n';
     query += 'URL 3: ' + projectRentUrl + '\n';
     query += 'URL 4: ' + rentUrl + '\n\n';
     query += 'FORMAT YOUR RESPONSE EXACTLY LIKE THIS:\n\n';
     query += '=== URL 1: ' + projectSaleUrl + ' ===\n';
+    query += 'Total listings visible on this page: [number]\n';
     query += 'Listing 1: [title], [price], [size], [beds] bed, [PSF], [listing URL], [image URL]\n';
     query += 'Listing 2: ...\n';
-    query += '(or "No listings found" if the page has no results)\n\n';
+    query += '(or "No listings found on this page" if the page shows 0 results)\n\n';
     query += '=== URL 2: ' + saleUrl + ' ===\n';
+    query += 'Total listings visible on this page: [number]\n';
     query += 'Listing 1: ...\n\n';
     query += '=== URL 3: ' + projectRentUrl + ' ===\n';
+    query += 'Total listings visible on this page: [number]\n';
     query += 'Listing 1: ...\n\n';
     query += '=== URL 4: ' + rentUrl + ' ===\n';
+    query += 'Total listings visible on this page: [number]\n';
     query += 'Listing 1: ...\n\n';
-    query += 'RULES:\n';
-    query += '- You MUST include the === URL: ... === header before each section so I know which page the data came from\n';
+    query += 'CRITICAL RULES:\n';
+    query += '- You MUST include the === URL: ... === header before each section\n';
+    query += '- You MUST state the total count of listings visible on each page BEFORE listing them\n';
+    query += '- The number of listings you list MUST MATCH the total count you stated\n';
+    query += '- Do NOT invent, fabricate, or hallucinate listings that are not actually on the page\n';
+    query += '- If a page shows 4 listings, list exactly 4 — not 8, not 10\n';
+    query += '- It is BETTER to list fewer listings than to make up fake ones\n';
     query += '- Copy ALL text and numbers EXACTLY as they appear on each page\n';
-    query += '- Do NOT summarize, paraphrase, or round any numbers\n';
-    query += '- Include the full PropertyGuru listing URL for each listing (e.g. https://www.propertyguru.com.my/listing/...)\n';
-    query += '- Include the listing thumbnail image URL if visible\n';
-    query += '- List every single listing visible on the page';
+    query += '- Include the full PropertyGuru listing URL for each listing\n';
+    query += '- If a URL returns a 404 or redirect, say "Page not found" instead of guessing';
 
     var resp = await fetch('https://api.perplexity.ai/chat/completions', {{
       method: 'POST',
@@ -2474,7 +2482,7 @@ footer {{
       body: JSON.stringify({{
         model: 'sonar',
         messages: [
-          {{ role: 'system', content: 'You are a web page content copier. Visit each URL provided and copy ALL listing content from each page. You MUST label each section with the exact URL it came from using the format === URL: [url] ===. Copy every listing detail verbatim. Do NOT summarize or paraphrase. Do NOT combine results from different URLs.' }},
+          {{ role: 'system', content: 'You are a precise web page reader. Visit each URL and report ONLY what is actually visible on the page. State the exact count of listings on each page before listing them. NEVER fabricate or hallucinate listings. If you are unsure whether a listing exists on the page, do NOT include it. Accuracy is more important than completeness. Label each section with === URL: [url] ===.' }},
           {{ role: 'user', content: query }}
         ],
         search_domain_filter: ['propertyguru.com.my'],
