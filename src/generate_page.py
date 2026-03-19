@@ -1997,7 +1997,7 @@ footer {{
       mapHtml = '<div class="detail-map">'
         + '<a href="https://www.google.com/maps?q='+p.lat+','+p.lng+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
         + '<img src="https://staticmap.thisplace.org/map?center='+p.lat+','+p.lng+'&zoom=15&size=300x120&markers='+p.lat+','+p.lng+'" '
-        + 'onerror="this.parentElement.parentElement.innerHTML=\'<iframe class=detail-map-frame src=https://www.openstreetmap.org/export/embed.html?bbox='+(p.lng-0.01)+','+(p.lat-0.01)+','+(p.lng+0.01)+','+(p.lat+0.01)+'&marker='+p.lat+','+p.lng+'&layer=mapnik></iframe>\'" '
+        + 'onerror="window._mapFallback(this,'+p.lat+','+p.lng+')" '
         + 'alt="Map" style="width:100%;height:120px;object-fit:cover;border-radius:8px">'
         + '</a></div>';
     }} else if (p.a) {{
@@ -2023,7 +2023,7 @@ footer {{
         for (const o of others) {{
           const od = daysUntil(o.p.ad);
           const odText = od <= 0 ? 'Today' : od + 'd';
-          sameSchemeHtml += '<div class="same-scheme-item" onclick="event.stopPropagation();window._openDetail(\''+esc(o.id)+'\')">'
+          sameSchemeHtml += '<div class="same-scheme-item" data-id="'+esc(o.id)+'" onclick="event.stopPropagation();window._openDetail(this.dataset.id)">'
             + '<span class="ss-title">'+esc(o.p.t)+'</span>'
             + '<span class="ss-price">'+esc(o.p.p)+'</span>'
             + '<span class="ss-date">'+esc(o.p.ad)+' ('+odText+')</span>'
@@ -2047,6 +2047,15 @@ footer {{
       + sameSchemeHtml
       + (p.u ? '<a class="card-link" href="'+esc(p.u)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:8px;margin-top:8px;background:#EFF6FF;border-radius:8px;font-weight:600;font-size:0.85rem">View Original Listing &rarr;</a>' : '');
   }}
+
+  window._mapFallback = function(img, lat, lng) {{
+    var wrap = img.parentElement.parentElement;
+    var f = document.createElement('iframe');
+    f.className = 'detail-map-frame';
+    f.src = 'https://www.openstreetmap.org/export/embed.html?bbox=' + (lng-0.01) + ',' + (lat-0.01) + ',' + (lng+0.01) + ',' + (lat+0.01) + '&marker=' + lat + ',' + lng + '&layer=mapnik';
+    wrap.innerHTML = '';
+    wrap.appendChild(f);
+  }};
 
   window._openDetail = function(id) {{
     const p = allProps[id];
@@ -2199,12 +2208,30 @@ footer {{
     var active;
     try {{
       var resp = await fetch('data/active.json');
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
       active = await resp.json();
     }} catch(e) {{
-      // Fallback to inline data if fetch fails
-      active = JSON.parse(document.getElementById('__active__').textContent);
+      // Fallback: try inline data, or retry with absolute path
+      try {{
+        var inl = document.getElementById('__active__').textContent.trim();
+        if (inl && inl !== 'null') {{
+          active = JSON.parse(inl);
+        }} else {{
+          // Try with base path prefix (GitHub Pages)
+          var base = document.querySelector('base');
+          var prefix = base ? base.href : window.location.pathname.replace(/\/[^/]*$/, '/');
+          var resp2 = await fetch(prefix + 'data/active.json');
+          if (!resp2.ok) throw new Error('HTTP ' + resp2.status);
+          active = await resp2.json();
+        }}
+      }} catch(e2) {{
+        if (loadingEl) {{
+          loadingEl.innerHTML = '<div style="text-align:center;padding:2rem"><p style="font-size:1.1rem;font-weight:600;margin-bottom:8px">Failed to load property data</p><p style="color:var(--text-sec);font-size:0.85rem">Try refreshing, or open via a web server (not file://)</p></div>';
+        }}
+        return;
+      }}
     }}
-    allProps = active;
+    allProps = active || {{}};
     if (loadingEl) loadingEl.style.display = 'none';
 
       // Pre-compute search strings
