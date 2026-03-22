@@ -21523,5 +21523,640 @@
     "lat": 3.0735964,
     "lng": 101.5903237,
     "q": "postcode"
+  },
+  "Jalan Maple 7/5, Bandar Hillpark, 42300 Bandar Puncak Alam, Selangor": {
+    "lat": 3.234747,
+    "lng": 101.4310985,
+    "q": "postcode"
+  },
+  "KIP Core Sentral, Persiaran Warisan Kota Warisan, Sepang 43900, Selangor": {
+    "lat": 2.8222327,
+    "lng": 101.6962066,
+    "q": "full"
+  },
+  "Residensi Skyluxe, Jalan Jalil Perkasa 1, Bukit Jalil, 57000, Kuala Lumpur": {
+    "lat": 3.0612318,
+    "lng": 101.6858481,
+    "q": "postcode"
+  },
+  "Block B, Residensi Skysanctuary 1 (Edgewood Residences), No. 2, Jalan Santuari 1, Setapak, 53200, Kuala Lumpur": {
+    "lat": 3.1897077,
+    "lng": 101.7119024,
+    "q": "postcode"
+  },
+  "Endah Puri Condominium, Jalan 3/149E, Taman Sri Endah, 57000, Kuala Lumpur": {
+    "lat": 3.0612318,
+    "lng": 101.6858481,
+    "q": "postcode"
+  },
+  "The Elements @ Ampang, Blok A, Jalan Bemban, Off Jalan Ampang, 55000, Kuala Lumpur": {
+    "lat": 3.1520587,
+    "lng": 101.7324847,
+    "q": "postcode"
+  },
+  "Block 1, M City, Jalan Ampang, 50450, Kuala Lumpur": {
+    "lat": 3.1574149,
+    "lng": 101.7178232,
+    "q": "postcode"
+  },
+  "Blok B, Residensi Suasana @ Damai, No. 6, Jalan PJU 10/1, Damansara Damai, 47830 Petaling Jaya, Selangor": {
+    "lat": 3.1964032,
+    "lng": 101.594036,
+    "q": "postcode"
+  },
+  "Jalan 3/32, Seksyen 3, 43650 Bandar Baru Bangi, Selangor": {
+    "lat": 2.9419121,
+    "lng": 101.7809195,
+    "q": "full"
+  },
+  "Hyde 2, Persiaran Multimedia, I-City, Seksyen 7, 40000 Shah Alam, Selangor": {
+    "lat": 3.0716738,
+    "lng": 101.499469,
+    "q": "postcode"
+  },
+  "Residensi Riana Dutamas 1, No. 346, Jalan Segambut, 51200 Segambut, Kuala Lumpur": {
+    "lat": 3.1969931,
+    "lng": 101.6762432,
+    "q": "postcode"
+  },
+  "Jalan Putra Mahkota 7/3H, Putra Heights, 47650 Subang Jaya, Selangor": {
+    "lat": 2.9922484,
+    "lng": 101.566969,
+    "q": "full"
+  },
+  "Block S1, Vista Alam, Jalan Ikhtisas 14/1, Section 14, 40000 Shah Alam, Selangor": {
+    "lat": 3.0716738,
+    "lng": 101.499469,
+    "q": "postcode"
+  },
+  "Block Kemboja, Jalan Indah 4/5, Taman Ampang Indah, 68000 Ampang, Selangor": {
+    "lat": 3.2530813,
+    "lng": 101.7356842,
+    "q": "postcode"
+  },
+  "Sommerset Close, No. 1, Jalan Yaacob Latif, Bandar Tun Razak, 56000, Kuala Lumpur": {
+    "lat": 3.0693521,
+    "lng": 101.7405218,
+    "q": "postcode"
+  },
+  "Tower 2, Residensi Opus, No. 8, Jalan Talalla, 50460, Kuala Lumpur": {
+    "lat": 3.1316614,
+    "lng": 101.6962143,
+    "q": "postcode"
+  },
+  "Menara B, PJ CenterStage, No. 1, Jalan 13/1, Seksyen 13, 46100 Petaling Jaya, Selangor": {
+    "lat": 3.1003016,
+    "lng": 101.6330746,
+    "q": "postcode"
+  },
+  "Jalan 4/17, Bandar Tasik Puteri, 48020 Rawang, Selangor": {
+    "lat": 3.2790015,
+    "lng": 101.5086614,
+    "q": "postcode"
+  },
+  "Block C, Kompleks Midlandscity, Persiaran Setia Mayuri-Midlands, 43500 Semenyih, Selangor": {
+    "lat": 2.9320918,
+    "lng": 101.8588734,
+    "q": "postcode"
+  },
+  "Block E, Puchong Utama Court (on site Puchong Utama Court 1), No. 1, Jalan Puchong Utama 7, Taman Puchong Utama, 47140 Puchong, Selangor": {
+    "lat": 2.9928136,
+    "lng": 101.6136976,
+    "q": "postcode"
+  },
+  "Jalan Caledonia 2A/4, 45600 Bestari Jaya, Selangor": {
+    "lat": 3.3572169,
+    "lng": 101.4025402,
+    "q": "postcode"
+  },
+  "Residensi Laguna Biru 2, Jalan Tasik Biru 2, Taman Tasik Biru, 48050 Rawang, Selangor": {
+    "lat": 3.2473047,
+    "lng": 101.5222404,
+    "q": "full"
+  },
+  "The Mark @ Cheras, Jalan Cheras Hartamas, Taman Bukit Segar, 68000 Ampang, Selangor": {
+    "lat": 3.2530813,
+    "lng": 101.7356842,
+    "q": "postcode"
+  },
+  "Pangsapuri Seri Pegaga, No.1, Jalan Pegaga U12/1, Desa Alam, Seksyen U12, 40170 Shah Alam, Selangor": {
+    "lat": 3.1174195,
+    "lng": 101.4690428,
+    "q": "postcode"
+  },
+  "Jalan Bendahara 38, Off Jalan Sungai Jati, Taman Sentosa, 41200 Klang, Selangor": {
+    "lat": 3.0032031,
+    "lng": 101.4404566,
+    "q": "postcode"
+  },
+  "Residensi MH Platinum 2, No. 12, Jalan Usahawan 6, Setapak Jaya 2, 53300, Kuala Lumpur": {
+    "lat": 3.2004697,
+    "lng": 101.7262868,
+    "q": "postcode"
+  },
+  "Astana Alam 3, Jalan Astana 13/2, 42300 Bandar Puncak Alam, Selangor": {
+    "lat": 3.234747,
+    "lng": 101.4310985,
+    "q": "postcode"
+  },
+  "Block B, Aera Servis Residensi, Jalan PJS 5/28A, 46150 Petaling Jaya, Selangor": {
+    "lat": 3.0739203,
+    "lng": 101.6156049,
+    "q": "postcode"
+  },
+  "Jalan Kenyalang 11/4G, PJU 5, Kota Damansara, 47810 Petaling Jaya, Selangor": {
+    "lat": 3.1612339,
+    "lng": 101.5965253,
+    "q": "full"
+  },
+  "Menara 2, Serini Melawati, Jalan Melawati 1, Taman Melawati, 53100, Kuala Lumpur": {
+    "lat": 3.1533264,
+    "lng": 101.6927379,
+    "q": "postcode"
+  },
+  "Block A, Prestige Residence, No. 1, Persiaran Lestari Perdana, Taman Lestari Perdana, 43300 Seri Kembangan, Selangor": {
+    "lat": 3.0234167,
+    "lng": 101.7019712,
+    "q": "postcode"
+  },
+  "Pangsapuri Permai, Jalan Landai Permai, Sungai Besi, 57100, Kuala Lumpur": {
+    "lat": 3.0873799,
+    "lng": 101.7084176,
+    "q": "postcode"
+  },
+  "Block G, Lengkungan Kampung Nelayan, Taman Seri Nelayan, 42000 Pelabuhan Klang, Selangor": {
+    "lat": 3.0188112,
+    "lng": 101.412678,
+    "q": "postcode"
+  },
+  "KIP Core Sentral, Persiaran Warisan, KIP Sentral, Kota Warisan, 43900 Sepang, Selangor": {
+    "lat": 2.8287345,
+    "lng": 101.7101529,
+    "q": "postcode"
+  },
+  "Jalan SP 5/1, Seri Pristana, 47000 Sungai Buloh, Selangor": {
+    "lat": 3.2210683,
+    "lng": 101.5459826,
+    "q": "postcode"
+  },
+  "Residensi Harmoni, No. 1, Jalan Awan Makmur, Taman OUG, 58200, Kuala Lumpur": {
+    "lat": 3.0798012,
+    "lng": 101.6724104,
+    "q": "postcode"
+  },
+  "Jalan Sierra 3/7, Bandar 16 Sierra, 47120 Puchong, Selangor": {
+    "lat": 2.9817658,
+    "lng": 101.6369779,
+    "q": "postcode"
+  },
+  "Menara B, PJ Centrestage, No. 1, Jalan 13/1, Seksyen 13, 46100 Petaling Jaya, Selangor": {
+    "lat": 3.1003016,
+    "lng": 101.6330746,
+    "q": "postcode"
+  },
+  "Block A, Prestige Residence, Persiaran Lestari Perdana, Taman Lestari Perdana, 43300 Seri Kembangan, Selangor": {
+    "lat": 3.0234167,
+    "lng": 101.7019712,
+    "q": "postcode"
+  },
+  "Pangsapuri Perdana, Jalan Lompat Pagar 13/37, Seksyen 13, 40100 Shah Alam, Selangor": {
+    "lat": 3.085732,
+    "lng": 101.5488437,
+    "q": "full"
+  },
+  "Plaza KLTS, No. 99, Jalan Gombak, Setapak, 53300, Kuala Lumpur": {
+    "lat": 3.2004697,
+    "lng": 101.7262868,
+    "q": "postcode"
+  },
+  "Residensi MH Platinum 2, Jalan Usahawan 6, Setapak Jaya 2, 53200, Kuala Lumpur": {
+    "lat": 3.1897077,
+    "lng": 101.7119024,
+    "q": "postcode"
+  },
+  "Residensi Hijauan Rimba, No. 1, Jalan PJU 8/8B, Sentral Damansara, PJU 8, 47820 Petaling Jaya, Selangor": {
+    "lat": 3.1637493,
+    "lng": 101.612631,
+    "q": "postcode"
+  },
+  "Apartment Sri Bayu, Bandar Armada Putra, 42920 Pulau Indah, Selangor": {
+    "lat": 2.9381101,
+    "lng": 101.311816,
+    "q": "postcode"
+  },
+  "Menara Perniagaan Manjalara, Jalan Manjalara Idaman 6 (Jalan 11/62A), Bandar Sri Manjalara, 52200, Kuala Lumpur": {
+    "lat": 3.1893622,
+    "lng": 101.6265072,
+    "q": "postcode"
+  },
+  "Block Kasawari D, Jalan Damar 1, Taman Impian Ehsan, 43300 Seri Kembangan, Selangor": {
+    "lat": 3.0234167,
+    "lng": 101.7019712,
+    "q": "postcode"
+  },
+  "Block C, D'Warisan (The Heritage), Jalan Dagang SB, 43300 Seri Kembangan, Selangor": {
+    "lat": 3.0234167,
+    "lng": 101.7019712,
+    "q": "postcode"
+  },
+  "Pangsapuri Permai, Persiaran Puchong Permai, Taman Puchong Permai, Batu 13, 47150 Puchong, Selangor": {
+    "lat": 3.0042026,
+    "lng": 101.6014217,
+    "q": "postcode"
+  },
+  "16th Floor, Block A, Plaza Metro Prima, Jalan Metro 1, Metro Prima, 52100, Kuala Lumpur": {
+    "lat": 3.2102239,
+    "lng": 101.6384501,
+    "q": "postcode"
+  },
+  "Selangorku Prima Lakefront Homes, Persiaran Sepang Cyber 11, 63000 Cyberjaya, Selangor": {
+    "lat": 2.9223064,
+    "lng": 101.6481743,
+    "q": "postcode"
+  },
+  "Jalan Kedidi 10, Pantai Sepang Putra, 43950 Sungai Pelek, Selangor": {
+    "lat": 2.6575765,
+    "lng": 101.6761878,
+    "q": "postcode"
+  },
+  "Jalan Astana Kemensah, Taman Astana Kemensah, 68000 Ampang, Selangor": {
+    "lat": 3.2530813,
+    "lng": 101.7356842,
+    "q": "postcode"
+  },
+  "Residensi Bandar Razak (On-Site RC Residences), No. 1, Jalan Razak Mansion, 57100 Sungai Besi, Kuala Lumpur": {
+    "lat": 3.0873799,
+    "lng": 101.7084176,
+    "q": "postcode"
+  },
+  "Block C, Sri Ros Apartment, Jalan Sepakat Indah 6, Taman Sepakat Indah, 43000 Kajang, Selangor": {
+    "lat": 2.9908657,
+    "lng": 101.7829793,
+    "q": "postcode"
+  },
+  "Jalan SPM 7, Taman Sri Putramas, 47000 Sungai Buloh, Selangor": {
+    "lat": 3.2210683,
+    "lng": 101.5459826,
+    "q": "postcode"
+  },
+  "Blok I, Setiawalk, Persiaran Wawasan, Pusat Bandar Puchong, 47160 Puchong, Selangor": {
+    "lat": 3.0336224,
+    "lng": 101.6147174,
+    "q": "postcode"
+  },
+  "Menara Polo, Jalan 2/76E, Desa Pandan, 55100, Kuala Lumpur": {
+    "lat": 3.1474786,
+    "lng": 101.7130908,
+    "q": "postcode"
+  },
+  "Block A6, Green Acre Park Kondo, Bandar Sungai Long (R/Pangsa), 43000 Kajang, Selangor": {
+    "lat": 2.9908657,
+    "lng": 101.7829793,
+    "q": "postcode"
+  },
+  "Block A, Seiring Residence, Jalan Arimetrik U6/20, Seksyen U6, 40150 Shah Alam, Selangor": {
+    "lat": 3.1152608,
+    "lng": 101.5382213,
+    "q": "postcode"
+  },
+  "Jalan SP 3/8, Saujana Puchong, Bandar Putra Permai, 47110 Puchong, Selangor": {
+    "lat": 2.985286,
+    "lng": 101.6440044,
+    "q": "postcode"
+  },
+  "Block A, Residensi Adelia 2, Persiaran Bangi Avenue 2, Taman Bangi Avenue, 43000 Kajang, Selangor": {
+    "lat": 2.9908657,
+    "lng": 101.7829793,
+    "q": "postcode"
+  },
+  "Block D, Apartment Taman Medan Jaya, No. 2A, Jalan PJS 2/1, 46000 Petaling Jaya, Selangor": {
+    "lat": 3.0950996,
+    "lng": 101.6366916,
+    "q": "postcode"
+  },
+  "Block B, D'Haven Condominium, Lorong Tenggiri 1A, Off Jalan Mohd Yamin, 41100 Klang, Selangor": {
+    "lat": 3.0581848,
+    "lng": 101.5389818,
+    "q": "postcode"
+  },
+  "Jalan Eco Forest 3/1G, Eco Forest, 43500 Semenyih, Selangor": {
+    "lat": 2.9320918,
+    "lng": 101.8588734,
+    "q": "postcode"
+  },
+  "Jalan Sierra 9/2, Bandar Sierra 16, 47100 Puchong, Selangor": {
+    "lat": 2.9924917,
+    "lng": 101.6257759,
+    "q": "postcode"
+  },
+  "168 Residensi Selayang, KM 12, Jalan Ipoh - Rawang, 68100 Batu Caves, Selangor": {
+    "lat": 3.2360259,
+    "lng": 101.6759818,
+    "q": "postcode"
+  },
+  "Jalan Simfoni 3, Simfoni Perdana, LBS Alam Perdana, 42300 Bandar Puncak Alam, Selangor": {
+    "lat": 3.234747,
+    "lng": 101.4310985,
+    "q": "postcode"
+  },
+  "Block C1, RC Residences, No. 1, Jalan Razak Mansion, Sungai Besi, 57100, Kuala Lumpur": {
+    "lat": 3.0873799,
+    "lng": 101.7084176,
+    "q": "postcode"
+  },
+  "Jalan 7A/8, Bandar Tasik Puteri, 48020 Rawang, Selangor": {
+    "lat": 3.2790015,
+    "lng": 101.5086614,
+    "q": "postcode"
+  },
+  "Hijauan Saujana, Lot 91, Off Persiaran Golf Saujana Resort, Seksyen U2, 40150 Shah Alam, Selangor": {
+    "lat": 3.1152608,
+    "lng": 101.5382213,
+    "q": "postcode"
+  },
+  "Residensi Skysanctuary 1, No. 2, Jalan Santuari 1, Setapak, 53200, Kuala Lumpur": {
+    "lat": 3.1897077,
+    "lng": 101.7119024,
+    "q": "postcode"
+  },
+  "Block A1, Bayu Sejahtera, Persiaran Bayu 2, 68000 Ampang, Selangor": {
+    "lat": 3.2530813,
+    "lng": 101.7356842,
+    "q": "postcode"
+  },
+  "Block B1, Gravit8, Jalan Bayu Laut/KS09, Kota Bayuemas, 41200 Klang, Selangor": {
+    "lat": 3.0032031,
+    "lng": 101.4404566,
+    "q": "postcode"
+  },
+  "Block 18, Jalan Pahat K15/K, Dataran Otomobil, Section 15, 40200 Shah Alam, Selangor": {
+    "lat": 3.0541341,
+    "lng": 101.4998528,
+    "q": "postcode"
+  },
+  "Pangsapuri Indahria, Persiaran Jubli Perak, Seksyen 22, 40300 Shah Alam, Selangor": {
+    "lat": 3.0474258,
+    "lng": 101.5304945,
+    "q": "postcode"
+  },
+  "Block A3, Jalan Bukit Segar 1, Taman Bukit Segar, 68000 Ampang, Kuala Lumpur": {
+    "lat": 3.1543461,
+    "lng": 101.7427196,
+    "q": "postcode"
+  },
+  "Kuarza 16 (16 Quartz Melawati), Jalan Melawati 7B, Taman Melawati, 53100, Kuala Lumpur": {
+    "lat": 3.1533264,
+    "lng": 101.6927379,
+    "q": "postcode"
+  },
+  "Block J, Pangsapuri Seri Perantau, Persiaran Sireh Junjung/KS4, 42000 Klang, Selangor": {
+    "lat": 3.0188112,
+    "lng": 101.412678,
+    "q": "postcode"
+  },
+  "Gembira Residen Cond - Block A, Jalan Senangria, Taman Gembira, 58200, Kuala Lumpur": {
+    "lat": 3.0798012,
+    "lng": 101.6724104,
+    "q": "postcode"
+  },
+  "Tower B, Anya at Shorea Park Residency, Jalan SP1, Shorea Park 47120 Puchong, Selangor": {
+    "lat": 2.9817658,
+    "lng": 101.6369779,
+    "q": "postcode"
+  },
+  "Jalan Intan 3, Taman Puchong Intan, 47150 Puchong, Selangor": {
+    "lat": 3.0222721,
+    "lng": 101.6124603,
+    "q": "full"
+  },
+  "Residensi Skysierra, Jalan Taman Setiawangsa, 54200, Kuala Lumpur": {
+    "lat": 3.1788768,
+    "lng": 101.7471484,
+    "q": "postcode"
+  },
+  "Arte Cheras, Jalan Cheras, Taman Midah, 56000 Cheras, Kuala Lumpur": {
+    "lat": 3.0693521,
+    "lng": 101.7405218,
+    "q": "postcode"
+  },
+  "1st Floor, Block D, Metropolitan Square, Jalan PJU 8/1, Bandar Damansara Perdana, 47820 Petaling Jaya, Selangor": {
+    "lat": 3.1637493,
+    "lng": 101.612631,
+    "q": "postcode"
+  },
+  "Lorong Cempaka 2, Bangi Golf Resort, 43650 Bandar Baru Bangi, Selangor": {
+    "lat": 2.950466,
+    "lng": 101.7787576,
+    "q": "postcode"
+  },
+  "Tower 2, Bayu Residensi @ Seri Temenggung, Jalan Temenggung, 68100 Batu Caves, Selangor": {
+    "lat": 3.2360259,
+    "lng": 101.6759818,
+    "q": "postcode"
+  },
+  "Jalan Genting 3/KU 4, Taman Kembara, 42100 Klang, Selangor": {
+    "lat": 3.0741137,
+    "lng": 101.4109956,
+    "q": "postcode"
+  },
+  "Jalan CV 1/1C, Casa View, 43800 Dengkil, Selangor": {
+    "lat": 2.872178,
+    "lng": 101.68303,
+    "q": "postcode"
+  },
+  "Tower 1, KL Gateway Premium Residences (Residensi Premium 1), Jalan Kerinchi, 59200, Kuala Lumpur": {
+    "lat": 3.1102478,
+    "lng": 101.6684607,
+    "q": "postcode"
+  },
+  "Jalan Teratai 7, Seksyen BB11, 48300 Bukit Beruntung, Selangor": {
+    "lat": 3.4066096,
+    "lng": 101.572969,
+    "q": "postcode"
+  },
+  "Paragon 3, Persiaran Lestari Perdana, Taman Lestari Putra, Bandar Putra Permai, 43300 Seri Kembangan, Selangor": {
+    "lat": 3.0234167,
+    "lng": 101.7019712,
+    "q": "postcode"
+  },
+  "Jalan SP 4/20, Bandar Saujana Putra, 42610 Lebuhraya Elite, Jenjarom, Selangor": {
+    "lat": 2.9496678,
+    "lng": 101.5823535,
+    "q": "postcode"
+  },
+  "Block A, Residensi Zamrud, Jalan Zamrud Utama, Sungai Tangkas, 43000 Kajang, Selangor": {
+    "lat": 2.9908657,
+    "lng": 101.7829793,
+    "q": "postcode"
+  },
+  "Jalan Perdana 1, Pangsapuri Melodi Perdana, LBS Alam Perdana, 42300 Bandar Puncak Alam, Selangor": {
+    "lat": 3.234747,
+    "lng": 101.4310985,
+    "q": "postcode"
+  },
+  "Block D, Vista Millennium Condominium, Jalan DM1, Taman Desa Millennia, 47150 Puchong, Selangor": {
+    "lat": 3.0042026,
+    "lng": 101.6014217,
+    "q": "postcode"
+  },
+  "Block C, Laguna Biru 2, Jalan Tasik Biru 2, Taman Tasik Biru, 48050 Rawang, Selangor": {
+    "lat": 3.2729464,
+    "lng": 101.5334737,
+    "q": "postcode"
+  },
+  "Jalan 5/40, Taman Pusat Kepong, 51200, Kuala Lumpur": {
+    "lat": 3.2022369,
+    "lng": 101.6555948,
+    "q": "full"
+  },
+  "Laguna Biru 2, Jalan Tasik Biru 2, Taman Tasik Biru, 48050 Rawang, Selangor": {
+    "lat": 3.2729464,
+    "lng": 101.5334737,
+    "q": "postcode"
+  },
+  "Jalan BS 1/2, Bukit Saujana, 47000 Sungai Buloh, Selangor": {
+    "lat": 3.2210683,
+    "lng": 101.5459826,
+    "q": "postcode"
+  },
+  "Jalan PU 5/3A, Taman Puchong Utama, 47140 Puchong, Selangor": {
+    "lat": 3.0013555,
+    "lng": 101.6191179,
+    "q": "full"
+  },
+  "Tingkat 3, Blok 58, Seksyen 24, 40300 Shah Alam, Selangor": {
+    "lat": 3.0474258,
+    "lng": 101.5304945,
+    "q": "postcode"
+  },
+  "Jalan PJU 3/51, Sunway Bukit Rimba, Sunway Damansara, 47810 Petaling Jaya, Selangor": {
+    "lat": 3.1538487,
+    "lng": 101.5896972,
+    "q": "postcode"
+  },
+  "Jalan Eco Forest 1/1D, Eco Forest, 43500 Semenyih, Selangor": {
+    "lat": 2.9320918,
+    "lng": 101.8588734,
+    "q": "postcode"
+  },
+  "Block L, No. 2, Taman Pinggiran Batu Caves, 68100 Batu Caves, Selangor": {
+    "lat": 3.2360259,
+    "lng": 101.6759818,
+    "q": "postcode"
+  },
+  "Residensi Heliks, Jalan PJS 5/27, Pusat Dagangan Petaling Jaya Selatan, 46150 Petaling Jaya, Selangor": {
+    "lat": 3.0739203,
+    "lng": 101.6156049,
+    "q": "postcode"
+  },
+  "Lebuh Damar Merah, Taman Pendamar Indah 2, Pandamaran, 42000 Klang, Selangor": {
+    "lat": 3.0188112,
+    "lng": 101.412678,
+    "q": "postcode"
+  },
+  "Pangsapuri Laguna Biru, Jalan Tasik Biru 17, Taman Tasik Biru, 48050 Rawang, Selangor": {
+    "lat": 3.2729464,
+    "lng": 101.5334737,
+    "q": "postcode"
+  },
+  "Block C, Jalan PJS 2C/2, Taman Medan Cahaya, 46000 Petaling Jaya, Selangor": {
+    "lat": 3.0950996,
+    "lng": 101.6366916,
+    "q": "postcode"
+  },
+  "No. 1, Block D, Lebuhraya Pinggiran, Taman Pinggiran Batu Caves, 68100 Batu Caves, Selangor": {
+    "lat": 3.2360259,
+    "lng": 101.6759818,
+    "q": "postcode"
+  },
+  "Pangsapuri Cempaka, Persiaran Bukit Raja, Bandar Baru Klang, 41150 Klang, Selangor": {
+    "lat": 3.0604083,
+    "lng": 101.4652669,
+    "q": "postcode"
+  },
+  "Block 2, Residensi Alami, Jalan Tinju 13/50, Seksyen 13, 40100 Shah Alam, Selangor": {
+    "lat": 3.0824144,
+    "lng": 101.5439593,
+    "q": "postcode"
+  },
+  "Tower A, Residensi Kiara Jalil 2 @ Kiara Residence 2, No. 3, Jalan Jalil Perwira 1, Bukit Jalil, 58200, Kuala Lumpur": {
+    "lat": 3.0798012,
+    "lng": 101.6724104,
+    "q": "postcode"
+  },
+  "1st Floor, Block E, Apartment Teratai, Jalan Bunga Raya 3, Taman Bunga Raya, 48300 Bukit Beruntung, Selangor": {
+    "lat": 3.4066096,
+    "lng": 101.572969,
+    "q": "postcode"
+  },
+  "Jalan Bukit Mewah 9/15, Taman Bukit Mewah, Fasa 9, 43000 Kajang, Selangor": {
+    "lat": 2.9746115,
+    "lng": 101.8119224,
+    "q": "full"
+  },
+  "Residensi Lot 118 (Sky Suites @ KLCC), No. 18, Jalan P. Ramlee, 50250, Kuala Lumpur": {
+    "lat": 3.1533438,
+    "lng": 101.7065754,
+    "q": "postcode"
+  },
+  "Jalan Pilus 27/24, Seksyen 27, 40400 Shah Alam, Selangor": {
+    "lat": 3.0151057,
+    "lng": 101.5706543,
+    "q": "full"
+  },
+  "Jalan Sukepi 3/28, Taman Sri Kandi, Batu 10, 42500 Telok Panglima Garang, Selangor": {
+    "lat": 2.9409143,
+    "lng": 101.5317009,
+    "q": "postcode"
+  },
+  "Antara Apartment, Jalan Mulia 1/2, Taman Mulia Jaya, 68000 Ampang, Selangor": {
+    "lat": 3.2530813,
+    "lng": 101.7356842,
+    "q": "postcode"
+  },
+  "Block D, Pangsapuri Idaman Abadi, Persiaran Tropicana Height 3A, Tropicana Height, 43000 Kajang, Selangor": {
+    "lat": 2.9908657,
+    "lng": 101.7829793,
+    "q": "postcode"
+  },
+  "Jalan SS14/7A, 47500 Subang Jaya, Selangor": {
+    "lat": 3.0735964,
+    "lng": 101.5903237,
+    "q": "postcode"
+  },
+  "Block 1, Trifolis Apartment, Jalan Batu Nilam 36/KS6, Bandar Bukit Tinggi 2, 41200 Klang, Selangor": {
+    "lat": 3.0032031,
+    "lng": 101.4404566,
+    "q": "postcode"
+  },
+  "Residensi Dana 15 (Aratre`), D15, Jalan PJU 1A/46, 47301 Petaling Jaya, Selangor": {
+    "lat": 3.1116167,
+    "lng": 101.5948337,
+    "q": "postcode"
+  },
+  "Jalan Indah Jaya 7, Taman Indah Jaya, Sungai Tekali, 43100 Hulu Langat, Selangor": {
+    "lat": 3.1162505,
+    "lng": 101.8139751,
+    "q": "postcode"
+  },
+  "Jalan HP 5/5, Hillpark 2, 43500 Semenyih, Selangor": {
+    "lat": 2.9320918,
+    "lng": 101.8588734,
+    "q": "postcode"
+  },
+  "Pangsapuri Selangorku Sena, Jalan Kiara Sungai Long, Bandar Sungai Long, 43000 Kajang, Selangor": {
+    "lat": 2.9908657,
+    "lng": 101.7829793,
+    "q": "postcode"
+  },
+  "Block B, Residensi Lagenda (Legend Heights @ Sri Segambut), No. 61, Jalan Udang Siar, Taman Sri Segambut, 52000, Kuala Lumpur": {
+    "lat": 3.2081001,
+    "lng": 101.6589495,
+    "q": "postcode"
+  },
+  "Sri Lavender Apartments, Jalan Sepakat Indah 2/2, Taman Sepakat Indah, Sungai Chua, 43000 Kajang, Selangor": {
+    "lat": 2.9908657,
+    "lng": 101.7829793,
+    "q": "postcode"
   }
 }
