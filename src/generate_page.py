@@ -2333,7 +2333,7 @@ footer {{
   }}
 
   function promptPerplexityKey() {{
-    var key = prompt('Enter your Perplexity API key (pplx-...).\nGet one at https://www.perplexity.ai/settings/api\n\nIt will be saved in your browser localStorage.');
+    var key = prompt('Enter your Perplexity API key (pplx-...).\\nGet one at https://www.perplexity.ai/settings/api\\n\\nIt will be saved in your browser localStorage.');
     if (key && key.trim()) {{
       localStorage.setItem(PPLX_KEY_LS, key.trim());
       return key.trim();
@@ -2346,7 +2346,7 @@ footer {{
   }}
 
   function promptGeminiKey() {{
-    var key = prompt('Enter your Google Gemini API key.\nGet one free at https://aistudio.google.com/apikey\n\nIt will be saved in your browser localStorage.');
+    var key = prompt('Enter your Google Gemini API key.\\nGet one free at https://aistudio.google.com/apikey\\n\\nIt will be saved in your browser localStorage.');
     if (key && key.trim()) {{
       localStorage.setItem(GEMINI_KEY_LS, key.trim());
       return key.trim();
@@ -2360,7 +2360,7 @@ footer {{
       + '<th></th><th>Property</th><th>' + (type === 'rental' ? 'Rent/mo' : 'Price') + '</th><th>PSF</th><th>Size</th><th>Beds</th><th></th>'
       + '</tr></thead><tbody>';
     listings.forEach(function(l) {{
-      var imgTag = l.image ? '<img class="mr-listing-img" src="'+esc(l.image)+'" onerror="this.style.display=\'none\'" alt="">' : '<div class="mr-listing-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.6rem">No img</div>';
+      var imgTag = l.image ? '<img class="mr-listing-img" src="'+esc(l.image)+'" onerror="this.style.display=\\'none\\'" alt="">' : '<div class="mr-listing-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.6rem">No img</div>';
       h += '<tr>'
         + '<td>' + imgTag + '</td>'
         + '<td><div class="mr-listing-title" title="'+esc(l.title||'')+'">'+esc(l.title||'-')+'</div></td>'
@@ -2395,10 +2395,10 @@ footer {{
       + 'Warning: Listings below are AI-generated and may include hallucinated entries. Perplexity may return more listings than actually exist. Always verify on the actual PropertyGuru pages above.</div>';
 
     h += '<div class="mr-tab-bar">'
-      + '<button class="mr-tab active" onclick="event.stopPropagation();window._mrTab(this,\'sale\')">For Sale (' + sale.length + ')</button>'
-      + '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'rental\')">For Rent (' + rental.length + ')</button>'
-      + (summary ? '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'summary\')">Summary</button>' : '')
-      + (rawText ? '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\'rawdata\')">Raw Data</button>' : '')
+      + '<button class="mr-tab active" onclick="event.stopPropagation();window._mrTab(this,\\'sale\\')">For Sale (' + sale.length + ')</button>'
+      + '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\\'rental\\')">For Rent (' + rental.length + ')</button>'
+      + (summary ? '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\\'summary\\')">Summary</button>' : '')
+      + (rawText ? '<button class="mr-tab" onclick="event.stopPropagation();window._mrTab(this,\\'rawdata\\')">Raw Data</button>' : '')
       + '</div>'
       + '<div class="mr-tab-content active" data-mr-tab="sale">' + renderListingsTable(sale, 'sale') + '</div>'
       + '<div class="mr-tab-content" data-mr-tab="rental">' + renderListingsTable(rental, 'rental') + '</div>';
@@ -2406,7 +2406,7 @@ footer {{
     if (summary) {{
       var summaryHtml = summary
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\n/g, '<br>');
+        .replace(/\\n/g, '<br>');
       h += '<div class="mr-tab-content" data-mr-tab="summary"><div class="mr-summary">' + summaryHtml + '</div></div>';
     }}
 
@@ -2414,9 +2414,9 @@ footer {{
       var rawHtml = rawText
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\n/g, '<br>');
+        .replace(/\\n/g, '<br>');
       h += '<div class="mr-tab-content" data-mr-tab="rawdata">'
-        + '<div style="font-size:0.65rem;color:#e57c23;margin-bottom:6px;font-weight:600">Warning: Perplexity is an AI, not a real scraper. It may hallucinate listings that don\'t exist on the page. Always verify against the actual PropertyGuru links above.</div>'
+        + '<div style="font-size:0.65rem;color:#e57c23;margin-bottom:6px;font-weight:600">Warning: Perplexity is an AI, not a real scraper. It may hallucinate listings that do not exist on the page. Always verify against the actual PropertyGuru links above.</div>'
         + '<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:6px">Raw text from Perplexity (before Gemini parsing):</div>'
         + '<div class="mr-summary" style="max-height:400px;overflow-y:auto;font-size:0.68rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px">' + rawHtml + '</div>'
         + '</div>';
@@ -2442,35 +2442,35 @@ footer {{
 
   // Step 1: Use Perplexity to fetch raw listing text from PropertyGuru
   async function fetchPropertyGuruRawText(apiKey, scheme, saleUrl, rentUrl, projectSaleUrl, projectRentUrl) {{
-    var query = 'Visit each of the following 4 PropertyGuru Malaysia URLs one by one. For EACH URL, first state how many listing cards are visible on that page, then list ONLY those listings.\n\n';
-    query += 'URL 1: ' + projectSaleUrl + '\n';
-    query += 'URL 2: ' + saleUrl + '\n';
-    query += 'URL 3: ' + projectRentUrl + '\n';
-    query += 'URL 4: ' + rentUrl + '\n\n';
-    query += 'FORMAT YOUR RESPONSE EXACTLY LIKE THIS:\n\n';
-    query += '=== URL 1: ' + projectSaleUrl + ' ===\n';
-    query += 'Total listings visible on this page: [number]\n';
-    query += 'Listing 1: [title], [price], [size], [beds] bed, [PSF], [listing URL], [image URL]\n';
-    query += 'Listing 2: ...\n';
-    query += '(or "No listings found on this page" if the page shows 0 results)\n\n';
-    query += '=== URL 2: ' + saleUrl + ' ===\n';
-    query += 'Total listings visible on this page: [number]\n';
-    query += 'Listing 1: ...\n\n';
-    query += '=== URL 3: ' + projectRentUrl + ' ===\n';
-    query += 'Total listings visible on this page: [number]\n';
-    query += 'Listing 1: ...\n\n';
-    query += '=== URL 4: ' + rentUrl + ' ===\n';
-    query += 'Total listings visible on this page: [number]\n';
-    query += 'Listing 1: ...\n\n';
-    query += 'CRITICAL RULES:\n';
-    query += '- You MUST include the === URL: ... === header before each section\n';
-    query += '- You MUST state the total count of listings visible on each page BEFORE listing them\n';
-    query += '- The number of listings you list MUST MATCH the total count you stated\n';
-    query += '- Do NOT invent, fabricate, or hallucinate listings that are not actually on the page\n';
-    query += '- If a page shows 4 listings, list exactly 4 — not 8, not 10\n';
-    query += '- It is BETTER to list fewer listings than to make up fake ones\n';
-    query += '- Copy ALL text and numbers EXACTLY as they appear on each page\n';
-    query += '- Include the full PropertyGuru listing URL for each listing\n';
+    var query = 'Visit each of the following 4 PropertyGuru Malaysia URLs one by one. For EACH URL, first state how many listing cards are visible on that page, then list ONLY those listings.\\n\\n';
+    query += 'URL 1: ' + projectSaleUrl + '\\n';
+    query += 'URL 2: ' + saleUrl + '\\n';
+    query += 'URL 3: ' + projectRentUrl + '\\n';
+    query += 'URL 4: ' + rentUrl + '\\n\\n';
+    query += 'FORMAT YOUR RESPONSE EXACTLY LIKE THIS:\\n\\n';
+    query += '=== URL 1: ' + projectSaleUrl + ' ===\\n';
+    query += 'Total listings visible on this page: [number]\\n';
+    query += 'Listing 1: [title], [price], [size], [beds] bed, [PSF], [listing URL], [image URL]\\n';
+    query += 'Listing 2: ...\\n';
+    query += '(or "No listings found on this page" if the page shows 0 results)\\n\\n';
+    query += '=== URL 2: ' + saleUrl + ' ===\\n';
+    query += 'Total listings visible on this page: [number]\\n';
+    query += 'Listing 1: ...\\n\\n';
+    query += '=== URL 3: ' + projectRentUrl + ' ===\\n';
+    query += 'Total listings visible on this page: [number]\\n';
+    query += 'Listing 1: ...\\n\\n';
+    query += '=== URL 4: ' + rentUrl + ' ===\\n';
+    query += 'Total listings visible on this page: [number]\\n';
+    query += 'Listing 1: ...\\n\\n';
+    query += 'CRITICAL RULES:\\n';
+    query += '- You MUST include the === URL: ... === header before each section\\n';
+    query += '- You MUST state the total count of listings visible on each page BEFORE listing them\\n';
+    query += '- The number of listings you list MUST MATCH the total count you stated\\n';
+    query += '- Do NOT invent, fabricate, or hallucinate listings that are not actually on the page\\n';
+    query += '- If a page shows 4 listings, list exactly 4 — not 8, not 10\\n';
+    query += '- It is BETTER to list fewer listings than to make up fake ones\\n';
+    query += '- Copy ALL text and numbers EXACTLY as they appear on each page\\n';
+    query += '- Include the full PropertyGuru listing URL for each listing\\n';
     query += '- If a URL returns a 404 or redirect, say "Page not found" instead of guessing';
 
     var resp = await fetch('https://api.perplexity.ai/chat/completions', {{
@@ -2507,24 +2507,24 @@ footer {{
 
   // Step 2: Use Gemini to parse raw text into structured JSON
   async function parseListingsWithGemini(geminiKey, rawText, scheme, location, propType, size) {{
-    var prompt = 'Below is raw text scraped from PropertyGuru Malaysia listing pages for "' + scheme + '" in ' + location + '.\n\n';
-    prompt += 'RAW SCRAPED DATA:\n---\n' + rawText + '\n---\n\n';
-    prompt += 'Parse this data and extract ALL property listings into structured JSON.\n';
-    prompt += 'For each listing, extract:\n';
-    prompt += '- title: listing title/description\n';
-    prompt += '- price: the listed price exactly as shown (e.g. "RM 180,000" or "RM 800/mo")\n';
-    prompt += '- psf: price per sq ft if available\n';
-    prompt += '- size: floor size (e.g. "700 sq ft")\n';
-    prompt += '- beds: number of bedrooms\n';
-    prompt += '- image: the thumbnail image URL if found in the data\n';
-    prompt += '- url: the PropertyGuru listing URL if found in the data\n\n';
-    prompt += 'Return ONLY valid JSON (no markdown, no code fences) in this exact format:\n';
-    prompt += '{{"sale_listings":[{{"title":"...","price":"...","psf":"...","size":"...","beds":"...","image":"...","url":"..."}}],"rental_listings":[{{"title":"...","price":"...","psf":"...","size":"...","beds":"...","image":"...","url":"..."}}],"summary":"Brief 2-3 sentence market overview with price ranges observed"}}\n\n';
-    prompt += 'Rules:\n';
-    prompt += '- Separate listings into sale_listings and rental_listings based on the data\n';
-    prompt += '- Use EXACT prices and sizes from the data, do NOT make up or estimate values\n';
-    prompt += '- If a field is not available, use an empty string ""\n';
-    prompt += '- Include ALL listings found in the data\n';
+    var prompt = 'Below is raw text scraped from PropertyGuru Malaysia listing pages for "' + scheme + '" in ' + location + '.\\n\\n';
+    prompt += 'RAW SCRAPED DATA:\\n---\\n' + rawText + '\\n---\\n\\n';
+    prompt += 'Parse this data and extract ALL property listings into structured JSON.\\n';
+    prompt += 'For each listing, extract:\\n';
+    prompt += '- title: listing title/description\\n';
+    prompt += '- price: the listed price exactly as shown (e.g. "RM 180,000" or "RM 800/mo")\\n';
+    prompt += '- psf: price per sq ft if available\\n';
+    prompt += '- size: floor size (e.g. "700 sq ft")\\n';
+    prompt += '- beds: number of bedrooms\\n';
+    prompt += '- image: the thumbnail image URL if found in the data\\n';
+    prompt += '- url: the PropertyGuru listing URL if found in the data\\n\\n';
+    prompt += 'Return ONLY valid JSON (no markdown, no code fences) in this exact format:\\n';
+    prompt += '{{"sale_listings":[{{"title":"...","price":"...","psf":"...","size":"...","beds":"...","image":"...","url":"..."}}],"rental_listings":[{{"title":"...","price":"...","psf":"...","size":"...","beds":"...","image":"...","url":"..."}}],"summary":"Brief 2-3 sentence market overview with price ranges observed"}}\\n\\n';
+    prompt += 'Rules:\\n';
+    prompt += '- Separate listings into sale_listings and rental_listings based on the data\\n';
+    prompt += '- Use EXACT prices and sizes from the data, do NOT make up or estimate values\\n';
+    prompt += '- If a field is not available, use an empty string ""\\n';
+    prompt += '- Include ALL listings found in the data\\n';
     prompt += '- The summary should describe the price range and number of listings found';
 
     var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=' + geminiKey, {{
@@ -2616,7 +2616,7 @@ footer {{
       if (answer && answer.length > 50) {{
         var fallback = answer
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\n/g, '<br>');
+          .replace(/\\n/g, '<br>');
         fallbackHtml += '<div class="mr-summary" style="margin-top:8px">' + fallback + '</div>';
       }} else {{
         fallbackHtml += '<span class="mr-error" style="display:block;margin-top:8px">' + esc(e.message) + '</span>';
