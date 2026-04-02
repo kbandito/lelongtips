@@ -1466,8 +1466,8 @@ footer {{
   </header>
 
   <div class="stats">
-    <div class="stat s-blue" style="grid-column: 1 / -1">
-      <div class="label">Active Listings</div>
+    <div class="stat s-blue" style="grid-column: 1 / -1; cursor:pointer" onclick="document.querySelector('[data-tab=search]').click()">
+      <div class="label">Active Listings (tap to view all)</div>
       <div class="value blue" id="stat-active">{stats['active_count']:,}</div>
     </div>
   </div>
@@ -1490,7 +1490,7 @@ footer {{
     <button class="tab active" data-tab="dashboard">Dashboard</button>
     <button class="tab" data-tab="new">New <span class="badge-count green">{stats['new_count']}</span></button>
     <button class="tab" data-tab="changes">Changes <span class="badge-count orange">{stats['changed_count']}</span></button>
-    <button class="tab" data-tab="search">Search</button>
+    <button class="tab" data-tab="search">All <span class="badge-count" style="background:var(--accent-light);color:var(--accent)" id="tab-all-count">{stats['active_count']:,}</span></button>
     <button class="tab" data-tab="table">Table</button>
     <button class="tab" data-tab="map">Map</button>
   </div>
@@ -2018,6 +2018,11 @@ footer {{
     view.displayed = renderCards(containerId, items, 0, PAGE_SIZE);
     if (countEl) countEl.textContent = 'Showing ' + Math.min(view.displayed, items.length) + ' of ' + items.length + ' listings';
     if (moreBtn) moreBtn.style.display = view.displayed < items.length ? '' : 'none';
+    // Update tab badge count for All tab
+    if (viewName === 'all') {{
+      var tabBadge = document.getElementById('tab-all-count');
+      if (tabBadge) tabBadge.textContent = items.length.toLocaleString();
+    }}
 
     if (items.length === 0) {{
       document.getElementById(containerId).innerHTML = '<div class="empty"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="#E5E7EB" stroke-width="2"/><path d="M17 20h14M17 26h8" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg><p>No listings found</p></div>';
