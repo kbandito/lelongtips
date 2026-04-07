@@ -24483,5 +24483,130 @@
     "lat": 3.1538487,
     "lng": 101.5896972,
     "q": "postcode"
+  },
+  "Tower C, Residensi Infiniti 3, No. 1, Jalan Seri Wangsa 2, Wangsa Maju, 53300, Kuala Lumpur": {
+    "lat": 3.2004697,
+    "lng": 101.7262868,
+    "q": "postcode"
+  },
+  "Block B, Pangsapuri Berkeley Avenue (A), Jalan Tampin 1/KU1, Off Jalan Goh Hock Huat, 41400 Klang, Selangor": {
+    "lat": 3.0558381,
+    "lng": 101.4436745,
+    "q": "postcode"
+  },
+  "Jalan Dato Dagang 28, Taman Sentosa, 41200 Klang, Selangor": {
+    "lat": 2.9991143,
+    "lng": 101.4736045,
+    "q": "full"
+  },
+  "Pangsapuri Camelia Court, Persiaran Lembah Hijau 4, Bandar Tasik Puteri, 48020 Rawang, Selangor": {
+    "lat": 3.2790015,
+    "lng": 101.5086614,
+    "q": "postcode"
+  },
+  "Tulip, No. 6, Persiaran Metafasa, Seksyen U16, 40160 Shah Alam, Selangor": {
+    "lat": 3.1837222,
+    "lng": 101.5190587,
+    "q": "postcode"
+  },
+  "Block A, Rumah Pangsa Kayu Ara, No. 29, Jalan Teratai PJU 6A, 47400 Petaling Jaya, Selangor": {
+    "lat": 3.131596,
+    "lng": 101.6206074,
+    "q": "postcode"
+  },
+  "Armanee Kondominium, No. 8, Jalan PJU 8/1, Bandar Damansara Perdana, 47820 Petaling Jaya, Selangor": {
+    "lat": 3.1637493,
+    "lng": 101.612631,
+    "q": "postcode"
+  },
+  "Jalan DBI 13, Taman Desa Bukit Indah, 47000 Sungai Buloh, Selangor": {
+    "lat": 3.221068,
+    "lng": 101.5458768,
+    "q": "postcode"
+  },
+  "Residensi Dedaun Mas, No. 411, Jalan Klang Lama, 58000, Kuala Lumpur": {
+    "lat": 3.1003712,
+    "lng": 101.6723562,
+    "q": "postcode"
+  },
+  "Jalan Ritma 2/5, Ritma Perdana, LBS Alam Perdana, 42300 Bandar Puncak Alam, Selangor": {
+    "lat": 3.2347584,
+    "lng": 101.4312889,
+    "q": "postcode"
+  },
+  "Residensi Riverville, No. 6, Jalan Taman Seri Sentosa, 59800, Kuala Lumpur": {
+    "lat": 3.1516964,
+    "lng": 101.6942371,
+    "q": "postcode"
+  },
+  "Block 4, Pangsapuri Kiambang, Taman Putra Perdana, 47130 Puchong, Selangor": {
+    "lat": 2.9480271,
+    "lng": 101.6178897,
+    "q": "postcode"
+  },
+  "Jalan Kebun Nenas 4M/KS8, Bandar Putera 2, 41200 Klang, Selangor": {
+    "lat": 3.0032031,
+    "lng": 101.4404566,
+    "q": "postcode"
+  },
+  "Block 30, Pangsapuri Seroja, No. 2, Jalan Arca U8/80, Taman Bukit Jelutong, Seksyen U8, 40150 Shah Alam, Selangor": {
+    "lat": 3.1152676,
+    "lng": 101.5382176,
+    "q": "postcode"
+  },
+  "Block E, CBD Perdana 3, Jalan Perdana, Cyber 12, 63000 Cyberjaya, Selangor": {
+    "lat": 2.922311,
+    "lng": 101.6481782,
+    "q": "postcode"
+  },
+  "Block 2, Aspire Residence, Persiaran Aspirasi, 63000 Cyberjaya, Selangor": {
+    "lat": 2.922311,
+    "lng": 101.6481782,
+    "q": "postcode"
+  },
+  "Lorong Setiapuspa 2, Medan Damansara, 50490, Kuala Lumpur": {
+    "lat": 3.1407094,
+    "lng": 101.6563933,
+    "q": "full"
+  },
+  "Tower C, Pacific Towers (Capella Residenz @ Pacific Star), Jalan 13/6, Seksyen 13, 46200 Petaling Jaya, Selangor": {
+    "lat": 3.108756,
+    "lng": 101.6409098,
+    "q": "postcode"
+  },
+  "Blok F, Mentari Court, Jalan PJS 8/9, Taman Seri Mentari, 46150 Petaling Jaya, Selangor": {
+    "lat": 3.0739185,
+    "lng": 101.6156034,
+    "q": "postcode"
+  },
+  "Pangsapuri Maya (Maya Bay Residences), Jalan Cove Sentral 1, Bandar Gamuda Cove, 42700 Banting, Selangor": {
+    "lat": 2.8303029,
+    "lng": 101.5112133,
+    "q": "postcode"
+  },
+  "Residensi Platinum Teratai, No. 2, Jalan Kuraman, Setapak, 53000, Kuala Lumpur": {
+    "lat": 3.1986774,
+    "lng": 101.7087154,
+    "q": "postcode"
+  },
+  "Sri Lavender Apartments, Jalan Sepakat Indah 2/2, Taman Sepakat Indah II, Sungai Chua, 43000 Kajang, Selangor": {
+    "lat": 2.9908657,
+    "lng": 101.7829793,
+    "q": "postcode"
+  },
+  "Blok J, Mutiara Ville, Cyber 11, 63000 Cyberjaya, Selangor": {
+    "lat": 2.922311,
+    "lng": 101.6481782,
+    "q": "postcode"
+  },
+  "Pertama Residency, No. 16, Jalan 3/92B, Taman Kobena, 56100, Kuala Lumpur": {
+    "lat": 3.1066621,
+    "lng": 101.7423871,
+    "q": "postcode"
+  },
+  "Block C, Rumah Pangsa Seri Pulai, Jalan Balakong Jaya 26, Taman Balakong Jaya, 43200 Seri Kembangan, Selangor": {
+    "lat": 2.9918365,
+    "lng": 101.720677,
+    "q": "postcode"
   }
 }
