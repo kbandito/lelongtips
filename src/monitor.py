@@ -172,7 +172,7 @@ class FixedFullScrapingPropertyMonitor:
         self.logged_in = False
 
         # Rate limiting settings
-        self.request_delay = 2  # seconds between requests
+        self.request_delay = 0.5  # seconds between requests
         self.max_retries = 3
         self.timeout = 30
 
@@ -1083,20 +1083,10 @@ class FixedFullScrapingPropertyMonitor:
                     response.text, page_num
                 )
 
-                # Fetch size from detail page for properties missing it
-                # Budget: skip if we've already spent too long on detail fetches
-                elapsed_total = (
-                    datetime.now()
-                    - datetime.fromisoformat(scraping_stats["start_time"])
-                ).total_seconds()
-                if elapsed_total < 900:  # only if under 15 min total
-                    for prop_data in page_properties:
-                        if prop_data.get("size") == "Size not specified":
-                            detail_url = prop_data.get("listing_url")
-                            if detail_url and "/property/" in detail_url:
-                                size = self.fetch_size_from_detail(detail_url)
-                                if size:
-                                    prop_data["size"] = size
+                # Detail page size fetching is deferred — it was the main
+                # bottleneck causing the scraper to only cover ~42% of listings.
+                # Size is available from search cards for most listings; the rest
+                # can be backfilled in a separate optional step.
 
                 for prop_data in page_properties:
                     property_id = self.create_property_id(
@@ -1143,7 +1133,7 @@ class FixedFullScrapingPropertyMonitor:
                     datetime.now()
                     - datetime.fromisoformat(scraping_stats["start_time"])
                 ).total_seconds()
-                if elapsed_time > 1200:
+                if elapsed_time > 2400:
                     print(f"⏰ Time limit approaching, stopping at page {page_num}")
                     scraping_stats["stopped_early"] = True
                     scraping_stats["stop_reason"] = "Time limit"
@@ -1553,11 +1543,19 @@ class FixedFullScrapingPropertyMonitor:
             msg = f"📊 <b>LELONG SCAN</b> — {esc(now.strftime('%d %b %Y'))}\n\n"
 
         # Headline stats
+        coverage = scraping_stats.get("coverage_percentage", 0)
+        pages_done = scraping_stats.get("pages_completed", 0)
+        pages_total = scraping_stats.get("total_pages", 0)
         msg += (
             f"<b>{total_tracked:,}</b> tracked · "
             f"<b>{len(new_listings)}</b> new · "
             f"<b>{len(changed_properties)}</b> changed\n"
+            f"📄 {pages_done}/{pages_total} pages · "
+            f"<b>{total_on_site:,}</b> on site · "
+            f"{coverage:.0f}% coverage\n"
         )
+        if coverage < 95:
+            msg += f"⚠️ <i>Incomplete scan — only {coverage:.0f}% covered</i>\n"
 
         # New listings (top 5)
         if new_listings:
