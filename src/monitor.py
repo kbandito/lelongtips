@@ -1143,7 +1143,7 @@ class FixedFullScrapingPropertyMonitor:
                     datetime.now()
                     - datetime.fromisoformat(scraping_stats["start_time"])
                 ).total_seconds()
-                if elapsed_time > 1200:
+                if elapsed_time > 3600:
                     print(f"⏰ Time limit approaching, stopping at page {page_num}")
                     scraping_stats["stopped_early"] = True
                     scraping_stats["stop_reason"] = "Time limit"
