@@ -42,7 +42,7 @@ Titles:
 {numbered}"""
 
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemma-4-31b-it",
         contents=prompt,
     )
 
