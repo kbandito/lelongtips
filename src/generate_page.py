@@ -2532,7 +2532,7 @@ footer {{
     prompt += '- Include ALL listings found in the data\\n';
     prompt += '- The summary should describe the price range and number of listings found';
 
-    var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=' + geminiKey, {{
+    var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent?key=' + geminiKey, {{
       method: 'POST',
       headers: {{ 'Content-Type': 'application/json' }},
       body: JSON.stringify({{
