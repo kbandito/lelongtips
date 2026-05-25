@@ -41268,5 +41268,80 @@
     "lat": 2.9908949,
     "lng": 101.7831111,
     "q": "postcode"
+  },
+  "Block A, The Tamarind, Jalan Sentul Indah, Off Jalan Sentul, 51100, Kuala Lumpur": {
+    "lat": 3.1917145,
+    "lng": 101.6878127,
+    "q": "postcode"
+  },
+  "Block D, Kompleks Suria Kinrara, Persiaran Kinrara Seksyen 3, 47190, Puchong, Selangor": {
+    "lat": 3.3314558,
+    "lng": 101.2513058,
+    "q": "postcode"
+  },
+  "Block C, Metropolitan Square, No. 2, Jalan PJU 8/1, Bandar Damansara Perdana, 47820 Petaling Jaya, Selangor": {
+    "lat": 3.1625178,
+    "lng": 101.6125279,
+    "q": "postcode"
+  },
+  "Seri Kuchai (Arte @ Kuchai Lama), Jalan Kuchai Maju 12, 58200, Kuala Lumpur": {
+    "lat": 3.0798856,
+    "lng": 101.6724477,
+    "q": "postcode"
+  },
+  "Pangsapuri Bayu Sentul, Jalan Dato Senu 3, Taman Dato Senu, 51000, Kuala Lumpur": {
+    "lat": 3.1845647,
+    "lng": 101.6932494,
+    "q": "postcode"
+  },
+  "Residensi Curvo, No. 1, Jalan Arena 2, Setapak, 53200, Kuala Lumpur": {
+    "lat": 3.1897077,
+    "lng": 101.7119024,
+    "q": "postcode"
+  },
+  "Block D Dahlia, Pelangi Damansara, PJU 6, Persiaran Surian, 47800 Petaling Jaya, Selangor": {
+    "lat": 3.1514877,
+    "lng": 101.6104514,
+    "q": "postcode"
+  },
+  "Jalan Semilang 9, Taman Seri Putera, 42700 Banting, Selangor": {
+    "lat": 2.8344557,
+    "lng": 101.5139038,
+    "q": "postcode"
+  },
+  "Tower A, Residensi M Arisa Pelangi (M Arisa), No. 6, Jalan Sentul Pelangi, 51000, Kuala Lumpur": {
+    "lat": 3.1845647,
+    "lng": 101.6932494,
+    "q": "postcode"
+  },
+  "Trefoil @ Setia City, Jalan Setia Dagang AH U13/AH, Setia Alam, Seksyen U13, 40170, Shah Alam, Selangor": {
+    "lat": 3.1180261,
+    "lng": 101.4693789,
+    "q": "postcode"
+  },
+  "Jalan Akasia 1/6, Taman Akasia, 43500 Semenyih, Selangor": {
+    "lat": 2.9321342,
+    "lng": 101.8589286,
+    "q": "postcode"
+  },
+  "Jalan BP 12, Bukit Permata, 68100 Batu Caves, Selangor": {
+    "lat": 3.2348164,
+    "lng": 101.6756063,
+    "q": "postcode"
+  },
+  "Jalan Kesuma 6/1J, Bandar Tasik Kesuma, Beranang, Selangor": {
+    "lat": 3.2083304,
+    "lng": 101.304146,
+    "q": "state"
+  },
+  "Block A, Maya Ara Residences, Jalan PJU 1A/38, Ara Damansara, 47301 Petaling Jaya, Selangor": {
+    "lat": 3.1122187,
+    "lng": 101.5948427,
+    "q": "postcode"
+  },
+  "Jalan Sinaran 4, Taman Sinaran, 43000 Kajang, Selangor": {
+    "lat": 2.9908524,
+    "lng": 101.7831476,
+    "q": "postcode"
   }
 }
