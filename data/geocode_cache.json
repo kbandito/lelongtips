@@ -51633,5 +51633,15 @@
     "lat": 3.1622311,
     "lng": 101.6123997,
     "q": "postcode"
+  },
+  "14th Floor, Pangsapuri Kenanga, Taman Gombak Permai, 68100 Batu Caves, Selangor": {
+    "lat": 3.23498,
+    "lng": 101.6760392,
+    "q": "postcode"
+  },
+  "Block C, De Centrum Residences, Jalan Ikram-uniten, Taman Unipark Suria 43000 Kajang, Selangor": {
+    "lat": 2.9908793,
+    "lng": 101.7829381,
+    "q": "postcode"
   }
 }

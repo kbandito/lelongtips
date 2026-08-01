@@ -169664,5 +169664,898 @@
         "change_date": "2026-07-31T14:29:20.374008"
       }
     ]
+  },
+  {
+    "scan_date": "2026-08-01T14:17:13.577794",
+    "new_listings_count": 2,
+    "changed_properties_count": 51,
+    "new_listing_ids": [
+      "duplex_small_office_versatile_office_sovo_klselangor_size_not_specified_block_c_de_centrum_residences_jalan_ikramuniten_taman_unipark_suria_43000_kaja",
+      "2_1_bedroom_kenanga_apartment_10_mins_to_batu_caves_ktm_station_klselangor_size_not_specified_14th_floor_pangsapuri_kenanga_taman_gombak_permai_68100_"
+    ],
+    "changes": [
+      {
+        "property_id": "apartment_klselangor_size_not_specified_block_b_mentari_court_jalan_pjs_89_taman_seri_mentari_46150_petaling_jaya_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM185,000",
+        "new_value": "RM210,600",
+        "change_date": "2026-08-01T13:39:17.001234"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_block_b_mentari_court_jalan_pjs_89_taman_seri_mentari_46150_petaling_jaya_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "3 Aug 2026 (Mon)",
+        "new_value": "17 Aug 2026 (Mon)",
+        "change_date": "2026-08-01T13:39:17.001234"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_bsp_21_persiaran_saujana_putra_utama_bandar_saujana_putra_42610_jenjarom_selangor",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM229,500",
+        "new_value": "RM230,000",
+        "change_date": "2026-08-01T13:55:59.032035"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_bsp_21_persiaran_saujana_putra_utama_bandar_saujana_putra_42610_jenjarom_selangor",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "28 Jul 2026 (Tue)",
+        "new_value": "17 Mar 2026 (Tue)",
+        "change_date": "2026-08-01T13:55:59.032035"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_tower_2_bayu_residensi_seri_temenggung_jalan_temenggung_68100_batu_caves_selangor",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM148,000",
+        "new_value": "RM300,000",
+        "change_date": "2026-08-01T13:50:47.118918"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_tower_2_bayu_residensi_seri_temenggung_jalan_temenggung_68100_batu_caves_selangor",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "28 Jul 2026 (Tue)",
+        "new_value": "5 Aug 2026 (Wed)",
+        "change_date": "2026-08-01T13:50:47.118918"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_klselangor_size_not_specified_jalan_up_37_taman_ukay_perdana_68000_ampang_selangor",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,350,000",
+        "new_value": "RM1,600,000",
+        "change_date": "2026-08-01T14:14:17.518442"
+      },
+      {
+        "property_id": "25_storey_semi_detached_house_klselangor_size_not_specified_jalan_up_37_taman_ukay_perdana_68000_ampang_selangor",
+        "title": "2.5 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "6 Aug 2026 (Thu)",
+        "new_value": "9 Jul 2026 (Thu)",
+        "change_date": "2026-08-01T14:14:17.518442"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_pangsapuri_suria_permai_persiaran_permai_sentosa_pusat_bandar_putra_permai_43300_seri_kembangan_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM226,800",
+        "new_value": "RM240,000",
+        "change_date": "2026-08-01T13:48:45.723976"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_pangsapuri_suria_permai_persiaran_permai_sentosa_pusat_bandar_putra_permai_43300_seri_kembangan_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Aug 2026 (Wed)",
+        "new_value": "10 Aug 2026 (Mon)",
+        "change_date": "2026-08-01T13:48:45.723976"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_residensi_skymeridien_no_1_jalan_148a_sentul_timur_51000_kuala_lumpur",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM591,300",
+        "new_value": "RM550,000",
+        "change_date": "2026-08-01T13:58:13.790936"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_residensi_skymeridien_no_1_jalan_148a_sentul_timur_51000_kuala_lumpur",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "22 Apr 2026 (Wed)",
+        "new_value": "15 May 2024 (Wed)",
+        "change_date": "2026-08-01T13:58:13.790936"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_abadi_indah_kondo_jalan_3109c_taman_abadi_indah_58100_kuala_lumpur",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "6 Aug 2026 (Thu)",
+        "new_value": "10 Sep 2026 (Thu)",
+        "change_date": "2026-08-01T13:50:18.421662"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_klselangor_size_not_specified_vila_laman_cahaya_jalan_cahaya_3_off_jalan_datuk_sulaiman_60000_kuala_lumpur",
+        "title": "3 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM2,100,000",
+        "new_value": "RM2,500,000",
+        "change_date": "2026-08-01T13:50:06.768769"
+      },
+      {
+        "property_id": "3_storey_semi_detached_house_klselangor_size_not_specified_vila_laman_cahaya_jalan_cahaya_3_off_jalan_datuk_sulaiman_60000_kuala_lumpur",
+        "title": "3 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "8 Sep 2026 (Tue)",
+        "new_value": "19 Dec 2026 (Sat)",
+        "change_date": "2026-08-01T13:50:06.768769"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_vista_saujana_jalan_wangsa_26_taman_wangsa_permai_52200_kepong_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM270,000",
+        "new_value": "RM290,000",
+        "change_date": "2026-08-01T14:13:17.085453"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_vista_saujana_jalan_wangsa_26_taman_wangsa_permai_52200_kepong_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "17 Sep 2026 (Thu)",
+        "new_value": "23 Jul 2026 (Thu)",
+        "change_date": "2026-08-01T14:13:17.085453"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_residensi_m_luna_no_888_jalan_lingkaran_tengah_2_mrr2_52100_kepong_kuala_lumpur",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM311,900",
+        "new_value": "RM500,000",
+        "change_date": "2026-08-01T13:52:10.961019"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_residensi_m_luna_no_888_jalan_lingkaran_tengah_2_mrr2_52100_kepong_kuala_lumpur",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Aug 2026 (Wed)",
+        "new_value": "11 Aug 2026 (Tue)",
+        "change_date": "2026-08-01T13:52:10.961019"
+      },
+      {
+        "property_id": "service_apartment_selangor_893_sqft_sensory_residence_jalan_southville_1_southville_city_43800_dengkil_selangor",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM320,000",
+        "new_value": "RM233,280",
+        "change_date": "2026-08-01T14:16:35.683048"
+      },
+      {
+        "property_id": "service_apartment_selangor_893_sqft_sensory_residence_jalan_southville_1_southville_city_43800_dengkil_selangor",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Aug 2026 (Wed)",
+        "new_value": "28 Jul 2026 (Tue)",
+        "change_date": "2026-08-01T14:16:35.683048"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_block_d_kompleks_suria_kinrara_persiaran_kinrara_seksyen_3_47190_puchong_selangor",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM124,800",
+        "new_value": "RM250,000",
+        "change_date": "2026-08-01T14:14:54.992845"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_block_d_kompleks_suria_kinrara_persiaran_kinrara_seksyen_3_47190_puchong_selangor",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Aug 2026 (Wed)",
+        "new_value": "29 Jul 2026 (Wed)",
+        "change_date": "2026-08-01T14:14:54.992845"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_block_a_residensi_zamrud_jalan_zamrud_utama_sungai_tangkas_43000_kajang_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM320,000",
+        "new_value": "RM194,862",
+        "change_date": "2026-08-01T14:15:55.459025"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_block_a_residensi_zamrud_jalan_zamrud_utama_sungai_tangkas_43000_kajang_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "6 Aug 2026 (Thu)",
+        "new_value": "27 Jul 2026 (Mon)",
+        "change_date": "2026-08-01T14:15:55.459025"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_sky_park_tower_1_jalan_teknokrat_1_cyber_3_63000_cyberjaya_selangor",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM250,000",
+        "new_value": "RM243,000",
+        "change_date": "2026-08-01T13:55:41.505608"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_sky_park_tower_1_jalan_teknokrat_1_cyber_3_63000_cyberjaya_selangor",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "12 Aug 2026 (Wed)",
+        "new_value": "28 Jul 2026 (Tue)",
+        "change_date": "2026-08-01T13:55:41.505608"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_residensi_selangorku_begonia_jalan_eco_majestic_3a5_eco_majestic_43500_semenyih_selangor",
+        "title": "[4 min to Econsave Mart Eco Majestic] Apartment [Short drive to Lotus's Semenyih ]",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM189,600",
+        "new_value": "RM183,800",
+        "change_date": "2026-08-01T13:53:41.570976"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_pangsapuri_akasia_residensi_jalan_kenanga_18_taman_salak_perdana_bandar_baru_salak_tinggi_43900_sepang_selango",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM210,000",
+        "new_value": "RM227,000",
+        "change_date": "2026-08-01T13:55:50.126793"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_pangsapuri_akasia_residensi_jalan_kenanga_18_taman_salak_perdana_bandar_baru_salak_tinggi_43900_sepang_selango",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "28 Apr 2026 (Tue)",
+        "new_value": "29 Jun 2026 (Mon)",
+        "change_date": "2026-08-01T13:55:50.126793"
+      },
+      {
+        "property_id": "condominium_klselangor_size_not_specified_block_c_residensi_legendview_jalan_setia_jaya_taman_setia_jaya_48000_rawang_selangor",
+        "title": "Condominium",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM420,000",
+        "new_value": "RM370,000",
+        "change_date": "2026-08-01T14:07:44.608395"
+      },
+      {
+        "property_id": "condominium_klselangor_size_not_specified_block_c_residensi_legendview_jalan_setia_jaya_taman_setia_jaya_48000_rawang_selangor",
+        "title": "Condominium",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "26 Nov 2025 (Wed)",
+        "new_value": "16 Feb 2026 (Mon)",
+        "change_date": "2026-08-01T14:07:44.608395"
+      },
+      {
+        "property_id": "duplex_soho_klselangor_size_not_specified_wisma_infinitum_no_18_jalan_dewan_sultan_sulaiman_50300_kuala_lumpur",
+        "title": "Duplex SOHO",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM689,000",
+        "new_value": "RM576,000",
+        "change_date": "2026-08-01T14:16:48.011383"
+      },
+      {
+        "property_id": "office_suite_klselangor_size_not_specified_tower_a_mercu_summer_suites_no_8_jalan_cendana_off_jalan_sultan_ismail_50250_kuala_lumpur",
+        "title": "Office Suite",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM612,000",
+        "new_value": "RM720,000",
+        "change_date": "2026-08-01T13:56:51.491226"
+      },
+      {
+        "property_id": "office_suite_klselangor_size_not_specified_tower_a_mercu_summer_suites_no_8_jalan_cendana_off_jalan_sultan_ismail_50250_kuala_lumpur",
+        "title": "Office Suite",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "2 Apr 2026 (Thu)",
+        "new_value": "22 Apr 2026 (Wed)",
+        "change_date": "2026-08-01T13:56:51.491226"
+      },
+      {
+        "property_id": "condominium_klselangor_size_not_specified_hartamas_regency_2_no_2_jalan_duta_hartamas_sri_hartamas_50480_kuala_lumpur",
+        "title": "Condominium",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM790,000",
+        "new_value": "RM1,350,000",
+        "change_date": "2026-08-01T13:56:48.457391"
+      },
+      {
+        "property_id": "condominium_klselangor_size_not_specified_hartamas_regency_2_no_2_jalan_duta_hartamas_sri_hartamas_50480_kuala_lumpur",
+        "title": "Condominium",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "6 Feb 2024 (Tue)",
+        "new_value": "20 Apr 2026 (Mon)",
+        "change_date": "2026-08-01T13:56:48.457391"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_j1_taman_melawati_53100_kuala_lumpur",
+        "title": "2 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM387,000",
+        "new_value": "RM450,000",
+        "change_date": "2026-08-01T14:05:19.532321"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_j1_taman_melawati_53100_kuala_lumpur",
+        "title": "2 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Apr 2026 (Mon)",
+        "new_value": "25 Nov 2025 (Tue)",
+        "change_date": "2026-08-01T14:05:19.532321"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_pangsapuri_alam_budiman_persiaran_pulau_lumut_alam_budiman_seksyen_u10_40170_shah_alam_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "26 Mar 2026 (Thu)",
+        "new_value": "27 Nov 2025 (Thu)",
+        "change_date": "2026-08-01T14:05:48.149478"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_ceri_69_bandar_hillpark_42300_bandar_puncak_alam_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM522,000",
+        "new_value": "RM500,000",
+        "change_date": "2026-08-01T14:07:47.593226"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_ceri_69_bandar_hillpark_42300_bandar_puncak_alam_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "6 May 2026 (Wed)",
+        "new_value": "17 Mar 2026 (Tue)",
+        "change_date": "2026-08-01T14:07:47.593226"
+      },
+      {
+        "property_id": "25_storey_terrace_house_klselangor_size_not_specified_jalan_abadi_112_abadi_heights_47120_puchong_selangor",
+        "title": "2.5 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM900,000",
+        "new_value": "RM880,000",
+        "change_date": "2026-08-01T14:06:46.029531"
+      },
+      {
+        "property_id": "25_storey_terrace_house_klselangor_size_not_specified_jalan_abadi_112_abadi_heights_47120_puchong_selangor",
+        "title": "2.5 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "20 Apr 2026 (Mon)",
+        "new_value": "15 Jan 2026 (Thu)",
+        "change_date": "2026-08-01T14:06:46.029531"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_klselangor_size_not_specified_jalan_seri_putra_25b_bandar_seri_putra_43000_kajang_selangor",
+        "title": "2 Storey Semi Detached House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM747,000",
+        "new_value": "RM688,500",
+        "change_date": "2026-08-01T14:01:26.401890"
+      },
+      {
+        "property_id": "2_storey_semi_detached_house_klselangor_size_not_specified_jalan_seri_putra_25b_bandar_seri_putra_43000_kajang_selangor",
+        "title": "2 Storey Semi Detached House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "23 Apr 2026 (Thu)",
+        "new_value": "15 Jan 2025 (Wed)",
+        "change_date": "2026-08-01T14:01:26.401890"
+      },
+      {
+        "property_id": "shop_unit_klselangor_size_not_specified_kenanga_wholesale_city_jalan_gelugor_55200_kuala_lumpur",
+        "title": "Shop Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,080,000",
+        "new_value": "RM688,500",
+        "change_date": "2026-08-01T14:11:04.176487"
+      },
+      {
+        "property_id": "shop_unit_klselangor_size_not_specified_kenanga_wholesale_city_jalan_gelugor_55200_kuala_lumpur",
+        "title": "Shop Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "7 May 2026 (Thu)",
+        "new_value": "14 May 2026 (Thu)",
+        "change_date": "2026-08-01T14:11:04.176487"
+      },
+      {
+        "property_id": "condominium_klselangor_size_not_specified_akoya_residence_jalan_mutiara_3_mutiara_heights_43000_kajang_selangor",
+        "title": "Condominium",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM342,000",
+        "new_value": "RM340,200",
+        "change_date": "2026-08-01T14:10:37.995839"
+      },
+      {
+        "property_id": "condominium_klselangor_size_not_specified_akoya_residence_jalan_mutiara_3_mutiara_heights_43000_kajang_selangor",
+        "title": "Condominium",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "28 Jul 2026 (Tue)",
+        "new_value": "6 May 2026 (Wed)",
+        "change_date": "2026-08-01T14:10:37.995839"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_5a3_btp_5_bandar_tasik_puteri_48020_rawang_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM369,000",
+        "new_value": "RM580,000",
+        "change_date": "2026-08-01T14:16:07.001874"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_5a3_btp_5_bandar_tasik_puteri_48020_rawang_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "29 Jul 2026 (Wed)",
+        "new_value": "28 Jul 2026 (Tue)",
+        "change_date": "2026-08-01T14:16:07.001874"
+      },
+      {
+        "property_id": "soho_klselangor_size_not_specified_dk_impian_no_3_jalan_uranus_u5125a_subang_pelangi_seksyen_u5_40150_shah_alam_selangor",
+        "title": "SOHO",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM320,000",
+        "new_value": "RM178,200",
+        "change_date": "2026-08-01T14:05:22.427115"
+      },
+      {
+        "property_id": "soho_klselangor_size_not_specified_dk_impian_no_3_jalan_uranus_u5125a_subang_pelangi_seksyen_u5_40150_shah_alam_selangor",
+        "title": "SOHO",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "29 Jun 2026 (Mon)",
+        "new_value": "28 Oct 2025 (Tue)",
+        "change_date": "2026-08-01T14:05:22.427115"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_pangsapuri_bukit_kuda_jalan_perak_41300_klang_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM250,000",
+        "new_value": "RM225,000",
+        "change_date": "2026-08-01T14:03:43.479794"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_pangsapuri_bukit_kuda_jalan_perak_41300_klang_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "19 Feb 2024 (Mon)",
+        "new_value": "7 Aug 2025 (Thu)",
+        "change_date": "2026-08-01T14:03:43.479794"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_jalan_murni_21a_taman_langat_murni_bukit_changgang_42700_banting_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM210,000",
+        "new_value": "RM88,574",
+        "change_date": "2026-08-01T14:15:58.279445"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_jalan_murni_21a_taman_langat_murni_bukit_changgang_42700_banting_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "25 May 2024 (Sat)",
+        "new_value": "27 Jul 2026 (Mon)",
+        "change_date": "2026-08-01T14:15:58.279445"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_pangsapuri_ruby_jalan_matahari_u5117_seksyen_u5_40150_shah_alam_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM265,000",
+        "new_value": "RM279,000",
+        "change_date": "2026-08-01T14:06:02.742703"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_pangsapuri_ruby_jalan_matahari_u5117_seksyen_u5_40150_shah_alam_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Jun 2024 (Thu)",
+        "new_value": "4 Dec 2025 (Thu)",
+        "change_date": "2026-08-01T14:06:02.742703"
+      },
+      {
+        "property_id": "suitable_for_investment_located_in_paragon_valley_shop_office_units_various_schools_located_behind_this_area_surrounded_by_various_schools_residential",
+        "title": "[Facing main road - Kepong-Selayang Highway] Shop / Office Units @ Paragon Valley, Suitable for Investment [Surrounded by various schools, residential and industrial areas]",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM620,000",
+        "new_value": "RM1,700,000",
+        "change_date": "2026-08-01T14:00:36.536150"
+      },
+      {
+        "property_id": "suitable_for_investment_located_in_paragon_valley_shop_office_units_various_schools_located_behind_this_area_surrounded_by_various_schools_residential",
+        "title": "[Facing main road - Kepong-Selayang Highway] Shop / Office Units @ Paragon Valley, Suitable for Investment [Surrounded by various schools, residential and industrial areas]",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "13 Jun 2024 (Thu)",
+        "new_value": "26 Sep 2024 (Thu)",
+        "change_date": "2026-08-01T14:00:36.536150"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_hilir_5_taman_sri_angsana_hilir_55100_kuala_lumpur",
+        "title": "2 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM700,000",
+        "new_value": "RM607,500",
+        "change_date": "2026-08-01T14:03:20.379259"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_hilir_5_taman_sri_angsana_hilir_55100_kuala_lumpur",
+        "title": "2 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Aug 2024 (Tue)",
+        "new_value": "10 Jul 2025 (Thu)",
+        "change_date": "2026-08-01T14:03:20.379259"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_residensi_inspirasi_setapak_no_226_jalan_gombak_53000_kuala_lumpur",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM300,000",
+        "new_value": "RM255,150",
+        "change_date": "2026-08-01T14:03:57.719591"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_residensi_inspirasi_setapak_no_226_jalan_gombak_53000_kuala_lumpur",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "29 Oct 2024 (Tue)",
+        "new_value": "29 Jul 2025 (Tue)",
+        "change_date": "2026-08-01T14:03:57.719591"
+      },
+      {
+        "property_id": "puchong_permata_apartment_klselangor_size_not_specified_pangsapuri_puchong_permata_jalan_permai_4_taman_puchong_permai_47150_puchong_selangor",
+        "title": "Puchong Permata Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM260,000",
+        "new_value": "RM207,000",
+        "change_date": "2026-08-01T14:06:34.587609"
+      },
+      {
+        "property_id": "puchong_permata_apartment_klselangor_size_not_specified_pangsapuri_puchong_permata_jalan_permai_4_taman_puchong_permai_47150_puchong_selangor",
+        "title": "Puchong Permata Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "27 Nov 2024 (Wed)",
+        "new_value": "22 Jan 2026 (Thu)",
+        "change_date": "2026-08-01T14:06:34.587609"
+      },
+      {
+        "property_id": "1_storey_terrace_house_klselangor_size_not_specified_jalan_da_31_taman_dataran_abadi_43900_sepang_selangor",
+        "title": "1 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM243,000",
+        "new_value": "RM207,360",
+        "change_date": "2026-08-01T14:06:48.879632"
+      },
+      {
+        "property_id": "1_storey_terrace_house_klselangor_size_not_specified_jalan_da_31_taman_dataran_abadi_43900_sepang_selangor",
+        "title": "1 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "21 Nov 2024 (Thu)",
+        "new_value": "9 Feb 2026 (Mon)",
+        "change_date": "2026-08-01T14:06:48.879632"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_jalan_emas_33_bandar_sungai_emas_sungai_manggis_42700_banting_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM140,000",
+        "new_value": "RM157,500",
+        "change_date": "2026-08-01T14:07:29.841884"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_jalan_emas_33_bandar_sungai_emas_sungai_manggis_42700_banting_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "5 Feb 2025 (Wed)",
+        "new_value": "10 Mar 2026 (Tue)",
+        "change_date": "2026-08-01T14:07:29.841884"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_sr_21a_taman_saujana_rawang_48000_rawang_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM262,440",
+        "new_value": "RM336,000",
+        "change_date": "2026-08-01T14:03:37.619043"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_sr_21a_taman_saujana_rawang_48000_rawang_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "9 Dec 2025 (Tue)",
+        "new_value": "25 Jun 2025 (Wed)",
+        "change_date": "2026-08-01T14:03:37.619043"
+      },
+      {
+        "property_id": "3_storey_terrace_house_klselangor_size_not_specified_jalan_se_3_sunway_eastwood_taman_equine_bandar_putra_permai_43300_seri_kembangan_selangor",
+        "title": "3 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM1,200,000",
+        "new_value": "RM940,000",
+        "change_date": "2026-08-01T14:07:09.742732"
+      },
+      {
+        "property_id": "3_storey_terrace_house_klselangor_size_not_specified_jalan_se_3_sunway_eastwood_taman_equine_bandar_putra_permai_43300_seri_kembangan_selangor",
+        "title": "3 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "23 Dec 2024 (Mon)",
+        "new_value": "27 Jan 2026 (Tue)",
+        "change_date": "2026-08-01T14:07:09.742732"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_pangsapuri_koi_kinrara_jalan_pipit_bukit_tandang_47190_puchong_selangor",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM477,000",
+        "new_value": "RM450,000",
+        "change_date": "2026-08-01T14:06:25.914198"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_pangsapuri_koi_kinrara_jalan_pipit_bukit_tandang_47190_puchong_selangor",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "23 Jan 2025 (Thu)",
+        "new_value": "18 Dec 2025 (Thu)",
+        "change_date": "2026-08-01T14:06:25.914198"
+      },
+      {
+        "property_id": "3_storey_terrace_house_klselangor_size_not_specified_jalan_bangi_vista_1_bangi_vista_43000_kajang_selangor",
+        "title": "3 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM437,400",
+        "new_value": "RM648,000",
+        "change_date": "2026-08-01T14:07:35.595653"
+      },
+      {
+        "property_id": "3_storey_terrace_house_klselangor_size_not_specified_jalan_bangi_vista_1_bangi_vista_43000_kajang_selangor",
+        "title": "3 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "22 Apr 2025 (Tue)",
+        "new_value": "16 Mar 2026 (Mon)",
+        "change_date": "2026-08-01T14:07:35.595653"
+      },
+      {
+        "property_id": "3_storey_shop_office_klselangor_size_not_specified_jalan_airport_city_2_airport_business_centre_kota_warisan_43900_sepang_selangor",
+        "title": "3 Storey Shop Office",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM944,784",
+        "new_value": "RM568,800",
+        "change_date": "2026-08-01T14:05:22.460863"
+      },
+      {
+        "property_id": "3_storey_shop_office_klselangor_size_not_specified_jalan_airport_city_2_airport_business_centre_kota_warisan_43900_sepang_selangor",
+        "title": "3 Storey Shop Office",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "30 Apr 2025 (Wed)",
+        "new_value": "13 Nov 2025 (Thu)",
+        "change_date": "2026-08-01T14:05:22.460863"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_sri_haneco_38_kawasan_perindustrian_sri_haneco_43500_semenyih_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM253,911",
+        "new_value": "RM252,600",
+        "change_date": "2026-08-01T14:07:32.656123"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_sri_haneco_38_kawasan_perindustrian_sri_haneco_43500_semenyih_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "20 May 2025 (Tue)",
+        "new_value": "10 Mar 2026 (Tue)",
+        "change_date": "2026-08-01T14:07:32.656123"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_block_2_aspire_residence_jalan_aspire_1_cyber_10_63000_cyberjaya_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM320,000",
+        "new_value": "RM330,000",
+        "change_date": "2026-08-01T14:04:21.190243"
+      },
+      {
+        "property_id": "apartment_klselangor_size_not_specified_block_2_aspire_residence_jalan_aspire_1_cyber_10_63000_cyberjaya_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "28 May 2025 (Wed)",
+        "new_value": "27 Aug 2025 (Wed)",
+        "change_date": "2026-08-01T14:04:21.190243"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_residensi_era_novum_no_12a_jalan_kerinchi_kiri_2_59200_kuala_lumpur",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM830,000",
+        "new_value": "RM650,000",
+        "change_date": "2026-08-01T14:10:00.114749"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_residensi_era_novum_no_12a_jalan_kerinchi_kiri_2_59200_kuala_lumpur",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "20 Aug 2025 (Wed)",
+        "new_value": "22 Apr 2026 (Wed)",
+        "change_date": "2026-08-01T14:10:00.114749"
+      },
+      {
+        "property_id": "office_unit_klselangor_size_not_specified_block_a_kompleks_kelana_centre_point_no_3_jalan_ss_719_47301_petaling_jaya_selangor",
+        "title": "Office Unit",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM409,500",
+        "new_value": "RM272,286",
+        "change_date": "2026-08-01T14:09:25.758826"
+      },
+      {
+        "property_id": "office_unit_klselangor_size_not_specified_block_a_kompleks_kelana_centre_point_no_3_jalan_ss_719_47301_petaling_jaya_selangor",
+        "title": "Office Unit",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "11 Sep 2025 (Thu)",
+        "new_value": "30 Apr 2026 (Thu)",
+        "change_date": "2026-08-01T14:09:25.758826"
+      },
+      {
+        "property_id": "condominium_klselangor_size_not_specified_the_parque_residences_jalan_eco_santuari_31_eco_santuari_42500_telok_panglima_garang_selangor",
+        "title": "Condominium",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM600,000",
+        "new_value": "RM700,000",
+        "change_date": "2026-08-01T14:09:51.570383"
+      },
+      {
+        "property_id": "condominium_klselangor_size_not_specified_the_parque_residences_jalan_eco_santuari_31_eco_santuari_42500_telok_panglima_garang_selangor",
+        "title": "Condominium",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "24 Feb 2026 (Tue)",
+        "new_value": "27 Apr 2026 (Mon)",
+        "change_date": "2026-08-01T14:09:51.570383"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_sungai_renggam_3210_berjaya_park_seksyen_32_40460_shah_alam_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM500,000",
+        "new_value": "RM630,000",
+        "change_date": "2026-08-01T14:09:11.443687"
+      },
+      {
+        "property_id": "2_storey_terrace_house_klselangor_size_not_specified_jalan_sungai_renggam_3210_berjaya_park_seksyen_32_40460_shah_alam_selangor",
+        "title": "2 Storey Terrace House",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "6 May 2026 (Wed)",
+        "new_value": "27 Apr 2026 (Mon)",
+        "change_date": "2026-08-01T14:09:11.443687"
+      },
+      {
+        "property_id": "taman_medan_jaya_apartment_klselangor_size_not_specified_block_d_apartment_taman_medan_jaya_no_2a_jalan_pjs_21_46000_petaling_jaya_selangor",
+        "title": "Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM220,000",
+        "new_value": "RM230,000",
+        "change_date": "2026-08-01T14:15:21.321636"
+      },
+      {
+        "property_id": "taman_medan_jaya_apartment_klselangor_size_not_specified_block_d_apartment_taman_medan_jaya_no_2a_jalan_pjs_21_46000_petaling_jaya_selangor",
+        "title": "Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "26 Mar 2026 (Thu)",
+        "new_value": "22 Jul 2026 (Wed)",
+        "change_date": "2026-08-01T14:15:21.321636"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_tower_b_sensory_residence_jalan_southville_1_southville_city_43800_dengkil_selangor",
+        "title": "Service Apartment",
+        "type": "price_change",
+        "field": "Auction Price",
+        "old_value": "RM400,000",
+        "new_value": "RM405,000",
+        "change_date": "2026-08-01T14:16:35.660930"
+      },
+      {
+        "property_id": "service_apartment_klselangor_size_not_specified_tower_b_sensory_residence_jalan_southville_1_southville_city_43800_dengkil_selangor",
+        "title": "Service Apartment",
+        "type": "auction_date_change",
+        "field": "Auction Date",
+        "old_value": "29 Jul 2026 (Wed)",
+        "new_value": "28 Jul 2026 (Tue)",
+        "change_date": "2026-08-01T14:16:35.660930"
+      }
+    ]
   }
 ]
