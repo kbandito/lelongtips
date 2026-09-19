@@ -112,7 +112,28 @@ def load_snapshots(data_dir):
     return snapshots
 
 
-def match_property(prop, database, stable_index, listing_id_index, address_index):
+SITE_ID_IN_IMAGE = re.compile(r"/listings/(\d+)\.")
+
+
+def site_listing_id(prop):
+    """The site's own numeric listing id — the only durable identifier.
+
+    The base64 id in /property/<id>/ is re-issued over time (it changed at
+    least once for 4,178 of the 12,810 tracked properties), and the old
+    fallbacks all keyed on the street address, which is now members-only.
+    The numeric id is exposed as data-listing-id on the card and is also
+    embedded in the thumbnail filename, so it can be recovered for records
+    scraped before it was captured explicitly.
+    """
+    explicit = prop.get("site_listing_id")
+    if explicit:
+        return str(explicit)
+    m = SITE_ID_IN_IMAGE.search(prop.get("image_url", "") or "")
+    return m.group(1) if m else None
+
+
+def match_property(prop, database, stable_index, listing_id_index, address_index,
+                   site_index=None):
     """Find an existing property in the database that matches this one.
 
     Returns (existing_id, existing_data) or (None, None).
@@ -121,6 +142,15 @@ def match_property(prop, database, stable_index, listing_id_index, address_index
     cur_lid = prop.get("listing_id", "")
     cur_addr = normalize_text(prop.get("header_full", "") or "")
     cur_size = normalize_size(prop.get("size", ""))
+
+    # 0) Match by the site's numeric listing id. Checked first because it
+    #    survives both the re-issued base64 id and the loss of the address.
+    if site_index:
+        cur_site_id = site_listing_id(prop)
+        if cur_site_id and cur_site_id in site_index:
+            candidate_id = site_index[cur_site_id]
+            if candidate_id in database:
+                return candidate_id, database[candidate_id]
 
     # 1) Match by listing_id — validate address matches
     if cur_lid and cur_lid in listing_id_index:
@@ -164,6 +194,7 @@ def reprocess_all(data_dir=None):
     stable_index = {}  # stable_key -> property_id
     listing_id_index = {}  # listing_id -> property_id
     address_index = {}  # normalized_address -> property_id
+    site_index = {}  # site numeric listing id -> property_id
 
     # Track what changed in the LATEST snapshot (for notifications)
     new_listings = {}
@@ -192,7 +223,8 @@ def reprocess_all(data_dir=None):
             )
 
             existing_id, existing_data = match_property(
-                prop, database, stable_index, listing_id_index, address_index
+                prop, database, stable_index, listing_id_index, address_index,
+                site_index,
             )
 
             if existing_id is None:
@@ -220,6 +252,10 @@ def reprocess_all(data_dir=None):
                     ],
                 }
                 stable_index[sk] = prop_id
+                site_id = site_listing_id(prop)
+                if site_id:
+                    site_index[site_id] = prop_id
+                    database[prop_id]["site_listing_id"] = site_id
                 lid = prop.get("listing_id", "")
                 if lid:
                     listing_id_index[lid] = prop_id
@@ -307,7 +343,11 @@ def reprocess_all(data_dir=None):
                 existing_data["auction_date_history"] = adh
                 existing_data["_stable_key"] = old_sk
 
-                # Update listing_id index
+                # Update indexes
+                site_id = site_listing_id(prop)
+                if site_id:
+                    site_index[site_id] = existing_id
+                    existing_data["site_listing_id"] = site_id
                 lid = prop.get("listing_id", "")
                 if lid:
                     listing_id_index[lid] = existing_id

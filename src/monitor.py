@@ -769,10 +769,12 @@ class FixedFullScrapingPropertyMonitor:
         data["listing_url"] = listing_url
         data["listing_id"] = listing_id
 
-        # The site's own numeric id, handy for cross-referencing images.
+        # The site's own numeric id. This is the durable identifier: the
+        # base64 id in the URL is re-issued over time, and the street address
+        # that the old matching relied on is now members-only.
         watch = container.find(attrs={"data-listing-id": True})
         if watch:
-            data["site_listing_id"] = watch["data-listing-id"]
+            data["site_listing_id"] = str(watch["data-listing-id"])
 
         if not title:
             img = container.find("img", alt=True)
@@ -1550,6 +1552,29 @@ class FixedFullScrapingPropertyMonitor:
             database, new_listings, changed_properties = reprocess_all(
                 self.data_path
             )
+
+            # Identity continuity check. Matching now leans on the site's
+            # numeric listing id, but only ~43% of legacy records carry one
+            # (recovered from the thumbnail filename), so a scrape that loses
+            # the address could still fail to match and silently re-insert
+            # thousands of duplicates. Snapshots remain the source of truth,
+            # so a bad run is recoverable by deleting its snapshot file and
+            # rerunning reprocess — but it should never pass unannounced.
+            new_share = 100.0 * len(new_listings) / max(len(current_properties), 1)
+            if len(new_listings) > 200 and new_share > 40:
+                print(
+                    f"WARNING: {len(new_listings):,} of {len(current_properties):,} "
+                    f"listings ({new_share:.0f}%) look new. That usually means "
+                    "identity matching failed rather than a real surge."
+                )
+                self.send_telegram_notification(
+                    "<b>Check Needed</b>\n\n"
+                    f"{len(new_listings):,} of {len(current_properties):,} listings "
+                    f"({new_share:.0f}%) were treated as new. This is more likely "
+                    "broken matching than a real surge — the database may now hold "
+                    "duplicates. The snapshot for this run can be deleted and "
+                    "reprocess rerun to undo it."
+                )
 
             # Save derived data files
             self.save_properties_database(database)
