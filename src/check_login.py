@@ -26,7 +26,7 @@ SEARCH_PARAMS = {
     "state": "kl_sel",
 }
 MASKED = re.compile(r"RM\s?[\d,]*x+", re.IGNORECASE)
-REAL_PRICE = re.compile(r"RM\s?\d[\d,]{3,}")
+REAL_PRICE = re.compile(r"RM\s?\d[\d,]{3,}(?![\dx,])", re.IGNORECASE)
 DAY_DATE = re.compile(r"\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}")
 
 
@@ -46,8 +46,10 @@ def login_with_browser(email, password):
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
+        headless = os.getenv("HEADLESS", "").strip().lower() not in ("0", "false", "no")
+        print(f"  browser mode: {'headless' if headless else 'headed (xvfb)'}")
         browser = p.chromium.launch(
-            headless=True,
+            headless=headless,
             args=["--disable-blink-features=AutomationControlled"],
         )
         ctx = browser.new_context(user_agent=UA, locale="en-MY")
@@ -68,12 +70,28 @@ def login_with_browser(email, password):
         print(f"  captToken length before submit: {token} "
               f"({'populated' if token and token > 0 else 'EMPTY — reCAPTCHA did not run'})")
 
+        def token_len():
+            try:
+                return page.evaluate(
+                    "() => { const e = document.querySelector('input[name=captToken]');"
+                    " return e ? (e.value || '').length : -1; }"
+                )
+            except Exception:
+                return -2
+
         form.locator('button[type="submit"], input[type="submit"]').first.click()
+        # The site calls grecaptcha.execute() from its submit handler, so the
+        # token only appears after the click.
+        for _ in range(10):
+            page.wait_for_timeout(1000)
+            if token_len() > 0:
+                break
+        print(f"  captToken length after submit : {token_len()}")
         try:
             page.wait_for_load_state("networkidle", timeout=45000)
         except Exception:
             pass
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(3000)
 
         final_url = page.url
         ok = "/login" not in final_url

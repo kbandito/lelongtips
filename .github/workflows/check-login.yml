@@ -29,8 +29,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r src/requirements.txt
           playwright install chromium --with-deps
+      # Headed Chromium under a virtual display: reCAPTCHA v3 scores headless
+      # browsers poorly, and a low score is indistinguishable from a bad password.
       - name: Check what login unlocks
         env:
           LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
           LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
-        run: python src/check_login.py
+          HEADLESS: 'false'
+        run: xvfb-run -a python src/check_login.py
