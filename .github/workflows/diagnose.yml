@@ -17,7 +17,12 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
+      # Only src/ — a full checkout drags in 778MB of snapshots and takes
+      # longer than the diagnostic itself.
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          sparse-checkout-cone-mode: true
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
