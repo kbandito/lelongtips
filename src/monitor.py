@@ -1541,6 +1541,33 @@ class FixedFullScrapingPropertyMonitor:
                     )
                 for p in sample:
                     print(json.dumps(p, indent=2, ensure_ascii=False)[:700])
+
+                # Coverage report: how much of the site did this actually see,
+                # and how much of each field survives the guest view?
+                vals = list(current_properties.values())
+                def share(pred):
+                    n = sum(1 for p in vals if pred(p))
+                    return f"{n:,}/{len(vals):,} ({100.0 * n / max(len(vals), 1):.0f}%)"
+
+                rounds = [p["auction_round"] for p in vals if p.get("auction_round")]
+                print("\n--- DRY RUN COVERAGE ---")
+                print(f"  site reports         : {total_results:,} results")
+                print(f"  extracted            : {len(vals):,} "
+                      f"({100.0 * len(vals) / max(total_results, 1):.1f}% of site)")
+                print(f"  real price           : {share(lambda p: not p.get('price_masked'))}")
+                print(f"  day-precision date   : "
+                      f"{share(lambda p: p.get('auction_date_precision') == 'day')}")
+                print(f"  size known           : "
+                      f"{share(lambda p: p.get('size') != 'Size not specified')}")
+                print(f"  numeric listing id   : {share(lambda p: p.get('site_listing_id'))}")
+                print(f"  auction round known  : {share(lambda p: p.get('auction_round'))}")
+                print(f"  discount badge       : {share(lambda p: p.get('discount'))}")
+                print(f"  tenure               : {share(lambda p: p.get('tenure'))}")
+                if rounds:
+                    repeat = sum(1 for r in rounds if r > 1)
+                    print(f"  repeat auctions      : {repeat:,} of {len(rounds):,} "
+                          f"with a round ({100.0 * repeat / len(rounds):.0f}%), "
+                          f"max round {max(rounds)}")
                 self.send_telegram_notification("\n".join(lines))
                 return f"Dry run: {len(current_properties)} listings extracted"
 

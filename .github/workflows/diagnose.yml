@@ -16,6 +16,7 @@ on:
 jobs:
   diagnose:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       # Only src/ — a full checkout drags in 778MB of snapshots.
       - uses: actions/checkout@v4
@@ -30,14 +31,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r src/requirements.txt
 
-      - name: Live dry run (2 pages, writes nothing)
+      - name: Full dry run (all pages, writes nothing)
         env:
           LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
           LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           INCLUDE_EXPIRED: 'true'
-          MAX_PAGES: '2'
+          MAX_PAGES: '0'
           DRY_RUN: 'true'
         run: |
           cd src
