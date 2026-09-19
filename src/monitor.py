@@ -19,6 +19,10 @@ import hashlib
 import html  # for Telegram HTML escaping
 
 
+class ScrapeFailure(RuntimeError):
+    """Raised when a scrape produces nothing, so the job exits non-zero."""
+
+
 def categorize_property_type(title):
     """Categorize property from title into one of:
     Landed, High-rise, Commercial, Industrial, Land.
@@ -182,6 +186,15 @@ class FixedFullScrapingPropertyMonitor:
 
         # Duplicate detection (within a run)
         self.seen_property_hashes = set()
+
+        # Test controls. MAX_PAGES caps the crawl; DRY_RUN scrapes and
+        # notifies but writes nothing, so a fix can be verified against the
+        # live site without touching the snapshot history or the database.
+        try:
+            self.max_pages = int(os.getenv("MAX_PAGES", "0"))
+        except ValueError:
+            self.max_pages = 0
+        self.dry_run = os.getenv("DRY_RUN", "").strip().lower() in ("1", "true", "yes")
 
         # Notification settings
         self.telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -373,30 +386,41 @@ class FixedFullScrapingPropertyMonitor:
             return False, 0
 
     def validate_auction_date(self, date_str):
-        """Validate if auction date is reasonable.
-        In INCLUDE_EXPIRED mode, accept any parseable date.
-        In normal mode, only accept future/current auction dates.
+        """Validate an auction date in either precision the site now serves.
+
+        Members see "12 Jun 2026 (Fri)"; guests see "Sep 2026". A month-only
+        date counts as upcoming until the end of that month.
         """
-        try:
-            if not re.match(r"\d{1,2}\s+\w{3}\s+\d{4}\s+\(\w{3}\)", date_str):
-                return False
+        if not date_str:
+            return False
+        cleaned = re.sub(r"\s*\(\w{3}\)", "", date_str).strip()
 
-            if self.include_expired:
-                # Accept any valid-format date regardless of how old
-                return True
-
-            # Normal mode: accept only upcoming or current-year auctions
-            date_no_day = re.sub(r"\s*\(\w{3}\)", "", date_str).strip()
+        parsed = None
+        for fmt in ("%d %b %Y", "%d %B %Y"):
             try:
-                auction_dt = datetime.strptime(date_no_day, "%d %b %Y")
-                # Accept if auction date is today or in the future
-                return auction_dt.date() >= datetime.now().date()
+                parsed = datetime.strptime(cleaned, fmt).date()
+                break
             except ValueError:
-                pass
+                continue
+        if parsed is None:
+            for fmt in ("%b %Y", "%B %Y"):
+                try:
+                    month_start = datetime.strptime(cleaned, fmt).date()
+                except ValueError:
+                    continue
+                # Treat a month-only date as the last day of that month.
+                if month_start.month == 12:
+                    next_month = month_start.replace(year=month_start.year + 1, month=1)
+                else:
+                    next_month = month_start.replace(month=month_start.month + 1)
+                parsed = next_month - timedelta(days=1)
+                break
+        if parsed is None:
+            return False
 
-            return False
-        except Exception:
-            return False
+        if self.include_expired:
+            return True
+        return parsed >= datetime.now().date()
 
     # ---------- LOGIN ----------
     def login(self):
@@ -584,469 +608,291 @@ class FixedFullScrapingPropertyMonitor:
             return 7000, 590  # Fallback (~7000 listings, 12 per page)
 
     # ---------- Extraction ----------
+    # ---------- Card parsing ----------
+    # The site reworked its listing cards (observed 19 Sep 2026). A card is now:
+    #
+    #   <div class="row g-0 shadow rounded h-100">
+    #     <span class="badge ...">-60%</span>
+    #     <a class="... add-watch-list" data-listing-id="901493">
+    #     <a class="stretched-link" href="/property/<id>/..." title="Service Apartment">
+    #     <small>Auction Price</small> RM98,xxx        <- masked for guests
+    #     <small>Auction Date</small>  <div>Sep 2026</div>   <- month + year only
+    #     <p class="text-muted text-truncate">43300 Seri Kembangan, Selangor</p>
+    #     Login to view full address
+    #     Built-up 817 sq.ft  LACA  3rd Auction  LH
+    #
+    # Two changes broke the old extractor: the auction date lost its day and
+    # weekday ("12 Jun 2026 (Fri)" -> "Sep 2026"), and the price is masked
+    # unless logged in. The old code required BOTH a price and a strict date in
+    # one container, so every card was rejected and 0 properties were extracted.
+
+    PRICE_LABEL = re.compile(r"Auction\s*Price\s*RM\s?([\dx,]+)", re.IGNORECASE)
+    # A masked price looks like RM98,xxx — digits followed by x's.
+    MASKED_PRICE = re.compile(r"x", re.IGNORECASE)
+    DATE_FULL = re.compile(
+        r"Auction\s*Date\s*(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}(?:\s*\(\w{3}\))?)",
+        re.IGNORECASE,
+    )
+    DATE_MONTH = re.compile(
+        r"Auction\s*Date\s*([A-Za-z]{3,9}\s+\d{4})", re.IGNORECASE
+    )
+    BUILT_UP = re.compile(r"Built[\s\-]*up\s*([\d,]+)\s*sq\.?\s*ft", re.IGNORECASE)
+    LAND_AREA = re.compile(r"Land\s*Area\s*([\d,]+)\s*sq\.?\s*ft", re.IGNORECASE)
+    ANY_SIZE = re.compile(r"([\d,]+)\s*sq\.?\s*ft", re.IGNORECASE)
+    AUCTION_ROUND = re.compile(r"(\d+)\s*(?:st|nd|rd|th)\s*Auction", re.IGNORECASE)
+    TENURE = re.compile(r"\b(LH|FH|Leasehold|Freehold)\b")
+    DISCOUNT = re.compile(r"(-\d+)\s*%")
+
+    def find_card_containers(self, soup):
+        """Return one container element per listing card.
+
+        Anchored on the listing link rather than on any styling class, so a
+        CSS rename does not silently empty the scrape again. Several anchors
+        point at the same listing (image, title, body), so cards are keyed by
+        listing id.
+        """
+        cards = {}
+        for link in soup.find_all("a", href=re.compile(r"/property/")):
+            href = link.get("href", "")
+            listing_id = self.listing_id_from_url(href)
+            if not listing_id or listing_id in cards:
+                continue
+            # Walk up to the smallest ancestor that carries the price label.
+            node, hops = link, 0
+            while node.parent is not None and node.parent.name != "html" and hops < 8:
+                node = node.parent
+                hops += 1
+                text = node.get_text(" ", strip=True)
+                if "Auction Price" in text:
+                    # Guard against grabbing a wrapper that holds several cards.
+                    if len(re.findall(r"Auction\s*Price", text, re.IGNORECASE)) > 1:
+                        break
+                    cards[listing_id] = node
+                    break
+        return cards
+
+    @staticmethod
+    def listing_id_from_url(url):
+        """The opaque id in /property/<id>/<slug>, which is stable per listing."""
+        if not url or "/property/" not in url:
+            return None
+        tail = url.split("/property/", 1)[1]
+        listing_id = tail.split("/")[0].split("?")[0]
+        # Skip non-listing routes such as /property/add-watch-list
+        if not listing_id or "-" in listing_id:
+            return None
+        return listing_id
+
     def extract_properties_from_page(self, page_content, page_num):
-        """Extract property data from a single page with improved validation"""
+        """Extract every listing card on one search-results page."""
         properties = []
         page_duplicates = 0
         page_invalid = 0
+        rejection_reasons = {}
 
         try:
             soup = BeautifulSoup(page_content, "html.parser")
-            potential_properties = []
-
-            # Strategy 1: find listing cards via /property/ links with stretched-link
-            # Each listing card has exactly one <a class="stretched-link" href="/property/...">
-            property_links = soup.find_all(
-                "a",
-                href=re.compile(r"/property/"),
-                class_=re.compile(r"stretched-link"),
-            )
-
-            seen_containers = set()  # track by element id to avoid duplicates
-            for link in property_links:
-                try:
-                    container = link.parent
-                    container_attempts = 0
-
-                    while container and container.name != "html" and container_attempts < 6:
-                        container_text = container.get_text()
-
-                        has_price = bool(re.search(r"RM[\d,]+", container_text))
-                        has_date = bool(
-                            re.search(
-                                r"\d{1,2}\s+\w{3}\s+\d{4}\s+\(\w{3}\)", container_text
-                            )
-                        )
-
-                        if has_price and has_date:
-                            # Prefer smallest container: check it doesn't contain
-                            # multiple prices (which would mean it wraps several cards)
-                            price_count = len(re.findall(r"RM[\d,]+", container_text))
-                            if price_count > 2:
-                                # Container too large (multiple listings), keep walking
-                                container = container.parent
-                                container_attempts += 1
-                                continue
-
-                            # Deduplicate by actual DOM element identity
-                            elem_id = id(container)
-                            if elem_id not in seen_containers:
-                                seen_containers.add(elem_id)
-                                container_hash = hashlib.md5(
-                                    container_text.encode()
-                                ).hexdigest()
-                                if container_hash not in [
-                                    p.get("container_hash") for p in potential_properties
-                                ]:
-                                    potential_properties.append(
-                                        {
-                                            "container": container,
-                                            "container_text": container_text,
-                                            "container_hash": container_hash,
-                                        }
-                                    )
-                            break
-
-                        container = container.parent
-                        container_attempts += 1
-                except Exception:
-                    continue
-
-            # Strategy 2 (fallback): walk up from RM price text nodes
-            if not potential_properties:
-                price_elements = soup.find_all(string=re.compile(r"RM[\d,]+"))
-
-                for price_elem in price_elements:
-                    try:
-                        container = price_elem.parent
-                        container_attempts = 0
-
-                        while container and container.name != "html" and container_attempts < 10:
-                            container_text = container.get_text()
-
-                            has_price = bool(re.search(r"RM[\d,]+", container_text))
-                            has_date = bool(
-                                re.search(
-                                    r"\d{1,2}\s+\w{3}\s+\d{4}\s+\(\w{3}\)", container_text
-                                )
-                            )
-
-                            if has_price and has_date:
-                                container_hash = hashlib.md5(
-                                    container_text.encode()
-                                ).hexdigest()
-                                if container_hash not in [
-                                    p.get("container_hash") for p in potential_properties
-                                ]:
-                                    potential_properties.append(
-                                        {
-                                            "container": container,
-                                            "container_text": container_text,
-                                            "container_hash": container_hash,
-                                        }
-                                    )
-                                break
-
-                            container = container.parent
-                            container_attempts += 1
-                    except Exception:
-                        continue
-
-            print(
-                f"📄 Page {page_num}: "
-                f"Found {len(potential_properties)} potential property containers"
-            )
-
-            rejection_reasons = {}
-            for i, prop_info in enumerate(potential_properties):
-                try:
-                    property_data = self.extract_and_validate_property(
-                        prop_info["container"],
-                        prop_info["container_text"],
-                        page_num,
-                        i,
-                    )
-
-                    if isinstance(property_data, dict):
-                        prop_hash = self.create_property_hash(
-                            property_data["title"],
-                            property_data["price"],
-                            property_data["auction_date"],
-                            property_data["location"],
-                            property_data["size"],
-                        )
-
-                        if prop_hash not in self.seen_property_hashes:
-                            self.seen_property_hashes.add(prop_hash)
-                            property_data["property_hash"] = prop_hash
-                            properties.append(property_data)
-                        else:
-                            page_duplicates += 1
-                    elif isinstance(property_data, str):
-                        # Rejection reason string
-                        rejection_reasons[property_data] = rejection_reasons.get(property_data, 0) + 1
-                        page_invalid += 1
-                    else:
-                        rejection_reasons["unknown"] = rejection_reasons.get("unknown", 0) + 1
-                        page_invalid += 1
-                except Exception as e:
-                    print(f"⚠️ Error processing property {i} on page {page_num}: {e}")
-                    page_invalid += 1
-                    continue
-
-            reason_str = ""
-            if rejection_reasons:
-                reason_str = " | rejected: " + ", ".join(
-                    f"{k}={v}" for k, v in sorted(rejection_reasons.items())
-                )
-            print(
-                f"✅ Page {page_num}: Extracted {len(properties)} valid properties "
-                f"(skipped {page_duplicates} duplicates, {page_invalid} invalid{reason_str})"
-            )
-            return properties
-
         except Exception as e:
-            print(f"❌ Error processing page {page_num}: {e}")
+            print(f"Page {page_num}: could not parse HTML: {e}")
             return []
 
-    def extract_and_validate_property(self, container, container_text, page_num, index):
-        """Extract and validate property data from container node + text"""
-        try:
-            property_data = {}
+        page_text = soup.get_text(" ", strip=True)
+        if "too few filters" in page_text.lower():
+            print(f"Page {page_num}: site rejected the search (too few filters)")
+            return []
 
-            # ---------- HEADER / ADDRESS ----------
-            header_short = None  # e.g. "Plaza Haji Taib, Kuala Lumpur"
-            header_full = None  # e.g. "Plaza Haji Taib, 42, Lorong ..."
+        cards = self.find_card_containers(soup)
+        print(f"Page {page_num}: found {len(cards)} listing cards")
 
-            # Build list of ancestor nodes that likely represent the card
-            search_nodes = []
-            node = container
-            steps = 0
-            while node is not None and node.name != "html" and steps < 6:
-                search_nodes.append(node)
-                node = node.parent
-                steps += 1
-
+        for listing_id, container in cards.items():
             try:
-                for node in search_nodes:
-                    # Short header, e.g. "Plaza Haji Taib, Kuala Lumpur"
-                    if not header_short:
-                        p_tag = node.find(
-                            "p", class_=re.compile(r"text-muted", re.IGNORECASE)
-                        )
-                        if p_tag:
-                            txt = p_tag.get_text(strip=True)
-                            if txt:
-                                header_short = txt
-
-                    # Full address, e.g. "Plaza Haji Taib, 42, Lorong Haji Taib ..."
-                    if not header_full:
-                        h5_tag = node.find(
-                            "h5", class_=re.compile(r"fw-bold", re.IGNORECASE)
-                        )
-                        if h5_tag:
-                            txt = h5_tag.get_text(separator=" ", strip=True)
-                            if txt:
-                                header_full = txt
-
-                    # Old layout: Unit No., Jalan Tasik Raja Lumu...
-                    if not header_full:
-                        h3_tag = node.find(
-                            "h3", class_=re.compile(r"fw-bold", re.IGNORECASE)
-                        )
-                        if h3_tag:
-                            txt = h3_tag.get_text(separator=" ", strip=True)
-                            txt = re.sub(
-                                r"\s*Login to view\s*",
-                                "",
-                                txt,
-                                flags=re.IGNORECASE,
-                            )
-                            txt = re.sub(
-                                r"^\s*Unit No\.\s*,?\s*",
-                                "",
-                                txt,
-                                flags=re.IGNORECASE,
-                            )
-                            txt = txt.strip(" ,")
-                            if txt:
-                                header_full = txt
-
-            except Exception:
-                pass
-
-            if header_short:
-                property_data["header_short"] = header_short
-            if header_full:
-                property_data["header_full"] = header_full
-            if header_full:
-                property_data["header"] = header_full
-            elif header_short:
-                property_data["header"] = header_short
-
-            # ---------- URL / LINK ----------
-            listing_url = None
-            listing_title = None
-            try:
-                # Collect <a> tags from all search_nodes to cover entire card
-                anchors = []
-                for n in search_nodes:
-                    anchors.extend(n.find_all("a", href=True))
-
-                candidates = []
-                for a in anchors:
-                    href = a.get("href", "")
-                    if not href:
-                        continue
-                    # Skip login / javascript / anchors
-                    if "/login" in href or href.startswith("#") or href.lower().startswith(
-                        "javascript:"
-                    ):
-                        continue
-
-                    full_url = urllib.parse.urljoin(self.root_url, href)
-
-                    title_attr = a.get("title") or ""
-                    link_text = a.get_text(strip=True) or ""
-                    if title_attr and title_attr.lower() == "login to view":
-                        title_attr = ""
-                    if link_text and link_text.lower() == "login to view":
-                        link_text = ""
-
-                    # Priority:
-                    # 3 - /property/ and class has stretched-link
-                    # 2 - /property/ anywhere
-                    # 1 - other link (fallback)
-                    priority = 1
-                    classes = a.get("class", [])
-                    class_str = " ".join(classes).lower() if classes else ""
-
-                    if "/property/" in href:
-                        priority = 2
-                        if "stretched-link" in class_str:
-                            priority = 3
-
-                    candidates.append(
-                        (priority, full_url, title_attr.strip(), link_text.strip())
-                    )
-
-                if candidates:
-                    # Pick highest priority
-                    candidates.sort(key=lambda x: x[0], reverse=True)
-                    best = candidates[0]
-                    listing_url = best[1]
-                    # Prefer non-empty title_attr; else link_text
-                    if best[2]:
-                        listing_title = best[2]
-                    elif best[3]:
-                        listing_title = best[3]
-
-            except Exception:
-                pass
-
-            # ---------- PRICE ----------
-            price_match = re.search(r"RM([\d,]+)", container_text)
-            if not price_match:
-                return "no_price"
-            price_str = f"RM{price_match.group(1)}"
-            is_valid_price, price_value = self.validate_price(price_str)
-            if not is_valid_price:
-                return "bad_price"
-            property_data["price"] = price_str
-            property_data["price_value"] = price_value
-
-            # ---------- AUCTION DATE ----------
-            date_match = re.search(
-                r"(\d{1,2}\s+\w{3}\s+\d{4}\s+\(\w{3}\))", container_text
-            )
-            if not date_match:
-                return "no_date"
-            auction_date = date_match.group(1)
-            if not self.validate_auction_date(auction_date):
-                return "expired"
-            property_data["auction_date"] = auction_date
-
-            # ---------- SIZE ----------
-            size_match = re.search(r"([\d,]+\s*sq\.ft)", container_text)
-            if size_match:
-                property_data["size"] = size_match.group(1)
-            else:
-                property_data["size"] = "Size not specified"
-
-            # ---------- TITLE (TYPE / LABEL) ----------
-            title = None
-            if listing_title:
-                title = listing_title
-            else:
-                # Pattern like "3 Storey Shop Office"
-                m_storey = re.search(
-                    r"\d+\s+Storey\s+Shop\s+Office", container_text, flags=re.IGNORECASE
+                result = self.extract_and_validate_property(
+                    container, container.get_text(" ", strip=True), page_num, listing_id
                 )
-                if m_storey:
-                    title = m_storey.group(0).strip().title()
+                if isinstance(result, dict):
+                    prop_hash = self.create_property_hash(
+                        result["title"],
+                        result["price"],
+                        result["auction_date"],
+                        result["location"],
+                        result["size"],
+                    )
+                    if prop_hash in self.seen_property_hashes:
+                        page_duplicates += 1
+                        continue
+                    self.seen_property_hashes.add(prop_hash)
+                    result["property_hash"] = prop_hash
+                    properties.append(result)
                 else:
-                    title_patterns = [
-                        r"([A-Z][a-zA-Z\s&]+(?:Office|Tower|Plaza|Centre|Center|Complex|Building|Mall|Square))",
-                        r"([A-Z][a-zA-Z\s&]+(?:Apartment|Condominium|Residence|Suites|Condo))",
-                        r"([A-Z][a-zA-Z\s&]+(?:Shop|Retail|Commercial|Store))",
-                        r"([A-Z][a-zA-Z\s&]+(?:Factory|Warehouse|Industrial|Plant))",
-                        r"([A-Z][a-zA-Z\s&,]+(?:Land|Plot|Lot))",
-                        r"(Taman\s+[A-Z][a-zA-Z\s&]+)",
-                        r"(Bandar\s+[A-Z][a-zA-Z\s&]+)",
-                        r"(Menara\s+[A-Z][a-zA-Z\s&]+)",
-                    ]
-                    for pattern in title_patterns:
-                        title_match = re.search(pattern, container_text)
-                        if title_match:
-                            candidate_title = title_match.group(1).strip()
-                            if (
-                                5 <= len(candidate_title) <= 100
-                                and not re.match(r"^\d+$", candidate_title)
-                            ):
-                                title = candidate_title
-                                break
+                    reason = result or "unknown"
+                    rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
+                    page_invalid += 1
+            except Exception as e:
+                rejection_reasons[f"error:{e}"] = (
+                    rejection_reasons.get(f"error:{e}", 0) + 1
+                )
+                page_invalid += 1
 
-            if not title:
-                title = f"Property Listing P{page_num}-{index}"
-            property_data["title"] = title
+        reason_str = ""
+        if rejection_reasons:
+            reason_str = " | rejected: " + ", ".join(
+                f"{k}={v}" for k, v in sorted(rejection_reasons.items())
+            )
+        print(
+            f"Page {page_num}: extracted {len(properties)} "
+            f"(dupes {page_duplicates}, invalid {page_invalid}{reason_str})"
+        )
+        return properties
 
-            # ---------- LOCATION ----------
-            location_patterns = [
-                r"(Kuala Lumpur[^,\n.]*)",
-                r"(Selangor[^,\n.]*)",
-                r"(Shah Alam[^,\n.]*)",
-                r"(Petaling Jaya[^,\n.]*)",
-                r"(Subang[^,\n.]*)",
-                r"(Klang[^,\n.]*)",
-                r"(Cyberjaya[^,\n.]*)",
-                r"(Kota Damansara[^,\n.]*)",
-                r"(Mont Kiara[^,\n.]*)",
-                r"(Bangsar[^,\n.]*)",
-                r"(Kajang[^,\n.]*)",
-                r"(Puchong[^,\n.]*)",
-                r"(Ampang[^,\n.]*)",
-                r"(Cheras[^,\n.]*)",
-            ]
-            location = "KL/Selangor"
-            for pattern in location_patterns:
-                location_match = re.search(pattern, container_text)
-                if location_match:
-                    candidate_location = location_match.group(1).strip()
-                    if len(candidate_location) <= 100:
-                        location = candidate_location
-                        break
-            property_data["location"] = location
+    def extract_and_validate_property(self, container, container_text, page_num, listing_id):
+        """Build one property record from a card container.
 
-            # ---------- PROPERTY TYPE ----------
-            property_data["property_type"] = categorize_property_type(title)
+        Returns a dict, or a short string naming why the card was rejected.
+        """
+        data = {}
+        text = re.sub(r"\s+", " ", container_text)
 
-            # ---------- DISCOUNT ----------
-            discount_match = re.search(r"(-\d+%)", container_text)
-            if discount_match:
-                property_data["discount"] = discount_match.group(1)
+        # ---------- LINK / TITLE ----------
+        listing_url = None
+        title = None
+        for a in container.find_all("a", href=True):
+            if self.listing_id_from_url(a.get("href")) != listing_id:
+                continue
+            listing_url = urllib.parse.urljoin(self.root_url, a["href"])
+            attr = (a.get("title") or "").strip()
+            if attr and attr.lower() != "login to view":
+                title = attr
+            if title:
+                break
+        if not listing_url:
+            return "no_url"
+        data["listing_url"] = listing_url
+        data["listing_id"] = listing_id
 
-            # ---------- IMAGE ----------
-            image_url = None
-            try:
-                for node in search_nodes:
-                    img_tags = node.find_all("img", src=True)
-                    for img in img_tags:
-                        src = img.get("src", "")
-                        if any(skip in src.lower() for skip in [
-                            "logo", "icon", "avatar", "pixel", "blank",
-                            "spacer", "tracking", "1x1"
-                        ]):
-                            continue
-                        if src.startswith("data:"):
-                            continue
-                        image_url = urllib.parse.urljoin(self.root_url, src)
-                        break
-                    if image_url:
-                        break
-                # Check lazy-loaded images
-                if not image_url:
-                    for node in search_nodes:
-                        for img in node.find_all("img", attrs={"data-src": True}):
-                            src = img["data-src"]
-                            if not src.startswith("data:"):
-                                image_url = urllib.parse.urljoin(
-                                    self.root_url, src
-                                )
-                                break
-                        if image_url:
-                            break
-            except Exception:
-                pass
-            if image_url:
-                property_data["image_url"] = image_url
+        # The site's own numeric id, handy for cross-referencing images.
+        watch = container.find(attrs={"data-listing-id": True})
+        if watch:
+            data["site_listing_id"] = watch["data-listing-id"]
 
-            # ---------- URL / META ----------
-            if listing_url:
-                property_data["listing_url"] = listing_url
+        if not title:
+            img = container.find("img", alt=True)
+            if img and img["alt"].strip():
+                title = img["alt"].strip()
+        if not title:
+            return "no_title"
+        data["title"] = title
+
+        # ---------- PRICE ----------
+        # Guests see "RM98,xxx". Recording that as a real price would append a
+        # bogus point to every property's price history and destroy the
+        # reserve-price record, so a masked price is stored as "no observation".
+        m = self.PRICE_LABEL.search(text)
+        if not m:
+            return "no_price"
+        raw = m.group(1)
+        if self.MASKED_PRICE.search(raw):
+            data["price"] = ""
+            data["price_value"] = None
+            data["price_masked"] = True
+        else:
+            price_str = f"RM{raw}"
+            ok, value = self.validate_price(price_str)
+            if not ok:
+                return "bad_price"
+            data["price"] = f"RM{value:,}"
+            data["price_value"] = value
+            data["price_masked"] = False
+
+        # ---------- AUCTION DATE ----------
+        # Full dates appear for members; guests get month + year. Both are kept
+        # verbatim — inventing a day would fabricate data.
+        m = self.DATE_FULL.search(text)
+        if m:
+            data["auction_date"] = m.group(1).strip()
+            data["auction_date_precision"] = "day"
+        else:
+            m = self.DATE_MONTH.search(text)
+            if not m:
+                return "no_date"
+            data["auction_date"] = m.group(1).strip()
+            data["auction_date_precision"] = "month"
+        if not self.validate_auction_date(data["auction_date"]):
+            return "expired"
+
+        # ---------- SIZE ----------
+        m = self.BUILT_UP.search(text)
+        if m:
+            data["size"] = f"{m.group(1)} sq.ft"
+            data["size_basis"] = "built_up"
+        else:
+            m = self.LAND_AREA.search(text)
+            if m:
+                data["size"] = f"{m.group(1)} sq.ft"
+                data["size_basis"] = "land_area"
             else:
-                property_data["listing_url"] = f"{self.base_url}?page={page_num}"
+                m = self.ANY_SIZE.search(text)
+                data["size"] = f"{m.group(1)} sq.ft" if m else "Size not specified"
+                data["size_basis"] = "unspecified"
 
-            # Extract listing_id from /property/<base64id>/... URL
-            listing_id = None
-            if listing_url and "/property/" in listing_url:
-                parts = listing_url.split("/property/")
-                if len(parts) > 1:
-                    listing_id = parts[1].split("/")[0]
-            if listing_id:
-                property_data["listing_id"] = listing_id
+        # ---------- LOCATION ----------
+        # e.g. "43300 Seri Kembangan, Selangor"; the street address is members-only.
+        location = None
+        for p in container.find_all("p", class_=re.compile(r"text-muted")):
+            candidate = p.get_text(" ", strip=True)
+            if candidate and "login" not in candidate.lower():
+                location = candidate
+                break
+        if location:
+            data["header_short"] = location
+            data["header"] = location
+            m = re.match(r"(\d{5})\s+(.*)", location)
+            if m:
+                data["postcode"] = m.group(1)
+                location = m.group(2)
+        data["location"] = location or "KL/Selangor"
+        data["address_locked"] = "login to view" in text.lower()
 
-            property_data["url"] = f"{self.base_url}?page={page_num}"
-            property_data["page_number"] = page_num
-            now_iso = datetime.now().isoformat()
-            property_data["last_updated"] = now_iso
-            property_data["first_seen"] = now_iso
+        # ---------- AUCTION ROUND / TENURE / LACA / DISCOUNT ----------
+        # "3rd Auction" is how many times this lot has already failed — the
+        # single most useful field the site now exposes to guests.
+        m = self.AUCTION_ROUND.search(text)
+        if m:
+            data["auction_round"] = int(m.group(1))
+        m = self.TENURE.search(text)
+        if m:
+            data["tenure"] = {"LH": "Leasehold", "FH": "Freehold"}.get(
+                m.group(1), m.group(1)
+            )
+        if re.search(r"\bNon[\s\-]?LACA\b", text, re.IGNORECASE):
+            data["laca"] = False
+        elif re.search(r"\bLACA\b", text):
+            data["laca"] = True
+        badge = container.find("span", class_=re.compile(r"badge"))
+        if badge:
+            m = self.DISCOUNT.search(badge.get_text(strip=True))
+            if m:
+                data["discount"] = f"{m.group(1)}%"
 
-            # Stable key (for DB change detection)
-            property_data["_stable_key"] = self.generate_stable_key(property_data)
+        # ---------- IMAGE ----------
+        for img in container.find_all("img", src=True):
+            src = img["src"]
+            if src.startswith("data:"):
+                continue
+            if any(skip in src.lower() for skip in
+                   ["logo", "icon", "avatar", "pixel", "blank", "spacer", "1x1"]):
+                continue
+            data["image_url"] = urllib.parse.urljoin(self.root_url, src)
+            break
 
-            return property_data
-        except Exception as e:
-            return f"error:{e}"
+        # ---------- TYPE / META ----------
+        data["property_type"] = categorize_property_type(title)
+        data["url"] = f"{self.base_url}?page={page_num}"
+        data["page_number"] = page_num
+        now_iso = datetime.now().isoformat()
+        data["last_updated"] = now_iso
+        data["first_seen"] = now_iso
+        data["_stable_key"] = self.generate_stable_key(data)
+        return data
 
     # ---------- Scraping loop ----------
     def scrape_all_pages(self, total_pages, total_results):
@@ -1617,20 +1463,84 @@ class FixedFullScrapingPropertyMonitor:
 
         try:
             total_results, total_pages = self.get_total_pages_and_results()
+            if self.max_pages and total_pages > self.max_pages:
+                print(f"MAX_PAGES set: crawling {self.max_pages} of {total_pages} pages")
+                total_pages = self.max_pages
             current_properties, scraping_stats = self.scrape_all_pages(
                 total_pages, total_results
             )
 
             if not current_properties:
+                # Exiting 0 here is what let this rot unnoticed for a month: the
+                # workflow stayed green, the dashboard regenerated from stale
+                # data and a commit was pushed as if nothing was wrong.
                 print("No properties extracted")
                 error_message = (
                     "<b>Scraping Failed</b>\n\n"
                     f"Could not extract properties from {total_pages} pages.\n"
                     f"Total listings on site: {total_results:,}\n"
-                    "Will retry in 3 days."
+                    "The site markup has probably changed again."
                 )
                 self.send_telegram_notification(error_message)
-                return "Scraping failed"
+                raise ScrapeFailure(
+                    f"extracted 0 properties from {total_pages} pages "
+                    f"({total_results:,} results reported by the site)"
+                )
+
+            # A partial scrape is also a failure worth shouting about.
+            coverage = 100.0 * len(current_properties) / max(total_results, 1)
+            if coverage < 20:
+                self.send_telegram_notification(
+                    "<b>Scraping Degraded</b>\n\n"
+                    f"Only {len(current_properties):,} of {total_results:,} "
+                    f"listings extracted ({coverage:.1f}%)."
+                )
+
+            masked = sum(
+                1 for p in current_properties.values() if p.get("price_masked")
+            )
+            if masked:
+                share = 100.0 * masked / len(current_properties)
+                print(
+                    f"WARNING: {masked:,} of {len(current_properties):,} listings "
+                    f"({share:.0f}%) have a masked price (RM98,xxx). Prices are "
+                    "members-only; these are recorded as 'not observed' so they "
+                    "cannot corrupt the price history."
+                )
+                if share > 50:
+                    self.send_telegram_notification(
+                        "<b>Prices Masked</b>\n\n"
+                        f"{share:.0f}% of listings show a masked price "
+                        "(members-only). New listings are still tracked, but "
+                        "reserve-price changes cannot be detected while logged out."
+                    )
+
+            if self.dry_run:
+                sample = list(current_properties.values())[:5]
+                print(f"\nDRY RUN: {len(current_properties)} listings, nothing saved")
+                lines = [
+                    "<b>Scraper Test Run</b>",
+                    "",
+                    f"Extracted <b>{len(current_properties)}</b> listings "
+                    f"from {total_pages} page(s).",
+                    f"Site reports {total_results:,} results.",
+                    "",
+                ]
+                for i, p in enumerate(sample, 1):
+                    price = p.get("price") or "members only"
+                    lines.append(
+                        f"{i}. <b>{self.tg_escape_html(p.get('title', '?'))}</b>\n"
+                        f"   {self.tg_escape_html(p.get('location', '?'))}\n"
+                        f"   Price: {self.tg_escape_html(price)} | "
+                        f"{self.tg_escape_html(p.get('auction_date', '?'))}\n"
+                        f"   {self.tg_escape_html(p.get('size', '?'))}"
+                        + (f" | round {p['auction_round']}" if p.get("auction_round") else "")
+                        + (f" | {p['discount']}" if p.get("discount") else "")
+                    )
+                for p in sample:
+                    print(json.dumps(p, indent=2, ensure_ascii=False)[:700])
+                self.send_telegram_notification("\n".join(lines))
+                return f"Dry run: {len(current_properties)} listings extracted"
 
             # Save raw snapshot — this is the source of truth
             self.save_snapshot(current_properties, scraping_stats)
@@ -1688,6 +1598,12 @@ class FixedFullScrapingPropertyMonitor:
 
 
 if __name__ == "__main__":
+    import sys
+
     monitor = FixedFullScrapingPropertyMonitor()
-    report = monitor.run_monitoring()
+    try:
+        report = monitor.run_monitoring()
+    except ScrapeFailure as e:
+        print(f"SCRAPE FAILED: {e}")
+        sys.exit(1)
     print(report)

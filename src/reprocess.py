@@ -17,6 +17,42 @@ from pathlib import Path
 DATA_DIR = Path(os.path.dirname(__file__)).parent / "data"
 
 
+def price_observed(prop):
+    """True when the scan actually saw a price.
+
+    Guests now get a masked "RM98,xxx", which carries no value. Treating that
+    as a real price would append a bogus point to every property's price
+    history and wreck the reserve-price record, so it counts as "not observed".
+    """
+    if prop.get("price_masked"):
+        return False
+    price = (prop.get("price") or "").strip()
+    return bool(price) and "x" not in price.lower()
+
+
+def same_auction_month(a, b):
+    """True when two auction dates refer to the same month.
+
+    Members see "12 Jun 2026 (Fri)" and guests only "Jun 2026", so comparing
+    the strings would flag a change on every listing the first time the
+    scraper runs logged out.
+    """
+    def month_key(value):
+        if not value:
+            return None
+        cleaned = re.sub(r"\s*\(\w{3}\)", "", value).strip()
+        for fmt in ("%d %b %Y", "%d %B %Y", "%b %Y", "%B %Y"):
+            try:
+                d = datetime.strptime(cleaned, fmt)
+                return (d.year, d.month)
+            except ValueError:
+                continue
+        return None
+
+    ka, kb = month_key(a), month_key(b)
+    return ka is not None and ka == kb
+
+
 def normalize_text(s):
     if not s:
         return ""
@@ -165,13 +201,17 @@ def reprocess_all(data_dir=None):
                     **prop,
                     "_stable_key": sk,
                     "first_seen": prop.get("last_updated", scan_date),
-                    "price_history": [
-                        {
-                            "price": prop.get("price", ""),
-                            "date": prop.get("last_updated", scan_date),
-                            "url": prop.get("listing_url", ""),
-                        }
-                    ],
+                    "price_history": (
+                        [
+                            {
+                                "price": prop.get("price", ""),
+                                "date": prop.get("last_updated", scan_date),
+                                "url": prop.get("listing_url", ""),
+                            }
+                        ]
+                        if price_observed(prop)
+                        else []
+                    ),
                     "auction_date_history": [
                         {
                             "auction_date": prop.get("auction_date", ""),
@@ -193,7 +233,9 @@ def reprocess_all(data_dir=None):
                 # Existing property — check for changes
                 changes = []
 
-                if prop.get("price", "") != existing_data.get("price", ""):
+                if price_observed(prop) and prop.get("price", "") != existing_data.get(
+                    "price", ""
+                ):
                     changes.append({
                         "type": "price_change",
                         "field": "Auction Price",
@@ -209,7 +251,11 @@ def reprocess_all(data_dir=None):
                         "url": prop.get("listing_url", ""),
                     })
 
-                if prop.get("auction_date", "") != existing_data.get("auction_date", ""):
+                if prop.get("auction_date", "") != existing_data.get(
+                    "auction_date", ""
+                ) and not same_auction_month(
+                    prop.get("auction_date", ""), existing_data.get("auction_date", "")
+                ):
                     changes.append({
                         "type": "auction_date_change",
                         "field": "Auction Date",
@@ -230,7 +276,32 @@ def reprocess_all(data_dir=None):
                 adh = existing_data.get("auction_date_history", [])
                 old_sk = existing_data.get("_stable_key", sk)
 
+                prev_price = existing_data.get("price", "")
+                prev_price_value = existing_data.get("price_value")
+                prev_auction_date = existing_data.get("auction_date", "")
+                prev_precision = existing_data.get("auction_date_precision")
+
                 existing_data.update(prop)
+
+                # A masked price is missing data, not a new fact: keep the last
+                # price actually observed rather than overwriting it with "".
+                if not price_observed(prop) and prev_price:
+                    existing_data["price"] = prev_price
+                    existing_data["price_value"] = prev_price_value
+                    existing_data["price_stale"] = True
+                else:
+                    existing_data.pop("price_stale", None)
+
+                # Likewise keep a known day-precision date rather than
+                # coarsening it to the month the guest view reports.
+                if (
+                    prop.get("auction_date_precision") == "month"
+                    and prev_precision == "day"
+                    and same_auction_month(prop.get("auction_date", ""), prev_auction_date)
+                ):
+                    existing_data["auction_date"] = prev_auction_date
+                    existing_data["auction_date_precision"] = "day"
+
                 existing_data["first_seen"] = first_seen
                 existing_data["price_history"] = ph
                 existing_data["auction_date_history"] = adh
