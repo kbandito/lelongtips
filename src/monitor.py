@@ -338,13 +338,18 @@ class FixedFullScrapingPropertyMonitor:
             print(f"⚠️ Could not save scan stats: {e}")
             return False
 
-    def create_property_hash(self, title, price, auction_date, location, size):
-        """
-        Create a hash for duplicate detection (within a run).
+    def create_property_hash(self, title, price, auction_date, location, size,
+                             identity=""):
+        """Key for de-duplicating within a single run.
 
-        Include price + date so we treat "same identity, different price/date"
-        as distinct entries for coverage checks, but we de-dup by this hash.
+        Identity comes first when known. Hashing only the visible fields used
+        to be safe because the price made each card distinct, but with prices
+        masked every listing carries price "" and date "Sep 2026", so two
+        different units of the same type, town and size collapse onto one hash
+        and the second is silently dropped as a duplicate.
         """
+        if identity:
+            return hashlib.md5(f"id:{identity}".lower().encode()).hexdigest()
         content = f"{title}_{price}_{auction_date}_{location}_{size}".lower()
         return hashlib.md5(content.encode()).hexdigest()
 
@@ -716,6 +721,8 @@ class FixedFullScrapingPropertyMonitor:
                         result["auction_date"],
                         result["location"],
                         result["size"],
+                        identity=result.get("site_listing_id")
+                        or result.get("listing_id", ""),
                     )
                     if prop_hash in self.seen_property_hashes:
                         page_duplicates += 1
@@ -885,6 +892,13 @@ class FixedFullScrapingPropertyMonitor:
                 continue
             data["image_url"] = urllib.parse.urljoin(self.root_url, src)
             break
+
+        # Only about a quarter of cards carry data-listing-id, but the
+        # thumbnail filename is the same numeric id, so recover it from there.
+        if not data.get("site_listing_id"):
+            m = re.search(r"/listings/(\d+)\.", data.get("image_url", "") or "")
+            if m:
+                data["site_listing_id"] = m.group(1)
 
         # ---------- TYPE / META ----------
         data["property_type"] = categorize_property_type(title)
