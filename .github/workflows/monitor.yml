@@ -4,10 +4,18 @@ on:
   schedule:
     # Runs every 3 days at 9 PM Malaysia time (1 PM UTC)
     - cron: '0 13 */3 * *'
-  
+
   # Allow manual triggering
   workflow_dispatch:
     inputs:
+      mode:
+        description: 'full = scrape + notify + publish; diagnose = inspect site markup only'
+        required: false
+        type: choice
+        options:
+          - 'full'
+          - 'diagnose'
+        default: 'full'
       include_expired:
         description: 'Include expired auction listings'
         required: false
@@ -20,13 +28,15 @@ on:
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    
+    env:
+      MODE: ${{ github.event.inputs.mode || 'full' }}
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -39,8 +49,24 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r src/requirements.txt
         playwright install chromium --with-deps
-    
+
+    - name: Diagnose site markup
+      if: env.MODE == 'diagnose'
+      env:
+        LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
+        LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
+      run: python src/diagnose.py --pages 2 --dump-dir data/diagnostics
+
+    - name: Upload diagnostic HTML
+      if: env.MODE == 'diagnose'
+      uses: actions/upload-artifact@v4
+      with:
+        name: site-html-${{ github.run_number }}
+        path: data/diagnostics/
+        retention-days: 7
+
     - name: Scrape & reprocess (monitor.py → reprocess.py)
+      if: env.MODE == 'full'
       env:
         LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
         LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
@@ -53,20 +79,24 @@ jobs:
         cd src
         python monitor.py
 
-    - name: Geocode new addresses
-      run: python src/geocode.py
-      continue-on-error: true
+    # Geocoding is paused — re-enable when the map work resumes.
+    # - name: Geocode new addresses
+    #   run: python src/geocode.py
+    #   continue-on-error: true
 
     - name: Extract scheme names (Gemini AI)
+      if: env.MODE == 'full'
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: python src/extract_schemes.py
       continue-on-error: true
 
     - name: Generate dashboard
+      if: env.MODE == 'full'
       run: python src/generate_page.py
 
     - name: Commit and push changes
+      if: env.MODE == 'full'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
@@ -75,8 +105,9 @@ jobs:
         git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Upload monitoring report
+      if: env.MODE == 'full'
       uses: actions/upload-artifact@v4
       with:
         name: property-report-${{ github.run_number }}
