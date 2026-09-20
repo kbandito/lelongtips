@@ -1,5 +1,6 @@
 name: Scraper Diagnose
 
+# Re-run against a freshly copied session cookie.
 # Temporary: the site can only be reached from a runner, so verification of the
 # scraper fix happens here. Runs a capped, non-persisting scrape against the
 # live site and sends the result to Telegram. Delete once the fix is settled.
