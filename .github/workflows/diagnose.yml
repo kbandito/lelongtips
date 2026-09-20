@@ -31,7 +31,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r src/requirements.txt
 
-      - name: Full dry run (all pages, writes nothing)
+      - name: Logged-in dry run (2 pages, writes nothing)
         env:
           LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
           LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
@@ -39,7 +39,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           INCLUDE_EXPIRED: 'true'
-          MAX_PAGES: '0'
+          MAX_PAGES: '2'
           DRY_RUN: 'true'
         run: |
           cd src
