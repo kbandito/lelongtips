@@ -681,10 +681,21 @@ class FixedFullScrapingPropertyMonitor:
     PRICE_LABEL = re.compile(r"Auction\s*Price\s*RM\s?([\dx,]+)", re.IGNORECASE)
     # A masked price looks like RM98,xxx — digits followed by x's.
     MASKED_PRICE = re.compile(r"x", re.IGNORECASE)
+    # Members see "8th Oct 2026 (Thu), 9.00AM" — note the ordinal suffix, which
+    # the guest view never showed.
     DATE_FULL = re.compile(
-        r"Auction\s*Date\s*(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}(?:\s*\(\w{3}\))?)",
+        r"Auction\s*Date(?:\s*&\s*Time)?\s*"
+        r"(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3,9})\s+(\d{4})"
+        r"(?:\s*\((\w{3})\w*\))?",
         re.IGNORECASE,
     )
+    AUCTION_TIME = re.compile(r"(\d{1,2}[.:]\d{2}\s*[AP]M)", re.IGNORECASE)
+    # "Past Auction Price: RM280,000 (Oct 2024)" — the site's own prior reserve.
+    PAST_PRICE = re.compile(
+        r"Past\s*Auction\s*Price[:\s]*RM\s?([\d,]+)(?:\s*\(([^)]+)\))?",
+        re.IGNORECASE,
+    )
+    PER_SF = re.compile(r"RM\s?([\d,]+)\s*per\s*sf", re.IGNORECASE)
     DATE_MONTH = re.compile(
         r"Auction\s*Date\s*([A-Za-z]{3,9}\s+\d{4})", re.IGNORECASE
     )
@@ -872,8 +883,19 @@ class FixedFullScrapingPropertyMonitor:
         # verbatim — inventing a day would fabricate data.
         m = self.DATE_FULL.search(text)
         if m:
-            data["auction_date"] = m.group(1).strip()
+            day, month, year, weekday = m.group(1), m.group(2), m.group(3), m.group(4)
+            # Normalise to the "12 Jun 2026 (Fri)" shape the stored history uses.
+            try:
+                parsed = datetime.strptime(f"{day} {month[:3]} {year}", "%d %b %Y")
+                data["auction_date"] = parsed.strftime("%d %b %Y (%a)")
+            except ValueError:
+                data["auction_date"] = (
+                    f"{day} {month[:3]} {year}" + (f" ({weekday})" if weekday else "")
+                )
             data["auction_date_precision"] = "day"
+            t = self.AUCTION_TIME.search(text)
+            if t:
+                data["auction_time"] = t.group(1).upper().replace(" ", "")
         else:
             m = self.DATE_MONTH.search(text)
             if not m:
@@ -919,6 +941,16 @@ class FixedFullScrapingPropertyMonitor:
         # ---------- AUCTION ROUND / TENURE / LACA / DISCOUNT ----------
         # "3rd Auction" is how many times this lot has already failed — the
         # single most useful field the site now exposes to guests.
+        m = self.PAST_PRICE.search(text)
+        if m:
+            data["past_auction_price"] = f"RM{m.group(1)}"
+            data["past_auction_price_value"] = int(m.group(1).replace(",", ""))
+            if m.group(2):
+                data["past_auction_when"] = m.group(2).strip()
+        m = self.PER_SF.search(text)
+        if m:
+            data["price_per_sf"] = int(m.group(1).replace(",", ""))
+
         m = self.AUCTION_ROUND.search(text)
         if m:
             data["auction_round"] = int(m.group(1))
