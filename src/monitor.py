@@ -159,7 +159,7 @@ class FixedFullScrapingPropertyMonitor:
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/91.0.4472.124 Safari/537.36",
+            "Chrome/140.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
             "image/webp,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.5",
@@ -459,8 +459,16 @@ class FixedFullScrapingPropertyMonitor:
             # Set on both hosts: the cookie is issued for .lelongtips.com.my.
             for domain in ("www.lelongtips.com.my", ".lelongtips.com.my"):
                 self.session.cookies.set(name, value, domain=domain)
-        names = ", ".join(n for n, _ in pairs)
-        print(f"Using supplied session cookie(s): {names}")
+        for name, value in pairs:
+            # Length matters: a Laravel cookie is a few hundred characters and
+            # is rejected wholesale if truncated, which is the usual mistake
+            # when copying from the DevTools table instead of the value pane.
+            print(f"  cookie {name}: {len(value)} chars, "
+                  f"starts {value[:12]!r}, ends {value[-6:]!r}")
+            if name == "lt_session" and len(value) < 120:
+                print("    WARNING: that looks truncated — a full lt_session value "
+                      "is typically 300+ characters. Re-copy it with right-click "
+                      "> Copy value, not from the table column.")
         if not any(n == "lt_session" for n, _ in pairs):
             print("  note: no lt_session cookie supplied — that is the session one")
 
@@ -471,9 +479,17 @@ class FixedFullScrapingPropertyMonitor:
             text = resp.text
             masked = len(re.findall(r"RM\s?[\d,]*x+", text, re.IGNORECASE))
             locked = text.lower().count("login to view")
+            # The header greets a member by name and shows "Sign In" otherwise.
+            greeting = re.search(r"Hi\s+([A-Z][\w.'-]*(?:\s+[A-Z][\w.'-]*){0,3})\s*,",
+                                 text)
+            signin = "sign in" in text.lower()
             self.logged_in = masked == 0 and locked == 0
-            print(f"Cookie check: {masked} masked prices, {locked} 'login to view' "
+            print(f"Cookie check: {masked} masked prices, {locked} 'login to view', "
+                  f"header={'greets ' + greeting.group(1) if greeting else 'shows Sign In' if signin else 'unknown'} "
                   f"-> {'session is active' if self.logged_in else 'NOT logged in'}")
+            if not self.logged_in and greeting:
+                print("  odd: the header says you are signed in but prices are still "
+                      "masked — the account may not include price access.")
         except Exception as e:
             print(f"Cookie check failed: {e}")
             self.logged_in = False
@@ -483,6 +499,14 @@ class FixedFullScrapingPropertyMonitor:
         """Login to lelongtips.com.my using Playwright browser, then transfer cookies to requests session."""
         if self.login_with_cookie():
             return True
+        if os.getenv("LELONGTIPS_COOKIE", "").strip():
+            # A cookie was given and rejected. Falling back to a form login
+            # cannot work either (reCAPTCHA v3 issues no token from CI), so
+            # say so plainly instead of burying it in a browser stack trace.
+            print("Supplied cookie did not yield a member session; "
+                  "continuing as guest. Re-copy lt_session from a browser "
+                  "where you are logged in.")
+            return False
 
         email = os.getenv("LELONGTIPS_EMAIL", "")
         password = os.getenv("LELONGTIPS_PASSWORD", "")
