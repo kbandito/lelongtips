@@ -13,7 +13,7 @@ DOCS_DIR = os.path.join(os.path.dirname(__file__), "..", "docs")
 
 def load_json(path):
     try:
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return None
@@ -228,14 +228,14 @@ def write_data_files(properties, changes_history, daily_stats):
     geocode_cache_path = os.path.join(DATA_DIR, "geocode_cache.json")
     geocode_cache = None
     if os.path.exists(geocode_cache_path):
-        with open(geocode_cache_path, "r") as f:
+        with open(geocode_cache_path, "r", encoding="utf-8") as f:
             geocode_cache = json.load(f)
 
     # Load scheme name cache if available
     scheme_cache_path = os.path.join(DATA_DIR, "scheme_cache.json")
     scheme_cache = None
     if os.path.exists(scheme_cache_path):
-        with open(scheme_cache_path, "r") as f:
+        with open(scheme_cache_path, "r", encoding="utf-8") as f:
             scheme_cache = json.load(f)
 
     active = get_active_properties(properties)
@@ -251,7 +251,7 @@ def write_data_files(properties, changes_history, daily_stats):
             trimmed["exp"] = 1
         active_data[pid] = trimmed
 
-    with open(os.path.join(data_dir, "active.json"), "w") as f:
+    with open(os.path.join(data_dir, "active.json"), "w", encoding="utf-8") as f:
         json.dump(active_data, f, separators=(",", ":"))
     print(f"  active.json: {len(active_data)} properties ({len(active)} active, {len(active_data) - len(active)} expired)")
 
@@ -262,7 +262,7 @@ def write_data_files(properties, changes_history, daily_stats):
         "changes": latest_scan.get("changes", []),
         "scan_date": latest_scan.get("scan_date", ""),
     }
-    with open(os.path.join(data_dir, "changes.json"), "w") as f:
+    with open(os.path.join(data_dir, "changes.json"), "w", encoding="utf-8") as f:
         json.dump(changes_data, f, separators=(",", ":"))
 
     # stats.json - dashboard statistics
@@ -307,7 +307,7 @@ def write_data_files(properties, changes_history, daily_stats):
         "types": sorted(types_set),
         "locations": sorted(locs_set),
     }
-    with open(os.path.join(data_dir, "stats.json"), "w") as f:
+    with open(os.path.join(data_dir, "stats.json"), "w", encoding="utf-8") as f:
         json.dump(stats_data, f, separators=(",", ":"))
 
     return stats_data, active_data, changes_data
@@ -345,7 +345,7 @@ def generate_page():
                            inline_stats, inline_active, inline_changes)
 
     out_path = os.path.join(DOCS_DIR, "index.html")
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write(page_html)
     print(f"Dashboard generated: {out_path}")
     print(f"  Total tracked: {stats['total_tracked']:,}")

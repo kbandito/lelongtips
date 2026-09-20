@@ -103,7 +103,7 @@ def load_snapshots(data_dir):
     snapshots = []
     for path in snapshot_files:
         try:
-            with open(path) as f:
+            with open(path, encoding="utf-8") as f:
                 data = json.load(f)
             snapshots.append(data)
             print(f"  Loaded {path.name}: {len(data.get('properties', {}))} properties")
@@ -367,7 +367,7 @@ if __name__ == "__main__":
 
     # Save the rebuilt database
     props_path = DATA_DIR / "properties.json"
-    with open(props_path, "w") as f:
+    with open(props_path, "w", encoding="utf-8") as f:
         json.dump(database, f, indent=2, ensure_ascii=False)
     print(f"Saved {len(database)} properties to {props_path}")
 
@@ -376,7 +376,7 @@ if __name__ == "__main__":
     existing_changes = []
     if changes_path.exists():
         try:
-            with open(changes_path) as f:
+            with open(changes_path, encoding="utf-8") as f:
                 existing_changes = json.load(f)
         except Exception:
             pass
@@ -398,7 +398,7 @@ if __name__ == "__main__":
         "changes": change_records,
     }
     existing_changes.append(entry)
-    with open(changes_path, "w") as f:
+    with open(changes_path, "w", encoding="utf-8") as f:
         json.dump(existing_changes, f, indent=2, ensure_ascii=False)
 
     # Save daily stats
@@ -409,7 +409,7 @@ if __name__ == "__main__":
         "new_listings": len(new_listings),
         "changed_properties": len(changed_properties),
     }
-    with open(stats_path, "w") as f:
+    with open(stats_path, "w", encoding="utf-8") as f:
         json.dump(stats, f, indent=2, ensure_ascii=False)
 
     print(f"New: {len(new_listings)}, Changed: {len(changed_properties)}")

@@ -1620,7 +1620,7 @@ class FixedFullScrapingPropertyMonitor:
             "scraping_stats": scraping_stats,
             "properties": properties,
         }
-        with open(snapshot_path, "w") as f:
+        with open(snapshot_path, "w", encoding="utf-8") as f:
             json.dump(snapshot, f, indent=2, ensure_ascii=False)
         print(f"Snapshot saved: {snapshot_path} ({len(properties)} properties)")
         return snapshot_path

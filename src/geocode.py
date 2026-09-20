@@ -23,13 +23,13 @@ DEFAULT_LNG = 101.6869
 
 def load_cache():
     if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, "r") as f:
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
 
 def save_cache(cache):
-    with open(CACHE_FILE, "w") as f:
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(cache, f, indent=2, ensure_ascii=False)
 
 
@@ -83,7 +83,7 @@ def geocode_address(geocoder, address):
 
 
 def main():
-    with open(PROPERTIES_FILE, "r") as f:
+    with open(PROPERTIES_FILE, "r", encoding="utf-8") as f:
         properties = json.load(f)
 
     # Collect unique addresses from active (non-expired) properties
