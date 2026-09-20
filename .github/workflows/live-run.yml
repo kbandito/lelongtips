@@ -1,0 +1,55 @@
+name: Live Run
+
+# Re-run after fixing the dashboard crash on masked prices.
+# A real scrape on this branch: writes a snapshot, rebuilds the database and
+# sends Telegram. Runs in guest mode while the login problem is unsolved, so
+# prices are recorded as "not observed" rather than as values. Commits to this
+# branch only — main is untouched until the branch is merged.
+on:
+  push:
+    branches:
+      - 'claude/**'
+    paths:
+      - '.github/workflows/live-run.yml'
+  workflow_dispatch:
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+
+      - name: Scrape and notify
+        env:
+          LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
+          LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
+          LELONGTIPS_COOKIE: ${{ secrets.LELONGTIPS_COOKIE }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          INCLUDE_EXPIRED: 'true'
+        run: |
+          cd src
+          python monitor.py
+
+      - name: Generate dashboard
+        run: python src/generate_page.py
+
+      - name: Commit results to this branch
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/ docs/
+          git diff --staged --quiet || git commit -m "Live scrape (guest mode) - $(date '+%Y-%m-%d %H:%M:%S')"
+          git push

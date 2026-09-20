@@ -1,0 +1,47 @@
+name: Scraper Diagnose
+
+# Re-run against a freshly copied session cookie.
+# Temporary: the site can only be reached from a runner, so verification of the
+# scraper fix happens here. Runs a capped, non-persisting scrape against the
+# live site and sends the result to Telegram. Delete once the fix is settled.
+on:
+  push:
+    branches:
+      - 'claude/**'
+    paths:
+      - 'src/monitor.py'
+      - 'src/diagnose.py'
+      - '.github/workflows/diagnose.yml'
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      # Only src/ — a full checkout drags in 778MB of snapshots.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+
+      - name: Logged-in dry run (2 pages, writes nothing)
+        env:
+          LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
+          LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
+          LELONGTIPS_COOKIE: ${{ secrets.LELONGTIPS_COOKIE }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          INCLUDE_EXPIRED: 'true'
+          MAX_PAGES: '2'
+          DRY_RUN: 'true'
+        run: |
+          cd src
+          python monitor.py

@@ -189,7 +189,7 @@ def group_properties(input_path=None, output_path=None):
     if output_path is None:
         output_path = DATA_DIR / "properties.json"
 
-    with open(input_path) as f:
+    with open(input_path, encoding="utf-8") as f:
         raw = json.load(f)
 
     print(f"Input: {len(raw)} entries")
@@ -383,7 +383,7 @@ def group_properties(input_path=None, output_path=None):
     print(f"  Active (future auction): {active}")
     print(f"  Expired (past auction): {expired}")
 
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(database, f, indent=2, ensure_ascii=False)
     print(f"\nSaved to {output_path}")
 

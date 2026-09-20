@@ -17,6 +17,42 @@ from pathlib import Path
 DATA_DIR = Path(os.path.dirname(__file__)).parent / "data"
 
 
+def price_observed(prop):
+    """True when the scan actually saw a price.
+
+    Guests now get a masked "RM98,xxx", which carries no value. Treating that
+    as a real price would append a bogus point to every property's price
+    history and wreck the reserve-price record, so it counts as "not observed".
+    """
+    if prop.get("price_masked"):
+        return False
+    price = (prop.get("price") or "").strip()
+    return bool(price) and "x" not in price.lower()
+
+
+def same_auction_month(a, b):
+    """True when two auction dates refer to the same month.
+
+    Members see "12 Jun 2026 (Fri)" and guests only "Jun 2026", so comparing
+    the strings would flag a change on every listing the first time the
+    scraper runs logged out.
+    """
+    def month_key(value):
+        if not value:
+            return None
+        cleaned = re.sub(r"\s*\(\w{3}\)", "", value).strip()
+        for fmt in ("%d %b %Y", "%d %B %Y", "%b %Y", "%B %Y"):
+            try:
+                d = datetime.strptime(cleaned, fmt)
+                return (d.year, d.month)
+            except ValueError:
+                continue
+        return None
+
+    ka, kb = month_key(a), month_key(b)
+    return ka is not None and ka == kb
+
+
 def normalize_text(s):
     if not s:
         return ""
@@ -67,7 +103,7 @@ def load_snapshots(data_dir):
     snapshots = []
     for path in snapshot_files:
         try:
-            with open(path) as f:
+            with open(path, encoding="utf-8") as f:
                 data = json.load(f)
             snapshots.append(data)
             print(f"  Loaded {path.name}: {len(data.get('properties', {}))} properties")
@@ -76,7 +112,28 @@ def load_snapshots(data_dir):
     return snapshots
 
 
-def match_property(prop, database, stable_index, listing_id_index, address_index):
+SITE_ID_IN_IMAGE = re.compile(r"/listings/(\d+)\.")
+
+
+def site_listing_id(prop):
+    """The site's own numeric listing id — the only durable identifier.
+
+    The base64 id in /property/<id>/ is re-issued over time (it changed at
+    least once for 4,178 of the 12,810 tracked properties), and the old
+    fallbacks all keyed on the street address, which is now members-only.
+    The numeric id is exposed as data-listing-id on the card and is also
+    embedded in the thumbnail filename, so it can be recovered for records
+    scraped before it was captured explicitly.
+    """
+    explicit = prop.get("site_listing_id")
+    if explicit:
+        return str(explicit)
+    m = SITE_ID_IN_IMAGE.search(prop.get("image_url", "") or "")
+    return m.group(1) if m else None
+
+
+def match_property(prop, database, stable_index, listing_id_index, address_index,
+                   site_index=None):
     """Find an existing property in the database that matches this one.
 
     Returns (existing_id, existing_data) or (None, None).
@@ -85,6 +142,15 @@ def match_property(prop, database, stable_index, listing_id_index, address_index
     cur_lid = prop.get("listing_id", "")
     cur_addr = normalize_text(prop.get("header_full", "") or "")
     cur_size = normalize_size(prop.get("size", ""))
+
+    # 0) Match by the site's numeric listing id. Checked first because it
+    #    survives both the re-issued base64 id and the loss of the address.
+    if site_index:
+        cur_site_id = site_listing_id(prop)
+        if cur_site_id and cur_site_id in site_index:
+            candidate_id = site_index[cur_site_id]
+            if candidate_id in database:
+                return candidate_id, database[candidate_id]
 
     # 1) Match by listing_id — validate address matches
     if cur_lid and cur_lid in listing_id_index:
@@ -128,6 +194,7 @@ def reprocess_all(data_dir=None):
     stable_index = {}  # stable_key -> property_id
     listing_id_index = {}  # listing_id -> property_id
     address_index = {}  # normalized_address -> property_id
+    site_index = {}  # site numeric listing id -> property_id
 
     # Track what changed in the LATEST snapshot (for notifications)
     new_listings = {}
@@ -156,7 +223,8 @@ def reprocess_all(data_dir=None):
             )
 
             existing_id, existing_data = match_property(
-                prop, database, stable_index, listing_id_index, address_index
+                prop, database, stable_index, listing_id_index, address_index,
+                site_index,
             )
 
             if existing_id is None:
@@ -165,13 +233,17 @@ def reprocess_all(data_dir=None):
                     **prop,
                     "_stable_key": sk,
                     "first_seen": prop.get("last_updated", scan_date),
-                    "price_history": [
-                        {
-                            "price": prop.get("price", ""),
-                            "date": prop.get("last_updated", scan_date),
-                            "url": prop.get("listing_url", ""),
-                        }
-                    ],
+                    "price_history": (
+                        [
+                            {
+                                "price": prop.get("price", ""),
+                                "date": prop.get("last_updated", scan_date),
+                                "url": prop.get("listing_url", ""),
+                            }
+                        ]
+                        if price_observed(prop)
+                        else []
+                    ),
                     "auction_date_history": [
                         {
                             "auction_date": prop.get("auction_date", ""),
@@ -180,6 +252,10 @@ def reprocess_all(data_dir=None):
                     ],
                 }
                 stable_index[sk] = prop_id
+                site_id = site_listing_id(prop)
+                if site_id:
+                    site_index[site_id] = prop_id
+                    database[prop_id]["site_listing_id"] = site_id
                 lid = prop.get("listing_id", "")
                 if lid:
                     listing_id_index[lid] = prop_id
@@ -193,7 +269,9 @@ def reprocess_all(data_dir=None):
                 # Existing property — check for changes
                 changes = []
 
-                if prop.get("price", "") != existing_data.get("price", ""):
+                if price_observed(prop) and prop.get("price", "") != existing_data.get(
+                    "price", ""
+                ):
                     changes.append({
                         "type": "price_change",
                         "field": "Auction Price",
@@ -209,7 +287,11 @@ def reprocess_all(data_dir=None):
                         "url": prop.get("listing_url", ""),
                     })
 
-                if prop.get("auction_date", "") != existing_data.get("auction_date", ""):
+                if prop.get("auction_date", "") != existing_data.get(
+                    "auction_date", ""
+                ) and not same_auction_month(
+                    prop.get("auction_date", ""), existing_data.get("auction_date", "")
+                ):
                     changes.append({
                         "type": "auction_date_change",
                         "field": "Auction Date",
@@ -230,13 +312,42 @@ def reprocess_all(data_dir=None):
                 adh = existing_data.get("auction_date_history", [])
                 old_sk = existing_data.get("_stable_key", sk)
 
+                prev_price = existing_data.get("price", "")
+                prev_price_value = existing_data.get("price_value")
+                prev_auction_date = existing_data.get("auction_date", "")
+                prev_precision = existing_data.get("auction_date_precision")
+
                 existing_data.update(prop)
+
+                # A masked price is missing data, not a new fact: keep the last
+                # price actually observed rather than overwriting it with "".
+                if not price_observed(prop) and prev_price:
+                    existing_data["price"] = prev_price
+                    existing_data["price_value"] = prev_price_value
+                    existing_data["price_stale"] = True
+                else:
+                    existing_data.pop("price_stale", None)
+
+                # Likewise keep a known day-precision date rather than
+                # coarsening it to the month the guest view reports.
+                if (
+                    prop.get("auction_date_precision") == "month"
+                    and prev_precision == "day"
+                    and same_auction_month(prop.get("auction_date", ""), prev_auction_date)
+                ):
+                    existing_data["auction_date"] = prev_auction_date
+                    existing_data["auction_date_precision"] = "day"
+
                 existing_data["first_seen"] = first_seen
                 existing_data["price_history"] = ph
                 existing_data["auction_date_history"] = adh
                 existing_data["_stable_key"] = old_sk
 
-                # Update listing_id index
+                # Update indexes
+                site_id = site_listing_id(prop)
+                if site_id:
+                    site_index[site_id] = existing_id
+                    existing_data["site_listing_id"] = site_id
                 lid = prop.get("listing_id", "")
                 if lid:
                     listing_id_index[lid] = existing_id
@@ -256,7 +367,7 @@ if __name__ == "__main__":
 
     # Save the rebuilt database
     props_path = DATA_DIR / "properties.json"
-    with open(props_path, "w") as f:
+    with open(props_path, "w", encoding="utf-8") as f:
         json.dump(database, f, indent=2, ensure_ascii=False)
     print(f"Saved {len(database)} properties to {props_path}")
 
@@ -265,7 +376,7 @@ if __name__ == "__main__":
     existing_changes = []
     if changes_path.exists():
         try:
-            with open(changes_path) as f:
+            with open(changes_path, encoding="utf-8") as f:
                 existing_changes = json.load(f)
         except Exception:
             pass
@@ -287,7 +398,7 @@ if __name__ == "__main__":
         "changes": change_records,
     }
     existing_changes.append(entry)
-    with open(changes_path, "w") as f:
+    with open(changes_path, "w", encoding="utf-8") as f:
         json.dump(existing_changes, f, indent=2, ensure_ascii=False)
 
     # Save daily stats
@@ -298,7 +409,7 @@ if __name__ == "__main__":
         "new_listings": len(new_listings),
         "changed_properties": len(changed_properties),
     }
-    with open(stats_path, "w") as f:
+    with open(stats_path, "w", encoding="utf-8") as f:
         json.dump(stats, f, indent=2, ensure_ascii=False)
 
     print(f"New: {len(new_listings)}, Changed: {len(changed_properties)}")

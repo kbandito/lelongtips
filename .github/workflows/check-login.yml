@@ -1,0 +1,39 @@
+name: Check Login
+
+# Answers whether a logged-in session unlocks the exact price, the exact
+# auction date and the street address, all of which are masked for guests.
+# Credentials come from repository secrets, never from this file.
+on:
+  push:
+    branches:
+      - 'claude/**'
+    paths:
+      - 'src/check_login.py'
+      - '.github/workflows/check-login.yml'
+  workflow_dispatch:
+
+jobs:
+  check-login:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+          playwright install chromium --with-deps
+      # Headed Chromium under a virtual display: reCAPTCHA v3 scores headless
+      # browsers poorly, and a low score is indistinguishable from a bad password.
+      - name: Check what login unlocks
+        env:
+          LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
+          LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
+          HEADLESS: 'false'
+        run: xvfb-run -a python src/check_login.py
