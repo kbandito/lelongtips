@@ -1,5 +1,6 @@
 name: Live Run
 
+# Re-run after fixing the dashboard crash on masked prices.
 # A real scrape on this branch: writes a snapshot, rebuilds the database and
 # sends Telegram. Runs in guest mode while the login problem is unsolved, so
 # prices are recorded as "not observed" rather than as values. Commits to this
