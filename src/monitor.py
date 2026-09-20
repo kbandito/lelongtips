@@ -455,6 +455,21 @@ class FixedFullScrapingPropertyMonitor:
             # cookie, "eyJpdiI6..."), so a bare value is assumed to be that.
             pairs.append(("lt_session", raw))
 
+        # Laravel percent-encodes its cookies, so the browser sends the encoded
+        # form and PHP decodes it once on arrival. Pasting the value DevTools
+        # shows with "Show URL-decoded" ticked would be decoded twice: every
+        # "+" in the base64 becomes a space, the MAC check fails and the
+        # session is rejected with no error. Re-encode when the value looks
+        # like raw base64.
+        def wire_form(value):
+            if "%" in value:
+                return value  # already in the on-the-wire encoding
+            if any(c in value for c in "+/="):
+                return urllib.parse.quote(value, safe="")
+            return value
+
+        pairs = [(n, wire_form(v)) for n, v in pairs]
+
         for name, value in pairs:
             # Set on both hosts: the cookie is issued for .lelongtips.com.my.
             for domain in ("www.lelongtips.com.my", ".lelongtips.com.my"):
