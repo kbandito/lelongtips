@@ -1,0 +1,43 @@
+name: Check Browser Session
+
+# Does the cookie work in a real browser from this machine? That separates
+# "the session is tied to its network" from "the site refuses anything that
+# is not a browser" — a plain HTTP client fails under either.
+on:
+  push:
+    branches:
+      - 'claude/**'
+    paths:
+      - 'src/check_browser_session.py'
+      - '.github/workflows/check-browser.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 playwright
+          playwright install chromium --with-deps
+      - name: Browser session check
+        env:
+          LELONGTIPS_COOKIE: ${{ secrets.LELONGTIPS_COOKIE }}
+        run: |
+          mkdir -p data/diagnostics
+          python src/check_browser_session.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-session-${{ github.run_number }}
+          path: data/diagnostics/
+          retention-days: 7
