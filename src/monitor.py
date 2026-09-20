@@ -499,6 +499,10 @@ class FixedFullScrapingPropertyMonitor:
                                  text)
             signin = "sign in" in text.lower()
             self.logged_in = masked == 0 and locked == 0
+            self.cookie_verdict = (
+                f"{masked} masked prices, {locked} 'login to view', "
+                f"{'ACTIVE' if masked == 0 and locked == 0 else 'NOT logged in'}"
+            )
             print(f"Cookie check: {masked} masked prices, {locked} 'login to view', "
                   f"header={'greets ' + greeting.group(1) if greeting else 'shows Sign In' if signin else 'unknown'} "
                   f"-> {'session is active' if self.logged_in else 'NOT logged in'}")
@@ -1697,7 +1701,14 @@ class FixedFullScrapingPropertyMonitor:
                         + (f" | {p['discount']}" if p.get("discount") else "")
                     )
                 for p in sample:
-                    print(json.dumps(p, indent=2, ensure_ascii=False)[:700])
+                    print(
+                        f"  - {p.get('title', '?')[:48]} | "
+                        f"{p.get('location', '?')} | {p.get('size', '?')} | "
+                        f"price={p.get('price') or 'MASKED'} | "
+                        f"{p.get('auction_date', '?')} | "
+                        f"round={p.get('auction_round', '-')} | "
+                        f"{p.get('discount', '-')}"
+                    )
 
                 # Coverage report: how much of the site did this actually see,
                 # and how much of each field survives the guest view?
@@ -1708,6 +1719,8 @@ class FixedFullScrapingPropertyMonitor:
 
                 rounds = [p["auction_round"] for p in vals if p.get("auction_round")]
                 print("\n--- DRY RUN COVERAGE ---")
+                print(f"  session              : "
+                      f"{getattr(self, 'cookie_verdict', 'no cookie supplied')}")
                 print(f"  site reports         : {total_results:,} results")
                 print(f"  cards seen in HTML   : {getattr(self, 'cards_seen', 0):,}")
                 rejects = getattr(self, "reject_totals", {}) or {}
