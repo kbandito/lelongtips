@@ -444,9 +444,12 @@ class FixedFullScrapingPropertyMonitor:
         LELONGTIPS_COOKIE accepts either a bare session value or a full
         "name=value; name2=value2" cookie header.
         """
-        raw = os.getenv("LELONGTIPS_COOKIE", "").strip()
+        from cookie_source import load_cookie, describe_source
+
+        raw = load_cookie()
         if not raw:
             return False
+        print(f"Session cookie from: {describe_source()}")
 
         pairs = []
         if "=" in raw:
@@ -523,7 +526,9 @@ class FixedFullScrapingPropertyMonitor:
         """Login to lelongtips.com.my using Playwright browser, then transfer cookies to requests session."""
         if self.login_with_cookie():
             return True
-        if os.getenv("LELONGTIPS_COOKIE", "").strip():
+        from cookie_source import load_cookie
+
+        if load_cookie():
             # A cookie was given and rejected. Falling back to a form login
             # cannot work either (reCAPTCHA v3 issues no token from CI), so
             # say so plainly instead of burying it in a browser stack trace.

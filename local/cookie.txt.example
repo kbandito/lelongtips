@@ -1,0 +1,6 @@
+# Paste your lt_session cookie value on the line below, then rename this
+# file to cookie.txt (same folder).
+#
+# Chrome: F12 - Application - Cookies - https://www.lelongtips.com.my
+# Click lt_session, untick "Show URL-decoded", copy the whole value.
+# It is several hundred characters long and starts with eyJpdiI6

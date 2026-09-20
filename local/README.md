@@ -2,63 +2,76 @@
 
 ## Why this exists
 
-Lelongtips hides prices, exact dates and addresses from anyone who is not
-logged in. Its login is tied to the network it was created on: the same
-session cookie that works in your browser is rejected from a server abroad.
-We confirmed that with a plain HTTP client and again with a full Chromium
-browser running on a US machine — both were served guest content.
+Lelongtips hides prices, exact auction dates and street addresses from anyone
+who is not logged in, and its login is tied to the network that created it.
+The same session cookie that works in your browser is refused from a server
+abroad. That was confirmed twice: once with a plain HTTP client, and again
+with a full Chromium browser (Malaysian locale and timezone) running on a US
+machine. Both were served masked prices.
 
-So the scrape has to run from your connection. Everything after it does not,
-so this only does the scrape: it saves a snapshot and pushes it. GitHub picks
-that up and does the rest — rebuilding the database, regenerating the
-dashboard and sending the Telegram alert.
+So the scrape has to run from your connection. Nothing after it does, so this
+only scrapes: it saves a snapshot and pushes it to GitHub, which rebuilds the
+database, regenerates the dashboard and sends the Telegram alert as before.
 
 ## One-time setup
 
-1. Install Python 3.11 or newer from python.org. Tick **"Add Python to PATH"**
-   during installation.
-2. Install Git from git-scm.com.
-3. Open Command Prompt and clone the repository:
+1. Install **Python** from python.org. Tick **"Add Python to PATH"** during
+   installation — the script cannot find Python without it.
+2. Install **Git** from git-scm.com.
+3. Open Command Prompt and run:
 
-       git clone https://github.com/kbandito/lelongtips.git
+       git clone --depth 1 https://github.com/kbandito/lelongtips.git
        cd lelongtips
-       pip install -r src/requirements.txt
 
-   The clone is large (about 1 GB) because it carries every past snapshot.
+   `--depth 1` skips years of history and saves several gigabytes. The
+   download is still large because the repository carries every past snapshot.
+
+4. Copy `local\cookie.txt.example` to `local\cookie.txt`.
 
 ## Each run
 
 1. Log in to lelongtips.com.my in Chrome.
-2. Press F12 → **Application** → **Cookies** → `https://www.lelongtips.com.my`.
-3. Click **`lt_session`**, untick "Show URL-decoded", and copy the whole value
-   from the panel at the bottom — not from the table column, which is
-   truncated.
-4. In Command Prompt:
+2. Press **F12** → **Application** → **Cookies** → `https://www.lelongtips.com.my`.
+3. Click **`lt_session`**. Untick **"Show URL-decoded"**. Copy the whole value
+   from the panel at the bottom — not from the table column, which is cut off.
+   It is several hundred characters and starts with `eyJpdiI6`.
+4. Paste it into `local\cookie.txt`, replacing whatever is there, and save.
+5. Double-click `local\run_scrape.bat`.
 
-       set LELONGTIPS_COOKIE=paste_the_value_here
-       local\run_scrape.bat
+The cookie goes in a file rather than a command because Windows mangles the
+`%` characters it contains when expanding variables. `cookie.txt` is ignored
+by Git, so it is never uploaded.
 
-The scrape takes roughly 35 minutes. It is polite to the site by design:
-one page every two seconds.
+The script checks your login before starting, so a dead cookie costs you a few
+seconds rather than a wasted half hour. The scrape itself takes about 35
+minutes — one page every two seconds, to stay polite to the site. You can use
+the PC normally while it runs.
 
-## Checking it worked
+## What you should see
 
-The run prints a summary. The line to look for is the masked-price warning:
+    Checking your login...
+      signed in as        : Tan Hui Sin
+      real prices         : 12  ['RM196,830', ...]
+    Login OK. Scraping now - this takes about 35 minutes.
 
-- No warning → prices came through and the session worked.
-- "100% have a masked price" → the cookie was not accepted. Log in again,
-  copy a fresh `lt_session`, and retry.
+If instead it says **NOT SIGNED IN**, the cookie has expired. Log in again,
+copy a fresh one, and rerun. Sessions typically last days to a couple of
+weeks.
 
-To test the cookie on its own without a full scrape:
+## Checking the cookie on its own
 
-    python src\check_session.py "%LELONGTIPS_COOKIE%"
+    python src\check_session.py
 
-It reports whether the site recognises you and how many prices are visible.
+It reports whether the site recognises you and how many prices are visible,
+without scraping anything.
 
 ## Making it automatic
 
-Windows Task Scheduler can run `local\run_scrape.bat` every three days.
-The catch is the cookie: it expires, and refreshing it means logging in
-through a browser by hand. Until that is automated, expect to refresh it
-every week or two — the scrape fails loudly and sends a Telegram alert when
-the session dies, so you will know rather than quietly collecting nothing.
+Windows Task Scheduler can run `local\run_scrape.bat` on a schedule. The
+snag is the cookie: it expires, and refreshing it means logging in through a
+browser by hand. Until that is automated, expect to refresh it every week or
+two.
+
+You do not have to do this at all to keep the project alive. GitHub keeps
+scraping every three days on its own and still sends Telegram alerts; it just
+cannot see prices. Run this when you want a priced refresh.

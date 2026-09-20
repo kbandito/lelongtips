@@ -56,6 +56,7 @@ def build_session(raw):
 
 
 def summarise(html, label):
+    """Print what this page reveals; returns True when prices are visible."""
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text(" ", strip=True)
     masked = MASKED.findall(text)
@@ -68,14 +69,16 @@ def summarise(html, label):
     print(f"  'login to view'     : {text.lower().count('login to view')}")
     print(f"  day-precision dates : {len(DAY_DATE.findall(text))}  "
           f"{DAY_DATE.findall(text)[:2]}")
-    return soup
+    return soup, bool(greet) and not masked and bool(real)
 
 
 def main():
-    raw = os.getenv("LELONGTIPS_COOKIE", "").strip()
-    if not raw and len(sys.argv) > 1:
-        raw = sys.argv[1].strip()
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from cookie_source import load_cookie, describe_source
+
+    raw = sys.argv[1].strip() if len(sys.argv) > 1 else load_cookie()
     print("Checking what this session can see...")
+    print(f"Cookie from: {'command line' if len(sys.argv) > 1 else describe_source()}")
     s = build_session(raw)
 
     try:
@@ -85,7 +88,9 @@ def main():
     except Exception as e:
         print(f"Request failed: {e}")
         return 1
-    soup = summarise(r.text, f"SEARCH RESULTS PAGE (HTTP {r.status_code})")
+    soup, prices_visible = summarise(
+        r.text, f"SEARCH RESULTS PAGE (HTTP {r.status_code})"
+    )
 
     a = soup.find("a", href=re.compile(r"/property/"))
     if a:
@@ -102,7 +107,9 @@ def main():
     print("     scraper must read prices from detail pages.")
     print("  NOT signed in here, but fine in your browser -> the session is")
     print("     bound to the IP or device it was created on.")
-    return 0
+    # 0 = prices visible, 2 = session not usable. Lets a script stop before
+    # spending 35 minutes on a scrape that would collect nothing.
+    return 0 if prices_visible else 2
 
 
 if __name__ == "__main__":
