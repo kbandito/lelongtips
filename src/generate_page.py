@@ -113,11 +113,14 @@ def trim_property(prop, geocode_cache=None, scheme_cache=None):
     # If no valid history exists, use price_value (monitor.py already multiplied
     # truncated prices by 1000) and format it.
     current_price = prop.get("price", "")
-    current_pv = prop.get("price_value", 0)
+    # price_value is None when the scan could not see a price: the site masks
+    # it as "RM98,xxx" for anyone not logged in. Treat that as zero here so the
+    # comparison below stays numeric.
+    current_pv = prop.get("price_value") or 0
     if not is_valid_price(current_price):
         if valid_ph:
             current_price = valid_ph[-1]["p"]
-            current_pv = extract_price_value(current_price)
+            current_pv = extract_price_value(current_price) or 0
         elif current_pv >= 10000:
             current_price = f"RM{current_pv:,}"
 
@@ -272,7 +275,11 @@ def write_data_files(properties, changes_history, daily_stats):
         })
 
     # Compute price stats from active listings
-    prices = [p.get("price_value", 0) for p in active.values() if p.get("price_value", 0) > 0]
+    prices = [
+        p["price_value"]
+        for p in active.values()
+        if isinstance(p.get("price_value"), (int, float)) and p["price_value"] > 0
+    ]
     avg_price = int(sum(prices) / len(prices)) if prices else 0
 
     # Count properties with price drops
