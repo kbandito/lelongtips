@@ -451,11 +451,18 @@ class FixedFullScrapingPropertyMonitor:
                     name, _, value = part.partition("=")
                     pairs.append((name.strip(), value.strip()))
         else:
-            pairs.append(("lelongtips_session", raw))
+            # The site's session cookie is lt_session (a Laravel encrypted
+            # cookie, "eyJpdiI6..."), so a bare value is assumed to be that.
+            pairs.append(("lt_session", raw))
 
         for name, value in pairs:
-            self.session.cookies.set(name, value, domain="www.lelongtips.com.my")
-        print(f"Using supplied session cookie ({len(pairs)} cookie(s))")
+            # Set on both hosts: the cookie is issued for .lelongtips.com.my.
+            for domain in ("www.lelongtips.com.my", ".lelongtips.com.my"):
+                self.session.cookies.set(name, value, domain=domain)
+        names = ", ".join(n for n, _ in pairs)
+        print(f"Using supplied session cookie(s): {names}")
+        if not any(n == "lt_session" for n, _ in pairs):
+            print("  note: no lt_session cookie supplied — that is the session one")
 
         # Confirm the cookie really is a logged-in session before trusting it.
         try:
