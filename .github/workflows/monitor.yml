@@ -55,6 +55,7 @@ jobs:
       env:
         LELONGTIPS_EMAIL: ${{ secrets.LELONGTIPS_EMAIL }}
         LELONGTIPS_PASSWORD: ${{ secrets.LELONGTIPS_PASSWORD }}
+        LELONGTIPS_COOKIE: ${{ secrets.LELONGTIPS_COOKIE }}
       run: python src/diagnose.py --pages 2 --dump-dir data/diagnostics
 
     - name: Upload diagnostic HTML
