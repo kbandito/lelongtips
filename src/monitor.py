@@ -195,6 +195,11 @@ class FixedFullScrapingPropertyMonitor:
         except ValueError:
             self.max_pages = 0
         self.dry_run = os.getenv("DRY_RUN", "").strip().lower() in ("1", "true", "yes")
+        # Scrape and save the snapshot, then stop: used when the scrape must
+        # run from a particular network but the rebuild can run anywhere.
+        self.snapshot_only = os.getenv("SNAPSHOT_ONLY", "").strip().lower() in (
+            "1", "true", "yes"
+        )
 
         # Notification settings
         self.telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -1748,6 +1753,15 @@ class FixedFullScrapingPropertyMonitor:
 
             # Save raw snapshot — this is the source of truth
             self.save_snapshot(current_properties, scraping_stats)
+
+            if self.snapshot_only:
+                # Split run: the scrape happens on a machine whose network the
+                # site accepts, and the heavy rebuild happens elsewhere. Only
+                # the snapshot is produced here.
+                print(f"\nSNAPSHOT ONLY: {len(current_properties)} listings saved. "
+                      "Commit and push data/snapshots/ — the rebuild, dashboard "
+                      "and Telegram alert run from there.")
+                return f"Snapshot saved: {len(current_properties)} listings"
 
             # Reprocess all snapshots to rebuild database
             from reprocess import reprocess_all
