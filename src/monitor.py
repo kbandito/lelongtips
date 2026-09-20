@@ -428,8 +428,55 @@ class FixedFullScrapingPropertyMonitor:
         return parsed >= datetime.now().date()
 
     # ---------- LOGIN ----------
+    def login_with_cookie(self):
+        """Adopt a session cookie captured from a real browser login.
+
+        The login form posts a hidden captToken produced by reCAPTCHA v3, so
+        an unattended script cannot log in reliably. A cookie exported from a
+        browser where a human logged in once sidesteps that entirely, and the
+        site treats the scrape as that member until the session expires.
+
+        LELONGTIPS_COOKIE accepts either a bare session value or a full
+        "name=value; name2=value2" cookie header.
+        """
+        raw = os.getenv("LELONGTIPS_COOKIE", "").strip()
+        if not raw:
+            return False
+
+        pairs = []
+        if "=" in raw:
+            for part in raw.split(";"):
+                part = part.strip()
+                if "=" in part:
+                    name, _, value = part.partition("=")
+                    pairs.append((name.strip(), value.strip()))
+        else:
+            pairs.append(("lelongtips_session", raw))
+
+        for name, value in pairs:
+            self.session.cookies.set(name, value, domain="www.lelongtips.com.my")
+        print(f"Using supplied session cookie ({len(pairs)} cookie(s))")
+
+        # Confirm the cookie really is a logged-in session before trusting it.
+        try:
+            resp = self.session.get(self.base_url, params=self.search_params,
+                                    timeout=self.timeout)
+            text = resp.text
+            masked = len(re.findall(r"RM\s?[\d,]*x+", text, re.IGNORECASE))
+            locked = text.lower().count("login to view")
+            self.logged_in = masked == 0 and locked == 0
+            print(f"Cookie check: {masked} masked prices, {locked} 'login to view' "
+                  f"-> {'session is active' if self.logged_in else 'NOT logged in'}")
+        except Exception as e:
+            print(f"Cookie check failed: {e}")
+            self.logged_in = False
+        return self.logged_in
+
     def login(self):
         """Login to lelongtips.com.my using Playwright browser, then transfer cookies to requests session."""
+        if self.login_with_cookie():
+            return True
+
         email = os.getenv("LELONGTIPS_EMAIL", "")
         password = os.getenv("LELONGTIPS_PASSWORD", "")
         if not email or not password:
@@ -707,6 +754,7 @@ class FixedFullScrapingPropertyMonitor:
             return []
 
         cards = self.find_card_containers(soup)
+        self.cards_seen = getattr(self, "cards_seen", 0) + len(cards)
         print(f"Page {page_num}: found {len(cards)} listing cards")
 
         for listing_id, container in cards.items():
@@ -739,6 +787,13 @@ class FixedFullScrapingPropertyMonitor:
                     rejection_reasons.get(f"error:{e}", 0) + 1
                 )
                 page_invalid += 1
+
+        totals = getattr(self, "reject_totals", None)
+        if totals is not None:
+            for k, v in rejection_reasons.items():
+                totals[k] = totals.get(k, 0) + v
+            if page_duplicates:
+                totals["duplicate"] = totals.get("duplicate", 0) + page_duplicates
 
         reason_str = ""
         if rejection_reasons:
@@ -883,20 +938,28 @@ class FixedFullScrapingPropertyMonitor:
                 data["discount"] = f"{m.group(1)}%"
 
         # ---------- IMAGE ----------
-        for img in container.find_all("img", src=True):
-            src = img["src"]
-            if src.startswith("data:"):
-                continue
-            if any(skip in src.lower() for skip in
-                   ["logo", "icon", "avatar", "pixel", "blank", "spacer", "1x1"]):
-                continue
-            data["image_url"] = urllib.parse.urljoin(self.root_url, src)
-            break
+        for img in container.find_all("img"):
+            # Thumbnails may be lazy-loaded, so the real URL can sit in
+            # data-src/data-original while src holds a placeholder.
+            for attr in ("src", "data-src", "data-original", "data-lazy"):
+                src = img.get(attr)
+                if not src or src.startswith("data:"):
+                    continue
+                if any(skip in src.lower() for skip in
+                       ["logo", "icon", "avatar", "pixel", "blank", "spacer", "1x1"]):
+                    continue
+                data["image_url"] = urllib.parse.urljoin(self.root_url, src)
+                break
+            if data.get("image_url"):
+                break
 
         # Only about a quarter of cards carry data-listing-id, but the
         # thumbnail filename is the same numeric id, so recover it from there.
         if not data.get("site_listing_id"):
             m = re.search(r"/listings/(\d+)\.", data.get("image_url", "") or "")
+            if not m:
+                # Last resort: the id appears in other card attributes too.
+                m = re.search(r"/listings/(\d+)\.", str(container))
             if m:
                 data["site_listing_id"] = m.group(1)
 
@@ -931,6 +994,8 @@ class FixedFullScrapingPropertyMonitor:
         }
 
         self.seen_property_hashes = set()
+        self.cards_seen = 0
+        self.reject_totals = {}
 
         for page_num in range(1, total_pages + 1):
             try:
@@ -1566,6 +1631,11 @@ class FixedFullScrapingPropertyMonitor:
                 rounds = [p["auction_round"] for p in vals if p.get("auction_round")]
                 print("\n--- DRY RUN COVERAGE ---")
                 print(f"  site reports         : {total_results:,} results")
+                print(f"  cards seen in HTML   : {getattr(self, 'cards_seen', 0):,}")
+                rejects = getattr(self, "reject_totals", {}) or {}
+                if rejects:
+                    print("  cards not kept       : "
+                          + ", ".join(f"{k}={v:,}" for k, v in sorted(rejects.items())))
                 print(f"  extracted            : {len(vals):,} "
                       f"({100.0 * len(vals) / max(total_results, 1):.1f}% of site)")
                 print(f"  real price           : {share(lambda p: not p.get('price_masked'))}")
